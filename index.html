@@ -495,6 +495,9 @@
             <button class="btn btn-warning" onclick="clearAllCards()" id="clearBtn" disabled>
                 ⚠️ Clear All
             </button>
+            <button class="btn btn-success" onclick="openGameMenu()" id="gameBtn" disabled>
+                🎮 Games
+            </button>
         </div>
 
         <div id="cardDisplay"></div>
@@ -509,8 +512,9 @@
                 <div class="upload-area" id="frontUpload" onclick="document.getElementById('frontImage').click()">
                     <div id="frontPreview">
                         <div class="upload-icon">📷</div>
-                        <p>Tap to upload image(s)</p>
-                        <p style="font-size: 0.8rem; color: #666; margin-top: 10px;">Select multiple to create cards instantly</p>
+                        <p style="font-weight: bold; font-size: 1.1rem;">Tap to upload image(s)</p>
+                        <p style="font-size: 0.9rem; color: #667eea; margin-top: 15px; font-weight: 600;">✨ TIP: Select multiple images from a folder!</p>
+                        <p style="font-size: 0.8rem; color: #666; margin-top: 5px;">Cards will be created instantly with filenames as text</p>
                     </div>
                 </div>
                 <input type="file" id="frontImage" accept="image/*" multiple onchange="handleImageUpload('front', this)">
@@ -539,6 +543,37 @@
         </div>
     </div>
 
+    <div class="modal" id="gameMenuModal">
+        <div class="modal-content">
+            <h2>🎮 Game Menu</h2>
+            <p style="margin-bottom: 20px; color: #666;">Select a game to play with your flashcards!</p>
+            
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <button class="btn btn-success" onclick="startGame('guess')" style="padding: 20px; font-size: 1.2rem; justify-content: center;">
+                    🎯 Guess the Word
+                </button>
+                
+                <button class="btn btn-secondary" onclick="closeGameMenu()" style="padding: 15px; justify-content: center;">
+                    ← Back to Flashcards
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="guessGameModal">
+        <div class="modal-content" style="max-width: 800px;">
+            <h2>🎯 Guess the Word</h2>
+            
+            <div id="guessGameContent"></div>
+            
+            <div style="margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="closeGuessGame()" style="width: 100%; padding: 15px; justify-content: center;">
+                    ← Back to Game Menu
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let cards = [];
         let currentIndex = 0;
@@ -546,6 +581,11 @@
         let newCard = { frontImage: null, backText: '', backImage: null };
         let clearAllClickCount = 0;
         let clearAllTimeout = null;
+        let guessGameState = {
+            currentCardIndex: 0,
+            score: 0,
+            answered: []
+        };
 
         // Load cards from browser storage on startup
         window.onload = function() {
@@ -808,6 +848,179 @@
             }
         }
 
+        function openGameMenu() {
+            if (cards.length === 0) {
+                alert('Please add some cards first!');
+                return;
+            }
+            document.getElementById('gameMenuModal').classList.add('active');
+        }
+
+        function closeGameMenu() {
+            document.getElementById('gameMenuModal').classList.remove('active');
+        }
+
+        function startGame(gameType) {
+            closeGameMenu();
+            
+            if (gameType === 'guess') {
+                // Reset game state
+                guessGameState = {
+                    currentCardIndex: 0,
+                    score: 0,
+                    answered: []
+                };
+                
+                // Shuffle cards for the game
+                const gameCards = [...cards].sort(() => Math.random() - 0.5);
+                guessGameState.gameCards = gameCards;
+                
+                document.getElementById('guessGameModal').classList.add('active');
+                renderGuessGame();
+            }
+        }
+
+        function closeGuessGame() {
+            document.getElementById('guessGameModal').classList.remove('active');
+            openGameMenu();
+        }
+
+        function renderGuessGame() {
+            const content = document.getElementById('guessGameContent');
+            
+            if (guessGameState.currentCardIndex >= guessGameState.gameCards.length) {
+                // Game over
+                content.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <h2 style="font-size: 3rem; margin-bottom: 20px;">🎉 All cards revealed!</h2>
+                        <p style="font-size: 1.5rem; margin-bottom: 20px;">Great job practicing!</p>
+                        <button class="btn btn-success" onclick="startGame('guess')" style="padding: 15px 30px; font-size: 1.2rem;">
+                            🔄 Play Again
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Get all cards for the current round
+            const allCards = [...cards];
+            const optionsCount = Math.min(Math.max(3, Math.min(6, allCards.length)), allCards.length);
+            
+            // Get random cards for this round
+            if (!guessGameState.currentRoundCards) {
+                let roundCards = [...allCards].sort(() => Math.random() - 0.5).slice(0, optionsCount);
+                guessGameState.currentRoundCards = roundCards;
+                guessGameState.correctCards = {};
+                guessGameState.selectedCard = null;
+                guessGameState.currentCardOrder = 0; // Track which card should be flipped next
+            }
+            
+            const roundCards = guessGameState.currentRoundCards;
+            
+            // Check if all cards have been marked correct
+            const allCorrect = roundCards.every((card, index) => guessGameState.correctCards[index]);
+            
+            // Get the current card that should be flipped
+            const currentCardIndex = guessGameState.currentCardOrder;
+            const isCardFlipped = guessGameState.selectedCard !== null;
+            
+            content.innerHTML = `
+                <div style="text-align: center;">
+                    <p style="font-size: 1.2rem; margin-bottom: 20px; color: #666;">
+                        Flip cards from left to right, top to bottom. One wrong answer resets all!
+                    </p>
+                    <p style="font-size: 1rem; margin-bottom: 30px; color: #667eea; font-weight: 600;">
+                        Progress: ${guessGameState.currentCardOrder} / ${roundCards.length} cards
+                    </p>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px; max-width: 800px; margin-left: auto; margin-right: auto;">
+                        ${roundCards.map((card, index) => {
+                            const isCorrect = guessGameState.correctCards[index];
+                            const isCurrentCard = index === currentCardIndex;
+                            const isSelected = guessGameState.selectedCard === index;
+                            const canFlip = index === currentCardIndex && !isCardFlipped;
+                            const isFlipped = isCorrect || isSelected;
+                            
+                            return `
+                                <div style="position: relative;">
+                                    <div onclick="${canFlip ? 'flipOptionCard(' + index + ')' : ''}" 
+                                         style="cursor: ${canFlip ? 'pointer' : 'not-allowed'}; 
+                                                aspect-ratio: 1; 
+                                                position: relative;
+                                                ${!canFlip && !isCorrect ? 'opacity: 0.6;' : ''}">
+                                        <div style="width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s; ${isFlipped ? 'transform: rotateY(180deg);' : ''}">
+                                            <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); ${isCurrentCard && !isFlipped ? 'border: 3px solid #ffc107;' : ''}">
+                                                <span style="font-size: 4rem; color: white;">❓</span>
+                                            </div>
+                                            <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: white; border-radius: 15px; display: flex; align-items: center; justify-content: center; padding: 10px; transform: rotateY(180deg); box-shadow: 0 4px 15px rgba(0,0,0,0.3); ${isSelected ? 'border: 4px solid #51cf66;' : ''}">
+                                                <img src="${card.frontImage}" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 10px;">
+                                                ${isCorrect ? '<div style="position: absolute; top: 5px; right: 5px; background: #51cf66; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;"><span style="color: white; font-size: 1.5rem;">✓</span></div>' : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                    
+                    <div id="guessGameButtons" style="display: ${isCardFlipped ? 'flex' : 'none'}; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                        <button class="btn btn-success" onclick="markCorrect()" style="padding: 15px 40px; font-size: 1.2rem; min-width: 200px; justify-content: center;">
+                            ✓ Correct!
+                        </button>
+                        <button class="btn btn-secondary" onclick="markWrong()" style="padding: 15px 40px; font-size: 1.2rem; min-width: 200px; justify-content: center;">
+                            ✗ Wrong - Reset All
+                        </button>
+                    </div>
+                    
+                    ${allCorrect ? `
+                        <button class="btn btn-success" onclick="nextRound()" style="padding: 15px 40px; font-size: 1.2rem; width: 100%; max-width: 400px; justify-content: center; margin-top: 20px;">
+                            ➡️ Next Round
+                        </button>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function flipOptionCard(cardIndex) {
+            // Only allow flipping the current card in order
+            if (cardIndex !== guessGameState.currentCardOrder) {
+                return;
+            }
+            
+            // Flip the card and select it
+            guessGameState.selectedCard = cardIndex;
+            renderGuessGame();
+        }
+
+        function markCorrect() {
+            const selectedCardIndex = guessGameState.selectedCard;
+            if (selectedCardIndex === null) return;
+            
+            // Mark as correct - card stays flipped
+            guessGameState.correctCards[selectedCardIndex] = true;
+            guessGameState.selectedCard = null;
+            guessGameState.currentCardOrder++; // Move to next card
+            renderGuessGame();
+        }
+
+        function markWrong() {
+            // Reset everything - all cards flip back
+            guessGameState.correctCards = {};
+            guessGameState.selectedCard = null;
+            guessGameState.currentCardOrder = 0; // Start from beginning
+            renderGuessGame();
+        }
+
+        function nextRound() {
+            // Move to next round
+            guessGameState.currentCardIndex++;
+            guessGameState.currentRoundCards = null;
+            guessGameState.correctCards = {};
+            guessGameState.selectedCard = null;
+            guessGameState.currentCardOrder = 0;
+            renderGuessGame();
+        }
+
         function renderDisplay() {
             const display = document.getElementById('cardDisplay');
             const shuffleBtn = document.getElementById('shuffleBtn');
@@ -825,12 +1038,16 @@
                 shuffleBtn.disabled = true;
                 if (clearBtn) clearBtn.disabled = true;
                 if (deleteBtn) deleteBtn.disabled = true;
+                const gameBtn = document.getElementById('gameBtn');
+                if (gameBtn) gameBtn.disabled = true;
                 return;
             }
 
             shuffleBtn.disabled = false;
             if (clearBtn) clearBtn.disabled = false;
             if (deleteBtn) deleteBtn.disabled = false;
+            const gameBtn = document.getElementById('gameBtn');
+            if (gameBtn) gameBtn.disabled = false;
             const card = cards[currentIndex];
 
             display.innerHTML = `
