@@ -476,6 +476,11 @@
     </style>
 </head>
 <body>
+    <!-- Audio element for sound effects -->
+    <audio id="flipSound" preload="auto">
+        <source src="https://raw.githubusercontent.com/Weeksder/burstcard/main/flipcard.wav" type="audio/wav">
+    </audio>
+
     <div class="container">
         <div class="header">
             <h1>📚 Flashcard App</h1>
@@ -587,6 +592,13 @@
             answered: []
         };
 
+        // Function to play the flip sound
+        function playFlipSound() {
+            const sound = document.getElementById('flipSound');
+            sound.currentTime = 0; // Reset to start for rapid clicks
+            sound.play().catch(e => console.log('Audio play failed:', e));
+        }
+
         // Load cards from browser storage on startup
         window.onload = function() {
             loadCards();
@@ -666,6 +678,7 @@
                             currentIndex = cards.length - totalFiles; // Go to first new card
                             isFlipped = false;
                             renderDisplay();
+                            playFlipSound(); // Play sound when multiple cards added
                             alert(totalFiles + ' cards created!\n\nFilenames used as text:\n' + 
                                   Array.from(files).map(f => '• ' + f.name.replace(/\.[^/.]+$/, "")).join('\n'));
                         }
@@ -722,6 +735,7 @@
 
             saveCards();
             closeCreateModal();
+            playFlipSound(); // Play sound when card is added
             renderDisplay();
         }
 
@@ -769,6 +783,7 @@
             const card = document.querySelector('.card');
             if (card) {
                 card.classList.toggle('flipped');
+                playFlipSound(); // Play sound when card is flipped
             }
         }
 
