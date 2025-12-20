@@ -6,10 +6,14 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-    <!-- Cache Prevention -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <!-- Comprehensive Cache Prevention for All Browsers -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, proxy-revalidate, max-age=0">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
+    <meta name="last-modified" content="2025-12-20T00:00:00Z">
+    <meta name="cache-control" content="no-cache">
+    <meta name="cache-control" content="no-store">
+    <meta name="cache-control" content="must-revalidate">
 
     <title>Flashcard App</title>
     <style>
@@ -570,6 +574,22 @@
     </div>
 
     <script>
+        // Force reload on browser back/forward navigation (prevents cached version)
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+                window.location.reload();
+            }
+        });
+
+        // Prevent caching in Chrome and other browsers
+        if ('caches' in window) {
+            caches.keys().then(function(names) {
+                names.forEach(function(name) {
+                    caches.delete(name);
+                });
+            });
+        }
+
         let cards = [];
         let currentIndex = 0;
         let isFlipped = false;
