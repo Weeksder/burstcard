@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- Cache Prevention -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
     <title>Flashcard App</title>
     <style>
         * {
@@ -584,7 +590,11 @@
 
         function loadCards() {
             try {
-                const saved = localStorage.getItem('flashcards');
+                // Clear any old localStorage data (migration cleanup)
+                localStorage.removeItem('flashcards');
+
+                // Load from sessionStorage only
+                const saved = sessionStorage.getItem('flashcards');
                 if (saved) {
                     cards = JSON.parse(saved);
                 }
@@ -596,7 +606,7 @@
 
         function saveCards() {
             try {
-                localStorage.setItem('flashcards', JSON.stringify(cards));
+                sessionStorage.setItem('flashcards', JSON.stringify(cards));
             } catch (e) {
                 console.error('Error saving cards:', e);
                 alert('Could not save cards. Storage may be full or disabled.');
@@ -815,7 +825,7 @@
                     cards = [];
                     currentIndex = 0;
                     isFlipped = false;
-                    localStorage.removeItem('flashcards');
+                    sessionStorage.removeItem('flashcards');
                     renderDisplay();
                     
                     // Reset button
