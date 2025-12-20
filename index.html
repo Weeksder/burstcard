@@ -729,11 +729,22 @@
         }
 
         function resetForm() {
-            newCard = { frontImage: null, backText: '', backImage: null };
+            newCard = { frontImage: null, backText: '', backImage: null, multipleFiles: null };
             document.getElementById('frontPreview').innerHTML = '<div class="upload-icon">📷</div><p style="font-weight: bold; font-size: 1.1rem;">Tap or drag & drop image(s)</p><p style="font-size: 0.9rem; color: #667eea; margin-top: 15px; font-weight: 600;">✨ TIP: Select multiple images from a folder!</p><p style="font-size: 0.8rem; color: #666; margin-top: 5px;">Cards will be created instantly with filenames as text</p>';
-            document.getElementById('backText').value = '';
+
+            const backTextElement = document.getElementById('backText');
+            backTextElement.value = '';
+            backTextElement.disabled = false;
+            backTextElement.style.background = '';
+
             document.getElementById('frontImage').value = '';
             document.getElementById('frontUpload').classList.remove('has-image');
+
+            // Reset button text
+            const addButton = document.querySelector('.form-actions .btn-success');
+            if (addButton) {
+                addButton.textContent = 'Add Card';
+            }
         }
 
         function isDuplicateImage(imageData) {
@@ -744,8 +755,98 @@
             const files = input.files;
             if (files.length === 0) return;
 
-            // If multiple files selected for front, create multiple cards immediately
+            // If multiple files selected for front, show preview instead of creating immediately
             if (side === 'front' && files.length > 1) {
+                // Store files temporarily
+                newCard.multipleFiles = files;
+
+                // Show preview of all images
+                let previewHTML = '<div style="text-align: center; padding: 20px;">';
+                previewHTML += '<p style="font-size: 1.2rem; font-weight: bold; color: #667eea; margin-bottom: 15px;">' + files.length + ' images selected</p>';
+                previewHTML += '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-height: 200px; overflow-y: auto;">';
+
+                // Extract and display all filenames
+                const fileNames = [];
+                for (let i = 0; i < files.length; i++) {
+                    const fileName = files[i].name.replace(/\.[^/.]+$/, "");
+                    fileNames.push(fileName);
+                }
+
+                // Show filenames in the Back (Text) textarea
+                document.getElementById('backText').value = '📝 Card names preview:\n\n' + fileNames.map((name, i) => (i + 1) + '. ' + name).join('\n');
+                document.getElementById('backText').disabled = true;
+                document.getElementById('backText').style.background = '#f8f9fa';
+
+                // Create mini previews for each image
+                let processedPreviews = 0;
+                for (let i = 0; i < Math.min(files.length, 9); i++) {
+                    const file = files[i];
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewHTML += '<img src="' + e.target.result + '" style="width: 100%; height: 80px; object-fit: cover; border-radius: 8px;">';
+                        processedPreviews++;
+
+                        if (processedPreviews === Math.min(files.length, 9)) {
+                            if (files.length > 9) {
+                                previewHTML += '</div><p style="margin-top: 10px; color: #666;">+ ' + (files.length - 9) + ' more images...</p>';
+                            } else {
+                                previewHTML += '</div>';
+                            }
+                            previewHTML += '</div>';
+                            document.getElementById('frontPreview').innerHTML = previewHTML;
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+
+                document.getElementById('frontUpload').classList.add('has-image');
+
+                // Change button text to indicate multiple cards will be created
+                const addButton = document.querySelector('.form-actions .btn-success');
+                if (addButton) {
+                    addButton.textContent = '✨ Create ' + files.length + ' Cards';
+                }
+
+                return;
+            }
+
+            // Single file handling
+            const file = files[0];
+            if (file) {
+                const fileName = file.name.replace(/\.[^/.]+$/, "");
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imageData = e.target.result;
+                    if (side === 'front') {
+                        newCard.frontImage = imageData;
+                        newCard.backText = fileName;
+                        newCard.multipleFiles = null; // Clear multiple files
+                        // Update both the textarea and newCard
+                        const backTextElement = document.getElementById('backText');
+                        if (backTextElement) {
+                            backTextElement.value = fileName;
+                            backTextElement.disabled = false;
+                            backTextElement.style.background = '';
+                        }
+                        document.getElementById('frontPreview').innerHTML =
+                            '<img src="' + imageData + '" class="preview-image"><p style="margin-top: 10px; font-size: 0.9rem;">Filename: ' + fileName + '</p>';
+                        document.getElementById('frontUpload').classList.add('has-image');
+
+                        // Reset button text
+                        const addButton = document.querySelector('.form-actions .btn-success');
+                        if (addButton) {
+                            addButton.textContent = 'Add Card';
+                        }
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function addCard() {
+            // Handle multiple files
+            if (newCard.multipleFiles && newCard.multipleFiles.length > 1) {
+                const files = newCard.multipleFiles;
                 let processed = 0;
                 let added = 0;
                 let duplicates = [];
@@ -753,7 +854,6 @@
 
                 for (let i = 0; i < files.length; i++) {
                     const file = files[i];
-                    // Extract filename without extension
                     const fileName = file.name.replace(/\.[^/.]+$/, "");
 
                     const reader = new FileReader();
@@ -776,20 +876,19 @@
 
                         // When all files are processed
                         if (processed === totalFiles) {
+                            saveCards();
+                            closeCreateModal();
+
                             if (added > 0) {
-                                saveCards();
-                                closeCreateModal();
-                                currentIndex = cards.length - added; // Go to first new card
+                                currentIndex = cards.length - added;
                                 isFlipped = false;
                                 renderDisplay();
-                            } else {
-                                closeCreateModal();
                             }
 
                             // Show summary
                             let message = '';
                             if (added > 0) {
-                                message = added + ' card' + (added === 1 ? '' : 's') + ' created!';
+                                message = '✅ ' + added + ' card' + (added === 1 ? '' : 's') + ' created!';
                             }
                             if (duplicates.length > 0) {
                                 message += '\n\n⚠️ ' + duplicates.length + ' duplicate' + (duplicates.length === 1 ? '' : 's') + ' skipped:\n' +
@@ -803,31 +902,7 @@
                 return;
             }
 
-            // Single file handling
-            const file = files[0];
-            if (file) {
-                const fileName = file.name.replace(/\.[^/.]+$/, "");
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const imageData = e.target.result;
-                    if (side === 'front') {
-                        newCard.frontImage = imageData;
-                        newCard.backText = fileName;
-                        // Update both the textarea and newCard
-                        const backTextElement = document.getElementById('backText');
-                        if (backTextElement) {
-                            backTextElement.value = fileName;
-                        }
-                        document.getElementById('frontPreview').innerHTML = 
-                            '<img src="' + imageData + '" class="preview-image"><p style="margin-top: 10px; font-size: 0.9rem;">Filename: ' + fileName + '</p>';
-                        document.getElementById('frontUpload').classList.add('has-image');
-                    }
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        function addCard() {
+            // Single card handling
             if (!newCard.frontImage) {
                 alert('Please add a front image!');
                 return;
