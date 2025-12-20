@@ -590,7 +590,7 @@
 
         function loadCards() {
             try {
-                const saved = localStorage.getItem('flashcards');
+                const saved = sessionStorage.getItem('flashcards');
                 if (saved) {
                     cards = JSON.parse(saved);
                 }
@@ -602,7 +602,7 @@
 
         function saveCards() {
             try {
-                localStorage.setItem('flashcards', JSON.stringify(cards));
+                sessionStorage.setItem('flashcards', JSON.stringify(cards));
             } catch (e) {
                 console.error('Error saving cards:', e);
                 alert('Could not save cards. Storage may be full or disabled.');
@@ -821,7 +821,7 @@
                     cards = [];
                     currentIndex = 0;
                     isFlipped = false;
-                    localStorage.removeItem('flashcards');
+                    sessionStorage.removeItem('flashcards');
                     renderDisplay();
                     
                     // Reset button
