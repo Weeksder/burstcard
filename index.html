@@ -591,22 +591,6 @@
     </audio>
 
     <script>
-        // Force reload on browser back/forward navigation (prevents cached version)
-        window.addEventListener('pageshow', function(event) {
-            if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
-                window.location.reload();
-            }
-        });
-
-        // Prevent caching in Chrome and other browsers
-        if ('caches' in window) {
-            caches.keys().then(function(names) {
-                names.forEach(function(name) {
-                    caches.delete(name);
-                });
-            });
-        }
-
         let cards = [];
         let currentIndex = 0;
         let isFlipped = false;
@@ -618,6 +602,32 @@
             score: 0,
             answered: []
         };
+
+        // Force reload on browser back/forward navigation (prevents cached version)
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+                window.location.reload();
+            }
+        });
+
+        // Confirm before closing tab (prevents accidental data loss)
+        window.addEventListener('beforeunload', function(event) {
+            // Only show prompt if there are cards
+            if (cards.length > 0) {
+                event.preventDefault();
+                event.returnValue = ''; // Modern browsers require this
+                return ''; // Some older browsers need this
+            }
+        });
+
+        // Prevent caching in Chrome and other browsers
+        if ('caches' in window) {
+            caches.keys().then(function(names) {
+                names.forEach(function(name) {
+                    caches.delete(name);
+                });
+            });
+        }
 
         // Load cards from browser storage on startup
         window.onload = function() {
