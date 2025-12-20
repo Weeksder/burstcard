@@ -590,6 +590,10 @@
 
         function loadCards() {
             try {
+                // Clear any old localStorage data (migration cleanup)
+                localStorage.removeItem('flashcards');
+
+                // Load from sessionStorage only
                 const saved = sessionStorage.getItem('flashcards');
                 if (saved) {
                     cards = JSON.parse(saved);
