@@ -573,6 +573,17 @@
         </div>
     </div>
 
+    <!-- Audio elements for sound effects -->
+    <audio id="flipSound" preload="auto">
+        <source src="flip2.wav" type="audio/wav">
+    </audio>
+    <audio id="correctSound" preload="auto">
+        <source src="correct.wav" type="audio/wav">
+    </audio>
+    <audio id="errorSound" preload="auto">
+        <source src="error.wav" type="audio/wav">
+    </audio>
+
     <script>
         // Force reload on browser back/forward navigation (prevents cached version)
         window.addEventListener('pageshow', function(event) {
@@ -607,6 +618,15 @@
             loadCards();
             renderDisplay();
         };
+
+        // Helper function to play sound effects
+        function playSound(soundId) {
+            const sound = document.getElementById(soundId);
+            if (sound) {
+                sound.currentTime = 0; // Reset to start
+                sound.play().catch(err => console.log('Sound play failed:', err));
+            }
+        }
 
         function loadCards() {
             try {
@@ -816,6 +836,7 @@
 
         function flipCard() {
             window.speechSynthesis.cancel();
+            playSound('flipSound');
             isFlipped = !isFlipped;
             const card = document.querySelector('.card');
             if (card) {
@@ -1048,7 +1069,9 @@
         function markCorrect() {
             const selectedCardIndex = guessGameState.selectedCard;
             if (selectedCardIndex === null) return;
-            
+
+            playSound('correctSound');
+
             // Mark as correct - card stays flipped
             guessGameState.correctCards[selectedCardIndex] = true;
             guessGameState.selectedCard = null;
@@ -1057,6 +1080,8 @@
         }
 
         function markWrong() {
+            playSound('errorSound');
+
             // Reset everything - all cards flip back
             guessGameState.correctCards = {};
             guessGameState.selectedCard = null;
