@@ -614,9 +614,15 @@
         window.addEventListener('beforeunload', function(event) {
             // Only show prompt if there are cards
             if (cards.length > 0) {
+                // Cancel the event
                 event.preventDefault();
-                event.returnValue = ''; // Modern browsers require this
-                return ''; // Some older browsers need this
+
+                // Chrome requires returnValue to be set
+                const confirmationMessage = 'You have unsaved flashcards. Are you sure you want to leave?';
+                event.returnValue = confirmationMessage;
+
+                // For older browsers
+                return confirmationMessage;
             }
         });
 
