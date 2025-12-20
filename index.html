@@ -476,11 +476,6 @@
     </style>
 </head>
 <body>
-    <!-- Audio element for sound effects -->
-    <audio id="flipSound" preload="auto">
-        <source src="https://raw.githubusercontent.com/Weeksder/burstcard/main/flipcard.wav" type="audio/wav">
-    </audio>
-
     <div class="container">
         <div class="header">
             <h1>📚 Flashcard App</h1>
@@ -528,17 +523,6 @@
             <div class="form-group">
                 <label>Back (Text)</label>
                 <textarea id="backText" placeholder="Enter text for the back of the card..."></textarea>
-            </div>
-
-            <div class="form-group">
-                <label>Back (Optional Image)</label>
-                <div class="upload-area" id="backUpload" onclick="document.getElementById('backImage').click()">
-                    <div id="backPreview">
-                        <div class="upload-icon">📷</div>
-                        <p>Tap to add image (optional)</p>
-                    </div>
-                </div>
-                <input type="file" id="backImage" accept="image/*" onchange="handleImageUpload('back', this)">
             </div>
 
             <div class="form-actions">
@@ -592,13 +576,6 @@
             answered: []
         };
 
-        // Function to play the flip sound
-        function playFlipSound() {
-            const sound = document.getElementById('flipSound');
-            sound.currentTime = 0; // Reset to start for rapid clicks
-            sound.play().catch(e => console.log('Audio play failed:', e));
-        }
-
         // Load cards from browser storage on startup
         window.onload = function() {
             loadCards();
@@ -627,6 +604,7 @@
         }
 
         function openCreateModal() {
+            window.speechSynthesis.cancel();
             document.getElementById('createModal').classList.add('active');
             resetForm();
         }
@@ -639,12 +617,9 @@
         function resetForm() {
             newCard = { frontImage: null, backText: '', backImage: null };
             document.getElementById('frontPreview').innerHTML = '<div class="upload-icon">📷</div><p>Tap to upload image(s)</p><p style="font-size: 0.8rem; color: #666; margin-top: 10px;">Select multiple to create cards instantly</p>';
-            document.getElementById('backPreview').innerHTML = '<div class="upload-icon">📷</div><p>Tap to add image (optional)</p>';
             document.getElementById('backText').value = '';
             document.getElementById('frontImage').value = '';
-            document.getElementById('backImage').value = '';
             document.getElementById('frontUpload').classList.remove('has-image');
-            document.getElementById('backUpload').classList.remove('has-image');
         }
 
         function handleImageUpload(side, input) {
@@ -678,7 +653,6 @@
                             currentIndex = cards.length - totalFiles; // Go to first new card
                             isFlipped = false;
                             renderDisplay();
-                            playFlipSound(); // Play sound when multiple cards added
                             alert(totalFiles + ' cards created!\n\nFilenames used as text:\n' + 
                                   Array.from(files).map(f => '• ' + f.name.replace(/\.[^/.]+$/, "")).join('\n'));
                         }
@@ -706,11 +680,6 @@
                         document.getElementById('frontPreview').innerHTML = 
                             '<img src="' + imageData + '" class="preview-image"><p style="margin-top: 10px; font-size: 0.9rem;">Filename: ' + fileName + '</p>';
                         document.getElementById('frontUpload').classList.add('has-image');
-                    } else {
-                        newCard.backImage = imageData;
-                        document.getElementById('backPreview').innerHTML = 
-                            '<img src="' + imageData + '" class="preview-image">';
-                        document.getElementById('backUpload').classList.add('has-image');
                     }
                 };
                 reader.readAsDataURL(file);
@@ -735,11 +704,11 @@
 
             saveCards();
             closeCreateModal();
-            playFlipSound(); // Play sound when card is added
             renderDisplay();
         }
 
         function deleteCard() {
+            window.speechSynthesis.cancel();
             if (cards.length === 0) {
                 alert('No cards to delete!');
                 return;
@@ -757,6 +726,7 @@
         }
 
         function shuffleCards() {
+            window.speechSynthesis.cancel();
             if (cards.length === 0) return;
             
             cards.sort(() => Math.random() - 0.5);
@@ -767,23 +737,25 @@
         }
 
         function nextCard() {
+            window.speechSynthesis.cancel();
             currentIndex = (currentIndex + 1) % cards.length;
             isFlipped = false;
             renderDisplay();
         }
 
         function prevCard() {
+            window.speechSynthesis.cancel();
             currentIndex = (currentIndex - 1 + cards.length) % cards.length;
             isFlipped = false;
             renderDisplay();
         }
 
         function flipCard() {
+            window.speechSynthesis.cancel();
             isFlipped = !isFlipped;
             const card = document.querySelector('.card');
             if (card) {
                 card.classList.toggle('flipped');
-                playFlipSound(); // Play sound when card is flipped
             }
         }
 
@@ -839,6 +811,7 @@
                 clearTimeout(clearAllTimeout);
                 
                 try {
+                    window.speechSynthesis.cancel();
                     cards = [];
                     currentIndex = 0;
                     isFlipped = false;
@@ -864,6 +837,7 @@
         }
 
         function openGameMenu() {
+            window.speechSynthesis.cancel();
             if (cards.length === 0) {
                 alert('Please add some cards first!');
                 return;
