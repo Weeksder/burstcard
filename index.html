@@ -632,6 +632,10 @@
             document.getElementById('frontUpload').classList.remove('has-image');
         }
 
+        function isDuplicateImage(imageData) {
+            return cards.some(card => card.frontImage === imageData);
+        }
+
         function handleImageUpload(side, input) {
             const files = input.files;
             if (files.length === 0) return;
@@ -639,32 +643,55 @@
             // If multiple files selected for front, create multiple cards immediately
             if (side === 'front' && files.length > 1) {
                 let processed = 0;
+                let added = 0;
+                let duplicates = [];
                 const totalFiles = files.length;
-                
+
                 for (let i = 0; i < files.length; i++) {
                     const file = files[i];
                     // Extract filename without extension
                     const fileName = file.name.replace(/\.[^/.]+$/, "");
-                    
+
                     const reader = new FileReader();
                     reader.onload = function(e) {
-                        cards.push({
-                            id: Date.now() + i + Math.random(),
-                            frontImage: e.target.result,
-                            backText: fileName,
-                            backImage: null
-                        });
+                        const imageData = e.target.result;
+
+                        // Check for duplicate
+                        if (isDuplicateImage(imageData)) {
+                            duplicates.push(fileName);
+                        } else {
+                            cards.push({
+                                id: Date.now() + i + Math.random(),
+                                frontImage: imageData,
+                                backText: fileName,
+                                backImage: null
+                            });
+                            added++;
+                        }
                         processed++;
-                        
+
                         // When all files are processed
                         if (processed === totalFiles) {
-                            saveCards();
-                            closeCreateModal();
-                            currentIndex = cards.length - totalFiles; // Go to first new card
-                            isFlipped = false;
-                            renderDisplay();
-                            alert(totalFiles + ' cards created!\n\nFilenames used as text:\n' + 
-                                  Array.from(files).map(f => '• ' + f.name.replace(/\.[^/.]+$/, "")).join('\n'));
+                            if (added > 0) {
+                                saveCards();
+                                closeCreateModal();
+                                currentIndex = cards.length - added; // Go to first new card
+                                isFlipped = false;
+                                renderDisplay();
+                            } else {
+                                closeCreateModal();
+                            }
+
+                            // Show summary
+                            let message = '';
+                            if (added > 0) {
+                                message = added + ' card' + (added === 1 ? '' : 's') + ' created!';
+                            }
+                            if (duplicates.length > 0) {
+                                message += '\n\n⚠️ ' + duplicates.length + ' duplicate' + (duplicates.length === 1 ? '' : 's') + ' skipped:\n' +
+                                          duplicates.map(f => '• ' + f).join('\n');
+                            }
+                            if (message) alert(message);
                         }
                     };
                     reader.readAsDataURL(file);
@@ -699,6 +726,13 @@
         function addCard() {
             if (!newCard.frontImage) {
                 alert('Please add a front image!');
+                return;
+            }
+
+            // Check for duplicate
+            if (isDuplicateImage(newCard.frontImage)) {
+                alert('⚠️ This image already exists in your flashcards!\n\nDuplicate not added.');
+                closeCreateModal();
                 return;
             }
 
