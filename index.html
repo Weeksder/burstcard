@@ -543,6 +543,7 @@
 
             <div class="form-actions">
                 <button class="btn btn-success" onclick="addCard()">Add Card</button>
+                <button class="btn btn-warning" id="renameButton" onclick="toggleRenameMode()" style="display: none;">✏️ Rename</button>
                 <button class="btn btn-secondary" onclick="closeCreateModal()">Cancel</button>
             </div>
         </div>
@@ -736,6 +737,7 @@
             backTextElement.value = '';
             backTextElement.disabled = false;
             backTextElement.style.background = '';
+            backTextElement.style.border = '';
 
             document.getElementById('frontImage').value = '';
             document.getElementById('frontUpload').classList.remove('has-image');
@@ -745,10 +747,42 @@
             if (addButton) {
                 addButton.textContent = 'Add Card';
             }
+
+            // Hide and reset rename button
+            const renameButton = document.getElementById('renameButton');
+            if (renameButton) {
+                renameButton.style.display = 'none';
+                renameButton.textContent = '✏️ Rename';
+                renameButton.classList.remove('btn-success');
+                renameButton.classList.add('btn-warning');
+            }
         }
 
         function isDuplicateImage(imageData) {
             return cards.some(card => card.frontImage === imageData);
+        }
+
+        function toggleRenameMode() {
+            const backTextElement = document.getElementById('backText');
+            const renameButton = document.getElementById('renameButton');
+
+            if (backTextElement.disabled) {
+                // Enable editing
+                backTextElement.disabled = false;
+                backTextElement.style.background = '#fff';
+                backTextElement.style.border = '2px solid #667eea';
+                renameButton.textContent = '✓ Done Editing';
+                renameButton.classList.remove('btn-warning');
+                renameButton.classList.add('btn-success');
+            } else {
+                // Disable editing
+                backTextElement.disabled = true;
+                backTextElement.style.background = '#f8f9fa';
+                backTextElement.style.border = '';
+                renameButton.textContent = '✏️ Rename';
+                renameButton.classList.remove('btn-success');
+                renameButton.classList.add('btn-warning');
+            }
         }
 
         function handleImageUpload(side, input) {
@@ -765,10 +799,23 @@
                 previewHTML += '<p style="font-size: 1.2rem; font-weight: bold; color: #667eea; margin-bottom: 15px;">' + files.length + ' images selected</p>';
                 previewHTML += '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-height: 200px; overflow-y: auto;">';
 
-                // Extract and display all filenames
+                // Extract and display all filenames (truncate to 60 chars excluding spaces)
                 const fileNames = [];
                 for (let i = 0; i < files.length; i++) {
-                    const fileName = files[i].name.replace(/\.[^/.]+$/, "");
+                    let fileName = files[i].name.replace(/\.[^/.]+$/, "");
+                    // Remove spaces for character count, then truncate
+                    const charsWithoutSpaces = fileName.replace(/\s/g, '').length;
+                    if (charsWithoutSpaces > 60) {
+                        // Truncate while preserving spaces
+                        let truncated = '';
+                        let charCount = 0;
+                        for (let char of fileName) {
+                            if (char !== ' ') charCount++;
+                            if (charCount > 60) break;
+                            truncated += char;
+                        }
+                        fileName = truncated;
+                    }
                     fileNames.push(fileName);
                 }
 
@@ -807,13 +854,32 @@
                     addButton.textContent = '✨ Create ' + files.length + ' Cards';
                 }
 
+                // Show rename button
+                const renameButton = document.getElementById('renameButton');
+                if (renameButton) {
+                    renameButton.style.display = 'block';
+                }
+
                 return;
             }
 
             // Single file handling
             const file = files[0];
             if (file) {
-                const fileName = file.name.replace(/\.[^/.]+$/, "");
+                let fileName = file.name.replace(/\.[^/.]+$/, "");
+                // Truncate to 60 chars excluding spaces
+                const charsWithoutSpaces = fileName.replace(/\s/g, '').length;
+                if (charsWithoutSpaces > 60) {
+                    let truncated = '';
+                    let charCount = 0;
+                    for (let char of fileName) {
+                        if (char !== ' ') charCount++;
+                        if (charCount > 60) break;
+                        truncated += char;
+                    }
+                    fileName = truncated;
+                }
+
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const imageData = e.target.result;
@@ -837,6 +903,12 @@
                         if (addButton) {
                             addButton.textContent = 'Add Card';
                         }
+
+                        // Hide rename button
+                        const renameButton = document.getElementById('renameButton');
+                        if (renameButton) {
+                            renameButton.style.display = 'none';
+                        }
                     }
                 };
                 reader.readAsDataURL(file);
@@ -847,6 +919,24 @@
             // Handle multiple files
             if (newCard.multipleFiles && newCard.multipleFiles.length > 1) {
                 const files = newCard.multipleFiles;
+
+                // Parse edited names from textarea
+                const backTextContent = document.getElementById('backText').value;
+                const lines = backTextContent.split('\n').filter(line => line.trim());
+                const editedNames = [];
+
+                // Extract names from numbered list format
+                for (let line of lines) {
+                    // Skip header line
+                    if (line.includes('Card names preview:')) continue;
+
+                    // Match pattern like "1. filename" or just "filename"
+                    const match = line.match(/^\d+\.\s*(.+)$/) || line.match(/^(.+)$/);
+                    if (match && match[1].trim()) {
+                        editedNames.push(match[1].trim());
+                    }
+                }
+
                 let processed = 0;
                 let added = 0;
                 let duplicates = [];
@@ -854,7 +944,8 @@
 
                 for (let i = 0; i < files.length; i++) {
                     const file = files[i];
-                    const fileName = file.name.replace(/\.[^/.]+$/, "");
+                    // Use edited name if available, otherwise use original filename
+                    const fileName = editedNames[i] || file.name.replace(/\.[^/.]+$/, "");
 
                     const reader = new FileReader();
                     reader.onload = function(e) {
