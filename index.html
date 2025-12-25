@@ -952,6 +952,7 @@
             }
             
             window.speechSynthesis.cancel();
+            document.body.style.overflow = 'hidden'; // Disable background scrolling
             document.getElementById('createModal').classList.add('active');
             resetForm();
         }
@@ -987,12 +988,16 @@
                 addButton.textContent = '💾 Update Card';
             }
             
+            // Disable background scrolling
+            document.body.style.overflow = 'hidden';
+            
             // Open modal
             document.getElementById('createModal').classList.add('active');
         }
 
         function closeCreateModal() {
             document.getElementById('createModal').classList.remove('active');
+            document.body.style.overflow = ''; // Re-enable background scrolling
             resetForm();
         }
 
@@ -1095,7 +1100,7 @@
                     container.dataset.index = i;
                     
                     container.innerHTML = `
-                        <img src="${e.target.result}" style="width: 100%; height: 150px; object-fit: contain; border-radius: 8px; background: #f5f5f5;" draggable="false">
+                        <img src="${e.target.result}" style="width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 8px;" draggable="false">
                         <div class="preview-image-delete" onclick="event.preventDefault(); event.stopPropagation(); deletePreviewImage(${i});">✕</div>
                     `;
                     
@@ -1199,14 +1204,185 @@
                 renameButton.textContent = '✓ Done Editing';
                 renameButton.classList.remove('btn-warning');
                 renameButton.classList.add('btn-success');
+                
+                // Add instruction
+                const lines = backTextElement.value.split('\n');
+                if (lines[0] && lines[0].includes('Card names preview:')) {
+                    lines[0] = '📝 Edit names:';
+                    backTextElement.value = lines.join('\n');
+                }
+                
+                // Add event listeners for protection
+                backTextElement.addEventListener('keydown', protectNumberedList);
+                backTextElement.addEventListener('dblclick', handleDoubleClick);
+                backTextElement.addEventListener('mouseup', handleSelectionEnd);
             } else {
-                // Disable editing
+                // Disable editing - process deletions and update images
+                backTextElement.removeEventListener('keydown', protectNumberedList);
+                backTextElement.removeEventListener('dblclick', handleDoubleClick);
+                backTextElement.removeEventListener('mouseup', handleSelectionEnd);
+                
+                const lines = backTextElement.value.split('\n').filter(line => line.trim());
+                const validIndices = [];
+                const validNames = [];
+                
+                for (let line of lines) {
+                    if (line.includes('Edit names') || line.includes('Card names preview')) continue;
+                    if (!line.trim()) continue;
+                    
+                    // Check if line has number format
+                    const match = line.match(/^(\d+)\.\s*(.*)$/);
+                    if (match) {
+                        const index = parseInt(match[1]) - 1; // 0-based
+                        const name = match[2].trim();
+                        if (name) {
+                            validIndices.push(index);
+                            validNames.push(name);
+                        }
+                    }
+                }
+                
+                // Update multipleFiles to only include images with valid names
+                if (newCard.multipleFiles) {
+                    const allFiles = Array.from(newCard.multipleFiles);
+                    const newFiles = [];
+                    
+                    validIndices.forEach(index => {
+                        if (allFiles[index]) {
+                            newFiles.push(allFiles[index]);
+                        }
+                    });
+                    
+                    // Update the file list
+                    if (newFiles.length > 0) {
+                        try {
+                            const dataTransfer = new DataTransfer();
+                            newFiles.forEach(file => dataTransfer.items.add(file));
+                            newCard.multipleFiles = dataTransfer.files;
+                        } catch (e) {
+                            newCard.multipleFiles = newFiles;
+                        }
+                        
+                        // Re-render preview with remaining images
+                        renderImagePreviews();
+                        
+                        // Update button count
+                        const addButton = document.querySelector('.form-actions .btn-success');
+                        if (addButton) {
+                            addButton.textContent = '✨ Create ' + newFiles.length + ' Cards';
+                        }
+                    } else {
+                        // No files left
+                        resetForm();
+                    }
+                }
+                
                 backTextElement.disabled = true;
                 backTextElement.style.background = '#f8f9fa';
                 backTextElement.style.border = '';
                 renameButton.textContent = '✏️ Rename';
                 renameButton.classList.remove('btn-success');
                 renameButton.classList.add('btn-warning');
+            }
+        }
+
+        function handleDoubleClick(e) {
+            const textarea = e.target;
+            const pos = textarea.selectionStart;
+            const text = textarea.value;
+            
+            // Find the current line
+            const beforeCursor = text.substring(0, pos);
+            const lineStart = beforeCursor.lastIndexOf('\n') + 1;
+            const afterCursor = text.substring(pos);
+            const lineEnd = afterCursor.indexOf('\n');
+            const lineEndPos = lineEnd === -1 ? text.length : pos + lineEnd;
+            
+            const currentLine = text.substring(lineStart, lineEndPos);
+            
+            // Check if line has number pattern
+            const match = currentLine.match(/^(\d+)\.\s*(.*)$/);
+            if (match) {
+                const numberPart = match[1] + '. ';
+                const namePart = match[2];
+                
+                // Select only the name part (after the number), excluding newline
+                const nameStart = lineStart + numberPart.length;
+                const nameEnd = lineStart + numberPart.length + namePart.length;
+                
+                // Make sure we don't include the newline
+                const actualEnd = Math.min(nameEnd, lineEndPos);
+                
+                textarea.setSelectionRange(nameStart, actualEnd);
+                e.preventDefault();
+            }
+        }
+
+        function handleSelectionEnd(e) {
+            const textarea = e.target;
+            let start = textarea.selectionStart;
+            let end = textarea.selectionEnd;
+            
+            if (start === end) return; // No selection
+            
+            const text = textarea.value;
+            const selectedText = text.substring(start, end);
+            
+            // Check if selection includes a number pattern at the beginning
+            const numberPattern = /^(\d+)\.\s+/;
+            const match = selectedText.match(numberPattern);
+            
+            if (match) {
+                // Adjust selection to exclude the number pattern
+                start = start + match[0].length;
+                textarea.setSelectionRange(start, end);
+            }
+            
+            // Also check if we're selecting from beginning of a line
+            const beforeStart = text.substring(0, start);
+            const lastNewline = beforeStart.lastIndexOf('\n');
+            const lineStart = lastNewline + 1;
+            const lineBeforeSelection = text.substring(lineStart, start);
+            
+            if (lineBeforeSelection.match(numberPattern)) {
+                // We selected from within the number pattern
+                const afterNumber = lineStart + lineBeforeSelection.match(numberPattern)[0].length;
+                if (start < afterNumber) {
+                    start = afterNumber;
+                    textarea.setSelectionRange(start, end);
+                }
+            }
+        }
+
+        function protectNumberedList(e) {
+            const textarea = e.target;
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            
+            // Get the selected text and what's before it
+            const beforeSelection = text.substring(0, start);
+            const selection = text.substring(start, end);
+            
+            // Check if selection includes a number pattern at the start of a line
+            const lines = (beforeSelection + selection).split('\n');
+            const lastLineIndex = lines.length - 1;
+            const lastLine = lines[lastLineIndex];
+            
+            // If trying to delete/backspace and it would affect the number pattern
+            if (e.key === 'Backspace' || e.key === 'Delete') {
+                // Check if cursor is right after a "number." pattern
+                const numberPattern = /^(\d+)\.\s*$/;
+                if (numberPattern.test(lastLine)) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Check if selection includes number pattern
+                if (selection.match(/^\d+\.\s/)) {
+                    e.preventDefault();
+                    return false;
+                }
             }
         }
 
@@ -1451,34 +1627,54 @@
             
             // Handle multiple files
             if (newCard.multipleFiles && newCard.multipleFiles.length > 1) {
-                const files = newCard.multipleFiles;
+                const files = Array.from(newCard.multipleFiles);
 
-                // Parse edited names from textarea
+                // Parse edited names from textarea and track which indices to keep
                 const backTextContent = document.getElementById('backText').value;
                 const lines = backTextContent.split('\n').filter(line => line.trim());
-                const editedNames = [];
+                const namesByIndex = {};
 
-                // Extract names from numbered list format
+                // Extract names with their original indices
                 for (let line of lines) {
                     // Skip header line
-                    if (line.includes('Card names preview:')) continue;
+                    if (line.includes('Card names preview')) continue;
 
-                    // Match pattern like "1. filename" or just "filename"
-                    const match = line.match(/^\d+\.\s*(.+)$/) || line.match(/^(.+)$/);
-                    if (match && match[1].trim()) {
-                        editedNames.push(match[1].trim());
+                    // Match pattern like "1. filename"
+                    const match = line.match(/^(\d+)\.\s*(.+)$/);
+                    if (match) {
+                        const index = parseInt(match[1]) - 1; // Convert to 0-based index
+                        const name = match[2].trim();
+                        if (name) {
+                            namesByIndex[index] = name;
+                        }
                     }
+                }
+
+                // Filter files to only include those with valid names
+                const filesToProcess = [];
+                const namesToProcess = [];
+                
+                for (let i = 0; i < files.length; i++) {
+                    if (namesByIndex.hasOwnProperty(i)) {
+                        filesToProcess.push(files[i]);
+                        namesToProcess.push(namesByIndex[i]);
+                    }
+                }
+
+                // If no valid files, show error
+                if (filesToProcess.length === 0) {
+                    showToastWithButton('⚠️ No valid cards to create!<br>Please add names.');
+                    return;
                 }
 
                 let processed = 0;
                 let added = 0;
                 let duplicates = [];
-                const totalFiles = files.length;
+                const totalFiles = filesToProcess.length;
 
-                for (let i = 0; i < files.length; i++) {
-                    const file = files[i];
-                    // Use edited name if available, otherwise use original filename
-                    const fileName = editedNames[i] || file.name.replace(/\.[^/.]+$/, "");
+                for (let i = 0; i < filesToProcess.length; i++) {
+                    const file = filesToProcess[i];
+                    const fileName = namesToProcess[i];
 
                     const reader = new FileReader();
                     reader.onload = function(e) {
@@ -1645,15 +1841,22 @@
                 clearBtn.textContent = '⚠️ TAP AGAIN to confirm delete ALL ' + cards.length + ' cards';
                 clearBtn.style.background = '#dc3545';
                 
+                // Add click-outside listener to cancel
+                setTimeout(() => {
+                    document.addEventListener('click', cancelClearAll);
+                }, 100); // Small delay to prevent immediate cancellation
+                
                 // Reset after 3 seconds if they don't tap again
                 clearAllTimeout = setTimeout(() => {
                     clearAllClickCount = 0;
                     clearBtn.textContent = '⚠️ Clear All';
                     clearBtn.style.background = '';
+                    document.removeEventListener('click', cancelClearAll);
                 }, 3000);
             } else if (clearAllClickCount === 2) {
                 // Second tap - actually delete
                 clearTimeout(clearAllTimeout);
+                document.removeEventListener('click', cancelClearAll);
                 
                 try {
                     window.speechSynthesis.cancel();
@@ -1681,16 +1884,31 @@
             }
         }
 
+        function cancelClearAll(event) {
+            const clearBtn = document.getElementById('clearBtn');
+            
+            // Only cancel if clicking outside the Clear All button
+            if (!event.target.closest('#clearBtn')) {
+                clearTimeout(clearAllTimeout);
+                clearAllClickCount = 0;
+                clearBtn.textContent = '⚠️ Clear All';
+                clearBtn.style.background = '';
+                document.removeEventListener('click', cancelClearAll);
+            }
+        }
+
         function openGameMenu() {
             window.speechSynthesis.cancel();
             if (cards.length === 0) {
                 alert('Please add some cards first!');
                 return;
             }
+            document.body.style.overflow = 'hidden'; // Disable background scrolling
             document.getElementById('gameMenuModal').classList.add('active');
         }
 
         function closeGameMenu() {
+            document.body.style.overflow = ''; // Re-enable background scrolling
             document.getElementById('gameMenuModal').classList.remove('active');
         }
 
@@ -1709,6 +1927,7 @@
                 const gameCards = [...cards].sort(() => Math.random() - 0.5);
                 guessGameState.gameCards = gameCards;
                 
+                document.body.style.overflow = 'hidden'; // Disable background scrolling
                 document.getElementById('guessGameModal').classList.add('active');
                 renderGuessGame();
             }
@@ -1716,7 +1935,7 @@
 
         function closeGuessGame() {
             document.getElementById('guessGameModal').classList.remove('active');
-            openGameMenu();
+            openGameMenu(); // This will handle scroll state
         }
 
         function renderGuessGame() {
