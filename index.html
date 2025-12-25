@@ -24,12 +24,19 @@
             -webkit-tap-highlight-color: transparent;
         }
 
+        html {
+            touch-action: pan-y;
+            -ms-touch-action: pan-y;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 10px;
             overflow-x: hidden;
+            touch-action: pan-y;
+            -ms-touch-action: pan-y;
         }
 
         .container {
@@ -393,7 +400,8 @@
             font-size: 1rem;
             font-family: inherit;
             resize: vertical;
-            min-height: 100px;
+            min-height: 240px;
+            max-height: 400px;
         }
 
         textarea:focus {
@@ -489,6 +497,101 @@
                 height: calc(100vh - 90px);
             }
         }
+
+        .toast-notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ff6b6b;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            z-index: 2000;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-align: center;
+            max-width: 85%;
+            animation: slideDown 0.3s ease-out;
+            cursor: pointer;
+        }
+
+        .toast-with-button {
+            cursor: default;
+            padding: 15px 20px;
+        }
+
+        .toast-button {
+            margin-top: 10px;
+            padding: 8px 24px;
+            background: white;
+            color: #ff6b6b;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .toast-button:active {
+            transform: scale(0.95);
+            background: #f0f0f0;
+        }
+
+        .preview-image-container {
+            position: relative;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        .preview-image-container img {
+            user-select: none;
+            -webkit-user-drag: none;
+            pointer-events: none;
+        }
+
+        .preview-image-container.selected {
+            outline: 3px solid #667eea;
+            outline-offset: 2px;
+            border-radius: 8px;
+        }
+
+        .preview-image-delete {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 28px;
+            height: 28px;
+            background: #ff6b6b;
+            color: white;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+
+        .preview-image-container.selected .preview-image-delete {
+            display: flex;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
     </style>
 </head>
 <body>
@@ -504,6 +607,9 @@
             </button>
             <button class="btn btn-secondary" onclick="shuffleCards()" id="shuffleBtn" disabled>
                 🔀 Shuffle
+            </button>
+            <button class="btn btn-primary" onclick="openRenameModal()" id="renameCardBtn" disabled>
+                ✏️ Rename
             </button>
             <button class="btn btn-secondary" onclick="deleteCard()" id="deleteBtn" disabled>
                 🗑️ Delete This
@@ -524,16 +630,17 @@
             <h2>Create New Card</h2>
             
             <div class="form-group">
-                <label>Front Images (Select one or multiple)</label>
-                <div class="upload-area" id="frontUpload" onclick="document.getElementById('frontImage').click()">
+                <label>Front Images (Select one or multiple - up to 30 images)</label>
+                <div class="upload-area" id="frontUpload" onclick="handleUploadAreaClick(event)">
                     <div id="frontPreview">
                         <div class="upload-icon">📷</div>
                         <p style="font-weight: bold; font-size: 1.1rem;">Tap or drag & drop image(s)</p>
                         <p style="font-size: 0.9rem; color: #667eea; margin-top: 15px; font-weight: 600;">✨ TIP: Select multiple images from a folder!</p>
                         <p style="font-size: 0.8rem; color: #666; margin-top: 5px;">Cards will be created instantly with filenames as text</p>
+                        <p style="font-size: 0.8rem; color: #ff6b6b; margin-top: 10px; font-weight: 600;">⚠️ Maximum 30 images can be uploaded at once</p>
                     </div>
                 </div>
-                <input type="file" id="frontImage" accept="image/*" multiple onchange="handleImageUpload('front', this)">
+                <input type="file" id="frontImage" accept="image/*" multiple title="Select up to 30 images" onchange="handleImageUpload('front', this)">
             </div>
 
             <div class="form-group">
@@ -543,6 +650,7 @@
 
             <div class="form-actions">
                 <button class="btn btn-success" onclick="addCard()">Add Card</button>
+                <button class="btn btn-primary" id="addMoreButton" onclick="addMoreImages()" style="display: none;">➕ Add More</button>
                 <button class="btn btn-warning" id="renameButton" onclick="toggleRenameMode()" style="display: none;">✏️ Rename</button>
                 <button class="btn btn-secondary" onclick="closeCreateModal()">Cancel</button>
             </div>
@@ -603,6 +711,50 @@
             score: 0,
             answered: []
         };
+
+        // Allow zoom between 75% and 125% (25% margin each way)
+        let currentZoom = 1.0;
+        const minZoom = 0.75;
+        const maxZoom = 1.25;
+
+        // Control zoom on Ctrl+scroll or Cmd+scroll
+        document.addEventListener('wheel', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                e.preventDefault();
+                
+                // Calculate new zoom level
+                const delta = e.deltaY > 0 ? -0.05 : 0.05;
+                const newZoom = currentZoom + delta;
+                
+                // Clamp zoom between min and max
+                if (newZoom >= minZoom && newZoom <= maxZoom) {
+                    currentZoom = newZoom;
+                    document.body.style.zoom = currentZoom;
+                }
+            }
+        }, { passive: false });
+
+        // Control pinch zoom on trackpad - limit to 25% range
+        let initialZoom = 1.0;
+        document.addEventListener('gesturestart', function(e) {
+            e.preventDefault();
+            initialZoom = currentZoom;
+        });
+
+        document.addEventListener('gesturechange', function(e) {
+            e.preventDefault();
+            const newZoom = initialZoom * e.scale;
+            
+            // Clamp zoom between min and max
+            if (newZoom >= minZoom && newZoom <= maxZoom) {
+                currentZoom = newZoom;
+                document.body.style.zoom = currentZoom;
+            }
+        });
+
+        document.addEventListener('gestureend', function(e) {
+            e.preventDefault();
+        });
 
         // Force reload on browser back/forward navigation (prevents cached version)
         window.addEventListener('pageshow', function(event) {
@@ -675,7 +827,8 @@
             const dt = e.dataTransfer;
             const files = dt.files;
 
-            if (files.length > 0) {
+            // Only process if there are actual files being dropped (not dragging internal images)
+            if (files && files.length > 0) {
                 // Create a fake input element to reuse handleImageUpload logic
                 const fakeInput = {
                     files: files
@@ -691,6 +844,78 @@
                 sound.currentTime = 0; // Reset to start
                 sound.play().catch(err => console.log('Sound play failed:', err));
             }
+        }
+
+        // Helper function to show toast notification
+        function showToast(message, duration = 3000) {
+            // Remove any existing toast
+            const existingToast = document.querySelector('.toast-notification');
+            if (existingToast) {
+                existingToast.remove();
+            }
+
+            // Create new toast
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification';
+            toast.innerHTML = message;
+            document.body.appendChild(toast);
+
+            // Function to remove toast
+            function removeToast() {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(-50%) translateY(-20px)';
+                toast.style.transition = 'all 0.3s ease-out';
+                setTimeout(function() {
+                    toast.remove();
+                    // Remove click listener from document
+                    document.removeEventListener('click', handleClick);
+                }, 300);
+            }
+
+            // Handle click anywhere to dismiss
+            function handleClick(e) {
+                // Don't dismiss if clicking on the Add Card button itself
+                if (!e.target.closest('.btn-primary') || e.target.textContent.indexOf('Add Card') === -1) {
+                    removeToast();
+                }
+            }
+
+            // Add click listener after a short delay to prevent immediate dismissal
+            setTimeout(function() {
+                document.addEventListener('click', handleClick);
+            }, 100);
+
+            // Auto-remove after duration
+            setTimeout(removeToast, duration);
+        }
+
+        // Helper function to show toast notification with OK button
+        function showToastWithButton(message) {
+            // Remove any existing toast
+            const existingToast = document.querySelector('.toast-notification');
+            if (existingToast) {
+                existingToast.remove();
+            }
+
+            // Create new toast
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification toast-with-button';
+            toast.innerHTML = message + '<br><button class="toast-button" onclick="this.parentElement.remove()">OK</button>';
+            document.body.appendChild(toast);
+
+            // Auto-remove after 3 seconds
+            setTimeout(function() {
+                if (toast.parentElement) {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateX(-50%) translateY(-20px)';
+                    toast.style.transition = 'all 0.3s ease-out';
+                    setTimeout(function() {
+                        if (toast.parentElement) {
+                            toast.remove();
+                        }
+                    }, 300);
+                }
+            }, 3000);
         }
 
         function loadCards() {
@@ -719,9 +944,51 @@
         }
 
         function openCreateModal() {
+            // Check if user already has 30 cards
+            if (cards.length >= 30) {
+                // Show toast notification for all devices
+                showToast('⚠️ Maximum 30 cards reached!<br>Delete some cards to add new ones', 3000);
+                return;
+            }
+            
             window.speechSynthesis.cancel();
             document.getElementById('createModal').classList.add('active');
             resetForm();
+        }
+
+        function openRenameModal() {
+            if (cards.length === 0) return;
+            
+            window.speechSynthesis.cancel();
+            
+            // Get current card
+            const currentCard = cards[currentIndex];
+            
+            // Set up the form for editing
+            newCard.frontImage = currentCard.frontImage;
+            newCard.backText = currentCard.backText;
+            newCard.backImage = currentCard.backImage;
+            newCard.editingIndex = currentIndex; // Store which card we're editing
+            
+            // Display the current image
+            document.getElementById('frontPreview').innerHTML = 
+                '<img src="' + currentCard.frontImage + '" class="preview-image"><p style="margin-top: 10px; font-size: 0.9rem;">Current card image</p>';
+            document.getElementById('frontUpload').classList.add('has-image');
+            
+            // Set the text
+            const backTextElement = document.getElementById('backText');
+            backTextElement.value = currentCard.backText;
+            backTextElement.disabled = false;
+            backTextElement.style.background = '';
+            
+            // Change the button text to "Update Card"
+            const addButton = document.querySelector('.form-actions .btn-success');
+            if (addButton) {
+                addButton.textContent = '💾 Update Card';
+            }
+            
+            // Open modal
+            document.getElementById('createModal').classList.add('active');
         }
 
         function closeCreateModal() {
@@ -730,8 +997,8 @@
         }
 
         function resetForm() {
-            newCard = { frontImage: null, backText: '', backImage: null, multipleFiles: null };
-            document.getElementById('frontPreview').innerHTML = '<div class="upload-icon">📷</div><p style="font-weight: bold; font-size: 1.1rem;">Tap or drag & drop image(s)</p><p style="font-size: 0.9rem; color: #667eea; margin-top: 15px; font-weight: 600;">✨ TIP: Select multiple images from a folder!</p><p style="font-size: 0.8rem; color: #666; margin-top: 5px;">Cards will be created instantly with filenames as text</p>';
+            newCard = { frontImage: null, backText: '', backImage: null, multipleFiles: null, editingIndex: null };
+            document.getElementById('frontPreview').innerHTML = '<div class="upload-icon">📷</div><p style="font-weight: bold; font-size: 1.1rem;">Tap or drag & drop image(s)</p><p style="font-size: 0.9rem; color: #667eea; margin-top: 15px; font-weight: 600;">✨ TIP: Select multiple images from a folder!</p><p style="font-size: 0.8rem; color: #666; margin-top: 5px;">Cards will be created instantly with filenames as text</p><p style="font-size: 0.8rem; color: #ff6b6b; margin-top: 10px; font-weight: 600;">⚠️ Maximum 30 images can be uploaded at once</p>';
 
             const backTextElement = document.getElementById('backText');
             backTextElement.value = '';
@@ -756,10 +1023,168 @@
                 renameButton.classList.remove('btn-success');
                 renameButton.classList.add('btn-warning');
             }
+
+            // Hide add more button
+            const addMoreButton = document.getElementById('addMoreButton');
+            if (addMoreButton) {
+                addMoreButton.style.display = 'none';
+            }
         }
 
         function isDuplicateImage(imageData) {
             return cards.some(card => card.frontImage === imageData);
+        }
+
+        function handleUploadAreaClick(event) {
+            // Only allow clicking to upload if no images are currently loaded
+            if (!newCard.multipleFiles || newCard.multipleFiles.length === 0) {
+                document.getElementById('frontImage').click();
+            }
+            // If images are loaded, do nothing (user must use Add More button or click outside images)
+        }
+
+        function renderImagePreviews() {
+            const files = newCard.multipleFiles;
+            if (!files || files.length === 0) return;
+
+            let previewHTML = '<div style="text-align: center; padding: 10px 5px;">';
+            previewHTML += '<p style="font-size: 1.2rem; font-weight: bold; color: #667eea; margin-bottom: 10px;">' + files.length + ' images selected</p>';
+            
+            // Add "Add More" button if not at limit
+            const totalCards = cards.length + files.length;
+            if (totalCards < 30) {
+                previewHTML += '<button onclick="addMoreImages(); event.stopPropagation();" style="margin-bottom: 10px; padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem;">➕ Add More Images</button>';
+            }
+            
+            previewHTML += '<div id="imagePreviewGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-height: 550px; overflow-y: auto; padding: 5px;"></div>';
+            previewHTML += '</div>';
+
+            document.getElementById('frontPreview').innerHTML = previewHTML;
+
+            // Extract and display all filenames
+            const fileNames = [];
+            for (let i = 0; i < files.length; i++) {
+                let fileName = files[i].name.replace(/\.[^/.]+$/, "");
+                const charsWithoutSpaces = fileName.replace(/\s/g, '').length;
+                if (charsWithoutSpaces > 60) {
+                    let truncated = '';
+                    let charCount = 0;
+                    for (let char of fileName) {
+                        if (char !== ' ') charCount++;
+                        if (charCount > 60) break;
+                        truncated += char;
+                    }
+                    fileName = truncated;
+                }
+                fileNames.push(fileName);
+            }
+
+            // Show filenames in the Back (Text) textarea
+            document.getElementById('backText').value = '📝 Card names preview:\n\n' + fileNames.map((name, i) => (i + 1) + '. ' + name).join('\n');
+            document.getElementById('backText').disabled = true;
+            document.getElementById('backText').style.background = '#f8f9fa';
+
+            // Create mini previews for ALL images
+            const grid = document.getElementById('imagePreviewGrid');
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const container = document.createElement('div');
+                    container.className = 'preview-image-container';
+                    container.dataset.index = i;
+                    
+                    container.innerHTML = `
+                        <img src="${e.target.result}" style="width: 100%; height: 150px; object-fit: contain; border-radius: 8px; background: #f5f5f5;" draggable="false">
+                        <div class="preview-image-delete" onclick="event.preventDefault(); event.stopPropagation(); deletePreviewImage(${i});">✕</div>
+                    `;
+                    
+                    container.onclick = function(event) {
+                        if (!event.target.classList.contains('preview-image-delete')) {
+                            toggleImageSelection(i);
+                        }
+                    };
+                    
+                    // Prevent drag and drop on images
+                    container.ondragstart = function(e) {
+                        e.preventDefault();
+                        return false;
+                    };
+                    
+                    grid.appendChild(container);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        let selectedImageIndex = null;
+
+        function toggleImageSelection(index) {
+            const containers = document.querySelectorAll('.preview-image-container');
+            
+            // Remove selection from all
+            containers.forEach(c => c.classList.remove('selected'));
+            
+            // Toggle selection
+            if (selectedImageIndex === index) {
+                selectedImageIndex = null;
+            } else {
+                selectedImageIndex = index;
+                containers[index].classList.add('selected');
+            }
+        }
+
+        function deletePreviewImage(index) {
+            // Store current scroll position of both the preview area and modal
+            const previewArea = document.getElementById('imagePreviewGrid');
+            const modalContent = document.querySelector('.modal-content');
+            const previewScrollTop = previewArea ? previewArea.scrollTop : 0;
+            const modalScrollTop = modalContent ? modalContent.scrollTop : 0;
+            
+            const files = Array.from(newCard.multipleFiles);
+            
+            // Remove the file
+            files.splice(index, 1);
+            
+            if (files.length === 0) {
+                // No files left, reset
+                resetForm();
+                return;
+            }
+            
+            // Update the multipleFiles with remaining files
+            try {
+                const dataTransfer = new DataTransfer();
+                files.forEach(file => dataTransfer.items.add(file));
+                newCard.multipleFiles = dataTransfer.files;
+            } catch (e) {
+                newCard.multipleFiles = files;
+            }
+            
+            // Reset selection
+            selectedImageIndex = null;
+            
+            // Re-render previews
+            renderImagePreviews();
+            
+            // Restore scroll positions after a short delay to allow rendering
+            setTimeout(function() {
+                const newPreviewArea = document.getElementById('imagePreviewGrid');
+                const newModalContent = document.querySelector('.modal-content');
+                
+                if (newPreviewArea) {
+                    newPreviewArea.scrollTop = previewScrollTop;
+                }
+                if (newModalContent) {
+                    newModalContent.scrollTop = modalScrollTop;
+                }
+            }, 50);
+            
+            // Update button text
+            const addButton = document.querySelector('.form-actions .btn-success');
+            if (addButton) {
+                addButton.textContent = '✨ Create ' + files.length + ' Cards';
+            }
         }
 
         function toggleRenameMode() {
@@ -785,9 +1210,134 @@
             }
         }
 
+        function addMoreImages() {
+            // Check if we're already at or near the limit
+            const currentCount = newCard.multipleFiles ? newCard.multipleFiles.length : 0;
+            const totalCards = cards.length + currentCount;
+            const remainingSlots = 30 - totalCards;
+            
+            if (remainingSlots <= 0) {
+                showToastWithButton('⚠️ Maximum 30 cards reached!<br>Delete cards to add more.');
+                return;
+            }
+
+            // Create a temporary input to select more files
+            const tempInput = document.createElement('input');
+            tempInput.type = 'file';
+            tempInput.accept = 'image/*';
+            tempInput.multiple = true;
+            tempInput.title = 'Select up to ' + remainingSlots + ' more images';
+            
+            tempInput.onchange = function(e) {
+                const newFiles = Array.from(e.target.files);
+                
+                // Check if adding these would exceed the total limit
+                if (currentCount + newFiles.length + cards.length > 30) {
+                    // Instead of blocking completely, take only the files that fit
+                    const filesToAdd = newFiles.slice(0, remainingSlots);
+                    showToastWithButton('⚠️ Maximum exceeded<br>Only ' + filesToAdd.length + ' added');
+                    
+                    // Combine existing files with the limited new files
+                    const existingFiles = Array.from(newCard.multipleFiles || []);
+                    const combinedFiles = existingFiles.concat(filesToAdd);
+                    
+                    // Create a new FileList-like object
+                    const dataTransfer = new DataTransfer();
+                    combinedFiles.forEach(file => dataTransfer.items.add(file));
+                    
+                    // Create a fake input with combined files
+                    const fakeInput = {
+                        files: dataTransfer.files
+                    };
+                    
+                    // Call handleImageUpload with the combined files
+                    handleImageUpload('front', fakeInput);
+                    return;
+                }
+
+                // Combine existing files with new files
+                const existingFiles = Array.from(newCard.multipleFiles || []);
+                const combinedFiles = existingFiles.concat(newFiles);
+                
+                // Create a new FileList-like object
+                const dataTransfer = new DataTransfer();
+                combinedFiles.forEach(file => dataTransfer.items.add(file));
+                
+                // Create a fake input with combined files
+                const fakeInput = {
+                    files: dataTransfer.files
+                };
+                
+                // Call handleImageUpload with the combined files
+                handleImageUpload('front', fakeInput);
+            };
+            
+            tempInput.click();
+        }
+
         function handleImageUpload(side, input) {
-            const files = input.files;
+            let files = input.files;
             if (files.length === 0) return;
+
+            // Check total limit considering existing cards
+            const totalAfterUpload = cards.length + files.length;
+            const remainingSlots = 30 - cards.length;
+            
+            if (side === 'front' && totalAfterUpload > 30) {
+                if (remainingSlots <= 0) {
+                    showToastWithButton('⚠️ Maximum 30 cards reached!<br>Delete cards to add more.');
+                    if (input.value) {
+                        input.value = '';
+                    }
+                    return;
+                }
+                
+                // Show toast about limiting
+                setTimeout(function() {
+                    showToastWithButton('⚠️ Maximum exceeded<br>Only ' + remainingSlots + ' added');
+                }, 100);
+                
+                // Create array of only the files that fit
+                const limitedFiles = Array.from(files).slice(0, remainingSlots);
+                
+                // Try to create FileList, fallback to array if not supported
+                try {
+                    const dataTransfer = new DataTransfer();
+                    limitedFiles.forEach(file => dataTransfer.items.add(file));
+                    files = dataTransfer.files;
+                } catch (e) {
+                    // Fallback for browsers that don't support DataTransfer
+                    files = limitedFiles;
+                }
+                
+                // Reset original input
+                if (input.value) {
+                    input.value = '';
+                }
+            } else if (side === 'front' && files.length > 30) {
+                // Original check for single upload exceeding 30
+                setTimeout(function() {
+                    showToastWithButton('⚠️ Maximum exceeded<br>Only 30 added');
+                }, 100);
+                
+                // Create array of only first 30 files
+                const limitedFiles = Array.from(files).slice(0, 30);
+                
+                // Try to create FileList, fallback to array if not supported
+                try {
+                    const dataTransfer = new DataTransfer();
+                    limitedFiles.forEach(file => dataTransfer.items.add(file));
+                    files = dataTransfer.files;
+                } catch (e) {
+                    // Fallback for browsers that don't support DataTransfer
+                    files = limitedFiles;
+                }
+                
+                // Reset original input
+                if (input.value) {
+                    input.value = '';
+                }
+            }
 
             // If multiple files selected for front, show preview instead of creating immediately
             if (side === 'front' && files.length > 1) {
@@ -795,56 +1345,7 @@
                 newCard.multipleFiles = files;
 
                 // Show preview of all images
-                let previewHTML = '<div style="text-align: center; padding: 20px;">';
-                previewHTML += '<p style="font-size: 1.2rem; font-weight: bold; color: #667eea; margin-bottom: 15px;">' + files.length + ' images selected</p>';
-                previewHTML += '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-height: 200px; overflow-y: auto;">';
-
-                // Extract and display all filenames (truncate to 60 chars excluding spaces)
-                const fileNames = [];
-                for (let i = 0; i < files.length; i++) {
-                    let fileName = files[i].name.replace(/\.[^/.]+$/, "");
-                    // Remove spaces for character count, then truncate
-                    const charsWithoutSpaces = fileName.replace(/\s/g, '').length;
-                    if (charsWithoutSpaces > 60) {
-                        // Truncate while preserving spaces
-                        let truncated = '';
-                        let charCount = 0;
-                        for (let char of fileName) {
-                            if (char !== ' ') charCount++;
-                            if (charCount > 60) break;
-                            truncated += char;
-                        }
-                        fileName = truncated;
-                    }
-                    fileNames.push(fileName);
-                }
-
-                // Show filenames in the Back (Text) textarea
-                document.getElementById('backText').value = '📝 Card names preview:\n\n' + fileNames.map((name, i) => (i + 1) + '. ' + name).join('\n');
-                document.getElementById('backText').disabled = true;
-                document.getElementById('backText').style.background = '#f8f9fa';
-
-                // Create mini previews for each image
-                let processedPreviews = 0;
-                for (let i = 0; i < Math.min(files.length, 9); i++) {
-                    const file = files[i];
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        previewHTML += '<img src="' + e.target.result + '" style="width: 100%; height: 80px; object-fit: cover; border-radius: 8px;">';
-                        processedPreviews++;
-
-                        if (processedPreviews === Math.min(files.length, 9)) {
-                            if (files.length > 9) {
-                                previewHTML += '</div><p style="margin-top: 10px; color: #666;">+ ' + (files.length - 9) + ' more images...</p>';
-                            } else {
-                                previewHTML += '</div>';
-                            }
-                            previewHTML += '</div>';
-                            document.getElementById('frontPreview').innerHTML = previewHTML;
-                        }
-                    };
-                    reader.readAsDataURL(file);
-                }
+                renderImagePreviews();
 
                 document.getElementById('frontUpload').classList.add('has-image');
 
@@ -858,6 +1359,12 @@
                 const renameButton = document.getElementById('renameButton');
                 if (renameButton) {
                     renameButton.style.display = 'block';
+                }
+
+                // Hide the bottom add more button (it's now in the preview area)
+                const addMoreButton = document.getElementById('addMoreButton');
+                if (addMoreButton) {
+                    addMoreButton.style.display = 'none';
                 }
 
                 return;
@@ -909,6 +1416,12 @@
                         if (renameButton) {
                             renameButton.style.display = 'none';
                         }
+
+                        // Hide add more button
+                        const addMoreButton = document.getElementById('addMoreButton');
+                        if (addMoreButton) {
+                            addMoreButton.style.display = 'none';
+                        }
                     }
                 };
                 reader.readAsDataURL(file);
@@ -916,6 +1429,26 @@
         }
 
         function addCard() {
+            // Check if we're editing an existing card
+            if (newCard.editingIndex !== undefined && newCard.editingIndex !== null) {
+                // Update existing card
+                const backText = document.getElementById('backText').value;
+                
+                cards[newCard.editingIndex].backText = backText;
+                
+                // If image was changed, update it
+                if (newCard.frontImage !== cards[newCard.editingIndex].frontImage) {
+                    cards[newCard.editingIndex].frontImage = newCard.frontImage;
+                }
+                
+                saveCards();
+                closeCreateModal();
+                renderDisplay();
+                
+                showToast('✅ Card updated!', 2000);
+                return;
+            }
+            
             // Handle multiple files
             if (newCard.multipleFiles && newCard.multipleFiles.length > 1) {
                 const files = newCard.multipleFiles;
@@ -976,16 +1509,10 @@
                                 renderDisplay();
                             }
 
-                            // Show summary
-                            let message = '';
-                            if (added > 0) {
-                                message = '✅ ' + added + ' card' + (added === 1 ? '' : 's') + ' created!';
-                            }
+                            // Show summary with toast notification
                             if (duplicates.length > 0) {
-                                message += '\n\n⚠️ ' + duplicates.length + ' duplicate' + (duplicates.length === 1 ? '' : 's') + ' skipped:\n' +
-                                          duplicates.map(f => '• ' + f).join('\n');
+                                showToastWithButton('⚠️ ' + duplicates.length + ' duplicate' + (duplicates.length === 1 ? '' : 's') + ' detected<br>Skipped');
                             }
-                            if (message) alert(message);
                         }
                     };
                     reader.readAsDataURL(file);
@@ -995,13 +1522,13 @@
 
             // Single card handling
             if (!newCard.frontImage) {
-                alert('Please add a front image!');
+                showToastWithButton('⚠️ Please add an image!');
                 return;
             }
 
             // Check for duplicate
             if (isDuplicateImage(newCard.frontImage)) {
-                alert('⚠️ This image already exists in your flashcards!\n\nDuplicate not added.');
+                showToastWithButton('⚠️ Duplicate detected<br>Image already exists');
                 closeCreateModal();
                 return;
             }
@@ -1018,6 +1545,9 @@
 
             saveCards();
             closeCreateModal();
+
+            currentIndex = cards.length - 1;
+            isFlipped = false;
             renderDisplay();
         }
 
@@ -1334,6 +1864,7 @@
             const shuffleBtn = document.getElementById('shuffleBtn');
             const clearBtn = document.getElementById('clearBtn');
             const deleteBtn = document.getElementById('deleteBtn');
+            const renameCardBtn = document.getElementById('renameCardBtn');
 
             if (cards.length === 0) {
                 display.innerHTML = `
@@ -1346,6 +1877,7 @@
                 shuffleBtn.disabled = true;
                 if (clearBtn) clearBtn.disabled = true;
                 if (deleteBtn) deleteBtn.disabled = true;
+                if (renameCardBtn) renameCardBtn.disabled = true;
                 const gameBtn = document.getElementById('gameBtn');
                 if (gameBtn) gameBtn.disabled = true;
                 return;
@@ -1354,6 +1886,7 @@
             shuffleBtn.disabled = false;
             if (clearBtn) clearBtn.disabled = false;
             if (deleteBtn) deleteBtn.disabled = false;
+            if (renameCardBtn) renameCardBtn.disabled = false;
             const gameBtn = document.getElementById('gameBtn');
             if (gameBtn) gameBtn.disabled = false;
             const card = cards[currentIndex];
@@ -1385,3 +1918,4 @@
     </script>
 </body>
 </html>
+
