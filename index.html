@@ -176,6 +176,11 @@
             overflow-wrap: break-word;
             padding: 0 10px;
         }
+
+        .card-text-auto-scale {
+            white-space: nowrap;
+            max-width: 100%;
+        }
         
         .vowel {
             color: red;
@@ -582,6 +587,25 @@
             display: flex;
         }
 
+        /* Responsive grid for image previews: 3-5 columns */
+        .responsive-grid {
+            grid-template-columns: repeat(3, 1fr); /* Default: 3 columns */
+        }
+
+        /* 4 columns on screens 800px and wider */
+        @media (min-width: 800px) {
+            .responsive-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        /* 5 columns on screens 1000px and wider */
+        @media (min-width: 1000px) {
+            .responsive-grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
+        }
+
         @keyframes slideDown {
             from {
                 opacity: 0;
@@ -634,13 +658,13 @@
                 <div class="upload-area" id="frontUpload" onclick="handleUploadAreaClick(event)">
                     <div id="frontPreview">
                         <div class="upload-icon">📷</div>
-                        <p style="font-weight: bold; font-size: 1.1rem;">Tap or drag & drop image(s)</p>
+                        <p style="font-weight: bold; font-size: 1.1rem;">Tap, drag & drop, or paste image(s)</p>
                         <p style="font-size: 0.9rem; color: #667eea; margin-top: 15px; font-weight: 600;">✨ TIP: Select multiple images from a folder!</p>
                         <p style="font-size: 0.8rem; color: #666; margin-top: 5px;">Cards will be created instantly with filenames as text</p>
-                        <p style="font-size: 0.8rem; color: #ff6b6b; margin-top: 10px; font-weight: 600;">⚠️ Maximum 30 images can be uploaded at once</p>
+                        <p style="font-size: 0.8rem; color: #ff6b6b; margin-top: 10px; font-weight: 600;">⚠️ Maximum 30 images (15MB each)</p>
                     </div>
                 </div>
-                <input type="file" id="frontImage" accept="image/*" multiple title="Select up to 30 images" onchange="handleImageUpload('front', this)">
+                <input type="file" id="frontImage" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/bmp,image/svg+xml,image/heic,image/heif,image/avif" multiple title="Select up to 30 images (max 15MB each)" onchange="handleImageUpload('front', this)">
             </div>
 
             <div class="form-group">
@@ -754,6 +778,71 @@
 
         document.addEventListener('gestureend', function(e) {
             e.preventDefault();
+        });
+
+        // Prevent browser from opening dropped files outside upload area
+        document.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }, false);
+
+        document.addEventListener('drop', function(e) {
+            // Only allow drops in the upload area
+            const uploadArea = document.getElementById('frontUpload');
+            if (!uploadArea || !uploadArea.contains(e.target)) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        }, false);
+
+        // Prevent drag enter default behavior
+        document.addEventListener('dragenter', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }, false);
+
+        // Handle paste events for copying images from clipboard
+        document.addEventListener('paste', function(e) {
+            // Only handle paste when the create modal is open
+            const createModal = document.getElementById('createModal');
+            if (!createModal || !createModal.classList.contains('active')) {
+                return;
+            }
+
+            const items = e.clipboardData?.items;
+            if (!items) return;
+
+            const imageFiles = [];
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                
+                // Check if item is an image
+                if (item.type.indexOf('image') !== -1) {
+                    const blob = item.getAsFile();
+                    if (blob) {
+                        // Create a File object with just "default" as the name
+                        const file = new File([blob], 'default', { type: blob.type });
+                        imageFiles.push(file);
+                    }
+                }
+            }
+
+            // If we found image files, process them
+            if (imageFiles.length > 0) {
+                e.preventDefault();
+                
+                // Create a DataTransfer object to mimic file input
+                const dataTransfer = new DataTransfer();
+                imageFiles.forEach(file => dataTransfer.items.add(file));
+                
+                // Create fake input object
+                const fakeInput = {
+                    files: dataTransfer.files,
+                    value: ''
+                };
+                
+                handleImageUpload('front', fakeInput);
+            }
         });
 
         // Force reload on browser back/forward navigation (prevents cached version)
@@ -1003,7 +1092,7 @@
 
         function resetForm() {
             newCard = { frontImage: null, backText: '', backImage: null, multipleFiles: null, editingIndex: null };
-            document.getElementById('frontPreview').innerHTML = '<div class="upload-icon">📷</div><p style="font-weight: bold; font-size: 1.1rem;">Tap or drag & drop image(s)</p><p style="font-size: 0.9rem; color: #667eea; margin-top: 15px; font-weight: 600;">✨ TIP: Select multiple images from a folder!</p><p style="font-size: 0.8rem; color: #666; margin-top: 5px;">Cards will be created instantly with filenames as text</p><p style="font-size: 0.8rem; color: #ff6b6b; margin-top: 10px; font-weight: 600;">⚠️ Maximum 30 images can be uploaded at once</p>';
+            document.getElementById('frontPreview').innerHTML = '<div class="upload-icon">📷</div><p style="font-weight: bold; font-size: 1.1rem;">Tap, drag & drop, or paste image(s)</p><p style="font-size: 0.9rem; color: #667eea; margin-top: 15px; font-weight: 600;">✨ TIP: Select multiple images from a folder!</p><p style="font-size: 0.8rem; color: #666; margin-top: 5px;">Cards will be created instantly with filenames as text</p><p style="font-size: 0.8rem; color: #ff6b6b; margin-top: 10px; font-weight: 600;">⚠️ Maximum 30 images (15MB each)</p>';
 
             const backTextElement = document.getElementById('backText');
             backTextElement.value = '';
@@ -1061,7 +1150,7 @@
                 previewHTML += '<button onclick="addMoreImages(); event.stopPropagation();" style="margin-bottom: 10px; padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem;">➕ Add More Images</button>';
             }
             
-            previewHTML += '<div id="imagePreviewGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-height: 550px; overflow-y: auto; padding: 5px;"></div>';
+            previewHTML += '<div id="imagePreviewGrid" class="responsive-grid" style="display: grid; gap: 12px; max-height: 550px; overflow-y: auto; padding: 5px;"></div>';
             previewHTML += '</div>';
 
             document.getElementById('frontPreview').innerHTML = previewHTML;
@@ -1215,11 +1304,13 @@
                 // Add event listeners for protection
                 backTextElement.addEventListener('keydown', protectNumberedList);
                 backTextElement.addEventListener('dblclick', handleDoubleClick);
+                backTextElement.addEventListener('click', handleTripleClick);
                 backTextElement.addEventListener('mouseup', handleSelectionEnd);
             } else {
                 // Disable editing - process deletions and update images
                 backTextElement.removeEventListener('keydown', protectNumberedList);
                 backTextElement.removeEventListener('dblclick', handleDoubleClick);
+                backTextElement.removeEventListener('click', handleTripleClick);
                 backTextElement.removeEventListener('mouseup', handleSelectionEnd);
                 
                 const lines = backTextElement.value.split('\n').filter(line => line.trim());
@@ -1286,6 +1377,53 @@
             }
         }
 
+        let clickCount = 0;
+        let clickTimer = null;
+
+        function handleTripleClick(e) {
+            clickCount++;
+            
+            if (clickTimer) {
+                clearTimeout(clickTimer);
+            }
+            
+            if (clickCount === 3) {
+                // Triple click detected - select only the name part
+                const textarea = e.target;
+                const pos = textarea.selectionStart;
+                const text = textarea.value;
+                
+                // Find the current line
+                const beforeCursor = text.substring(0, pos);
+                const lineStart = beforeCursor.lastIndexOf('\n') + 1;
+                const afterCursor = text.substring(pos);
+                const lineEnd = afterCursor.indexOf('\n');
+                const lineEndPos = lineEnd === -1 ? text.length : pos + lineEnd;
+                
+                const currentLine = text.substring(lineStart, lineEndPos);
+                
+                // Check if line has number pattern
+                const match = currentLine.match(/^(\d+)\.\s*(.*)$/);
+                if (match) {
+                    const numberPart = match[1] + '. ';
+                    const namePart = match[2];
+                    
+                    // Select only the name part, no trailing space or newline
+                    const nameStart = lineStart + numberPart.length;
+                    const nameEnd = lineStart + numberPart.length + namePart.length;
+                    
+                    textarea.setSelectionRange(nameStart, nameEnd);
+                    e.preventDefault();
+                }
+                
+                clickCount = 0;
+            }
+            
+            clickTimer = setTimeout(() => {
+                clickCount = 0;
+            }, 500);
+        }
+
         function handleDoubleClick(e) {
             const textarea = e.target;
             const pos = textarea.selectionStart;
@@ -1306,14 +1444,11 @@
                 const numberPart = match[1] + '. ';
                 const namePart = match[2];
                 
-                // Select only the name part (after the number), excluding newline
+                // Select only the name part, no trailing space or newline
                 const nameStart = lineStart + numberPart.length;
                 const nameEnd = lineStart + numberPart.length + namePart.length;
                 
-                // Make sure we don't include the newline
-                const actualEnd = Math.min(nameEnd, lineEndPos);
-                
-                textarea.setSelectionRange(nameStart, actualEnd);
+                textarea.setSelectionRange(nameStart, nameEnd);
                 e.preventDefault();
             }
         }
@@ -1326,6 +1461,12 @@
             if (start === end) return; // No selection
             
             const text = textarea.value;
+            
+            // Trim selection to exclude trailing newlines or spaces that would cause line merge
+            while (end > start && (text.charAt(end - 1) === '\n' || text.charAt(end) === '\n')) {
+                end--;
+            }
+            
             const selectedText = text.substring(start, end);
             
             // Check if selection includes a number pattern at the beginning
@@ -1335,7 +1476,6 @@
             if (match) {
                 // Adjust selection to exclude the number pattern
                 start = start + match[0].length;
-                textarea.setSelectionRange(start, end);
             }
             
             // Also check if we're selecting from beginning of a line
@@ -1349,8 +1489,12 @@
                 const afterNumber = lineStart + lineBeforeSelection.match(numberPattern)[0].length;
                 if (start < afterNumber) {
                     start = afterNumber;
-                    textarea.setSelectionRange(start, end);
                 }
+            }
+            
+            // Update selection if we made changes
+            if (start !== textarea.selectionStart || end !== textarea.selectionEnd) {
+                textarea.setSelectionRange(start, end);
             }
         }
 
@@ -1360,28 +1504,43 @@
             const end = textarea.selectionEnd;
             const text = textarea.value;
             
-            // Get the selected text and what's before it
-            const beforeSelection = text.substring(0, start);
-            const selection = text.substring(start, end);
-            
-            // Check if selection includes a number pattern at the start of a line
-            const lines = (beforeSelection + selection).split('\n');
-            const lastLineIndex = lines.length - 1;
-            const lastLine = lines[lastLineIndex];
-            
-            // If trying to delete/backspace and it would affect the number pattern
+            // If trying to delete/backspace
             if (e.key === 'Backspace' || e.key === 'Delete') {
-                // Check if cursor is right after a "number." pattern
-                const numberPattern = /^(\d+)\.\s*$/;
-                if (numberPattern.test(lastLine)) {
-                    e.preventDefault();
-                    return false;
+                const selection = text.substring(start, end);
+                
+                // Check if cursor is right after a "number." pattern (no selection)
+                if (start === end) {
+                    const beforeCursor = text.substring(0, start);
+                    const lines = beforeCursor.split('\n');
+                    const currentLine = lines[lines.length - 1];
+                    const numberPattern = /^(\d+)\.\s*$/;
+                    
+                    if (numberPattern.test(currentLine)) {
+                        e.preventDefault();
+                        return false;
+                    }
                 }
                 
-                // Check if selection includes number pattern
-                if (selection.match(/^\d+\.\s/)) {
-                    e.preventDefault();
-                    return false;
+                // If there's a selection
+                if (selection.length > 0) {
+                    // Check if selection includes number pattern at start
+                    if (selection.match(/^\d+\.\s/)) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    
+                    // Check if deletion would cause line merge (next char is newline)
+                    const afterSelection = text.charAt(end);
+                    if (afterSelection === '\n' || end >= text.length || text.substring(end, end + 1) === '\n') {
+                        e.preventDefault();
+                        
+                        // Manually delete just the selected text, preserve newline
+                        const newText = text.substring(0, start) + text.substring(end);
+                        textarea.value = newText;
+                        textarea.setSelectionRange(start, start);
+                        
+                        return false;
+                    }
                 }
             }
         }
@@ -1454,6 +1613,58 @@
         function handleImageUpload(side, input) {
             let files = input.files;
             if (files.length === 0) return;
+
+            // Validate file types and sizes
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/svg+xml', 'image/heic', 'image/heif', 'image/avif'];
+            const maxSize = 15 * 1024 * 1024; // 15MB per file
+            
+            const validFiles = [];
+            const rejectedFiles = [];
+            const oversizedFiles = [];
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                
+                // Check file type
+                if (!validTypes.includes(file.type.toLowerCase())) {
+                    rejectedFiles.push(file.name);
+                    continue;
+                }
+                
+                // Check file size
+                if (file.size > maxSize) {
+                    oversizedFiles.push(file.name);
+                    continue;
+                }
+                
+                validFiles.push(file);
+            }
+            
+            // Show notifications for rejected files
+            if (rejectedFiles.length > 0) {
+                showToastWithButton('⚠️ ' + rejectedFiles.length + ' file(s) rejected<br>Only image files allowed');
+            }
+            
+            if (oversizedFiles.length > 0) {
+                showToastWithButton('⚠️ ' + oversizedFiles.length + ' file(s) too large<br>Maximum 15MB per file');
+            }
+            
+            // If no valid files, exit
+            if (validFiles.length === 0) {
+                if (input.value) {
+                    input.value = '';
+                }
+                return;
+            }
+            
+            // Replace files with valid files only
+            try {
+                const dataTransfer = new DataTransfer();
+                validFiles.forEach(file => dataTransfer.items.add(file));
+                files = dataTransfer.files;
+            } catch (e) {
+                files = validFiles;
+            }
 
             // Check total limit considering existing cards
             const totalAfterUpload = cards.length + files.length;
@@ -2110,6 +2321,10 @@
             if (gameBtn) gameBtn.disabled = false;
             const card = cards[currentIndex];
 
+            // Determine if text should auto-scale (not a sentence)
+            const isSentence = card.backText && (card.backText.includes(' ') && card.backText.split(' ').length > 3);
+            const textClass = isSentence ? 'card-text' : 'card-text card-text-auto-scale';
+
             display.innerHTML = `
                 <div class="card-container">
                     <div class="card ${isFlipped ? 'flipped' : ''}" onclick="flipCard()">
@@ -2119,7 +2334,7 @@
                         </div>
                         <div class="card-face card-back">
                             ${card.backImage ? '<img src="' + card.backImage + '" class="card-image">' : ''}
-                            ${card.backText ? '<p class="card-text">' + highlightVowels(card.backText) + '</p>' : ''}
+                            ${card.backText ? '<p class="' + textClass + '">' + highlightVowels(card.backText) + '</p>' : ''}
                             <p class="hint">Tap to flip back</p>
                         </div>
                     </div>
@@ -2133,6 +2348,30 @@
                     </div>
                 </div>
             `;
+            
+            // Auto-scale text to fit on one line if needed
+            setTimeout(() => scaleTextToFit(), 10);
+        }
+
+        function scaleTextToFit() {
+            const textElement = document.querySelector('.card-text-auto-scale');
+            if (!textElement) return;
+            
+            const container = textElement.closest('.card-back');
+            if (!container) return;
+            
+            // Start with maximum font size
+            let fontSize = 7.5; // rem
+            textElement.style.fontSize = fontSize + 'rem';
+            
+            // Get container width (with some padding)
+            const maxWidth = container.offsetWidth - 40; // 20px padding on each side
+            
+            // Reduce font size until text fits
+            while (textElement.scrollWidth > maxWidth && fontSize > 1) {
+                fontSize -= 0.1;
+                textElement.style.fontSize = fontSize + 'rem';
+            }
         }
     </script>
 </body>
