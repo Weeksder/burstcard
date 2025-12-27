@@ -15,6 +15,9 @@
     <meta name="cache-control" content="no-store">
     <meta name="cache-control" content="must-revalidate">
 
+    <!-- JSZip library for creating ZIP files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
     <title>Flashcard App</title>
     <style>
         * {
@@ -74,7 +77,7 @@
             padding: 8px 16px;
             border: none;
             border-radius: 8px;
-            font-size: 0.8rem;
+            font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
@@ -101,6 +104,11 @@
 
         .btn-success {
             background: #51cf66;
+            color: white;
+        }
+        
+        .btn-info {
+            background: #17a2b8;
             color: white;
         }
         
@@ -294,6 +302,87 @@
             padding: 60px 30px;
             text-align: center;
             box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        /* Expandable Save Button */
+        .save-btn {
+            width: 50px;
+            overflow: hidden;
+            transition: width 0.3s ease, padding 0.3s ease;
+            white-space: nowrap;
+            padding: 8px 16px;
+        }
+
+        .save-btn.expanded {
+            width: auto;
+            padding: 8px 16px;
+        }
+
+        .save-btn::after {
+            content: '';
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            margin-left: 0;
+        }
+
+        .save-btn.expanded::after {
+            content: ' Save Session';
+            opacity: 1;
+            margin-left: 5px;
+        }
+
+        /* Expandable Rename Button */
+        .rename-btn {
+            width: 50px;
+            overflow: hidden;
+            transition: width 0.3s ease, padding 0.3s ease;
+            white-space: nowrap;
+            padding: 8px 16px;
+        }
+
+        .rename-btn.expanded {
+            width: auto;
+            padding: 8px 16px;
+        }
+
+        .rename-btn::after {
+            content: '';
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            margin-left: 0;
+        }
+
+        .rename-btn.expanded::after {
+            content: ' Rename Cards';
+            opacity: 1;
+            margin-left: 5px;
+        }
+
+        /* Expandable Game Button */
+        .game-btn {
+            width: 50px;
+            overflow: hidden;
+            transition: width 0.3s ease, padding 0.3s ease;
+            white-space: nowrap;
+            padding: 8px 16px;
+        }
+
+        .game-btn.expanded {
+            width: auto;
+            padding: 8px 16px;
+        }
+
+        .game-btn::after {
+            content: '';
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            margin-left: 0;
+        }
+
+        .game-btn.expanded::after {
+            content: ' Games';
+            opacity: 1;
+            margin-left: 5px;
         }
 
         .empty-state-icon {
@@ -627,13 +716,10 @@
 
         <div class="controls">
             <button class="btn btn-primary" onclick="openCreateModal()">
-                ➕ Add Card
+                ➕ Add Cards
             </button>
-            <button class="btn btn-secondary" onclick="shuffleCards()" id="shuffleBtn" disabled>
+            <button class="btn btn-primary" onclick="shuffleCards()" id="shuffleBtn" disabled>
                 🔀 Shuffle
-            </button>
-            <button class="btn btn-primary" onclick="openRenameModal()" id="renameCardBtn" disabled>
-                ✏️ Rename
             </button>
             <button class="btn btn-secondary" onclick="deleteCard()" id="deleteBtn" disabled>
                 🗑️ Delete This
@@ -641,8 +727,14 @@
             <button class="btn btn-warning" onclick="clearAllCards()" id="clearBtn" disabled>
                 ⚠️ Clear All
             </button>
-            <button class="btn btn-success" onclick="openGameMenu()" id="gameBtn" disabled>
-                🎮 Games
+            <button class="btn btn-primary rename-btn" onclick="toggleRenameButton()" id="renameCardBtn" disabled>
+                ✏️
+            </button>
+            <button class="btn btn-success game-btn" onclick="toggleGameButton()" id="gameBtn" disabled>
+                🎮
+            </button>
+            <button class="btn btn-info save-btn" id="saveBtn" onclick="toggleSaveButton()" disabled>
+                💾
             </button>
         </div>
 
@@ -651,10 +743,10 @@
 
     <div class="modal" id="createModal">
         <div class="modal-content">
-            <h2>Create New Card</h2>
+            <h2 id="modalTitle">Create New Cards</h2>
             
             <div class="form-group">
-                <label>Front Images (Select one or multiple - up to 30 images)</label>
+                <label id="modalLabel">Front Images (Select one or multiple - up to 30 images)</label>
                 <div class="upload-area" id="frontUpload" onclick="handleUploadAreaClick(event)">
                     <div id="frontPreview">
                         <div class="upload-icon">📷</div>
@@ -669,14 +761,15 @@
 
             <div class="form-group">
                 <label>Back (Text)</label>
-                <textarea id="backText" placeholder="Enter text for the back of the card..."></textarea>
+                <textarea id="backText" placeholder="Enter text for the back of the card..." disabled></textarea>
             </div>
 
             <div class="form-actions">
                 <button class="btn btn-success" onclick="addCard()">Add Card</button>
                 <button class="btn btn-primary" id="addMoreButton" onclick="addMoreImages()" style="display: none;">➕ Add More</button>
                 <button class="btn btn-warning" id="renameButton" onclick="toggleRenameMode()" style="display: none;">✏️ Rename</button>
-                <button class="btn btn-secondary" onclick="closeCreateModal()">Cancel</button>
+                <button class="btn btn-info" id="renameMultipleButton" onclick="toggleMultiRenameMode()" style="display: none;">📝 Rename Multiple</button>
+                <button class="btn btn-secondary" onclick="closeCreateModal()" style="padding: 8px 12px;">Cancel</button>
             </div>
         </div>
     </div>
@@ -712,6 +805,32 @@
         </div>
     </div>
 
+    <!-- Save Options Modal -->
+    <div class="modal" id="saveOptionsModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <h2>💾 Save Your Flashcards</h2>
+            <p style="margin-bottom: 25px; color: #666;">Choose how you'd like to save your session:</p>
+            
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <button class="btn btn-primary" id="saveJSONBtn" style="padding: 20px; text-align: left; white-space: normal; line-height: 1.5;">
+                    <strong style="font-size: 1.2rem; display: block; margin-bottom: 5px;">📄 Quick Save (JSON)</strong>
+                    <span style="font-size: 0.85rem; display: block; opacity: 0.9;">Fast and simple • Human-readable • ~5-15MB</span>
+                    <span style="font-size: 0.8rem; display: block; opacity: 0.7; margin-top: 5px;">Best for: Quick backups, small decks (1-30 cards)</span>
+                </button>
+                
+                <button class="btn btn-success" id="saveZIPBtn" style="padding: 20px; text-align: left; white-space: normal; line-height: 1.5;">
+                    <strong style="font-size: 1.2rem; display: block; margin-bottom: 5px;">📦 Export Package (ZIP)</strong>
+                    <span style="font-size: 0.85rem; display: block; opacity: 0.9;">Smaller file size • Organized • ~3-8MB</span>
+                    <span style="font-size: 0.8rem; display: block; opacity: 0.7; margin-top: 5px;">Best for: Large decks, sharing with others</span>
+                </button>
+            </div>
+            
+            <button class="btn btn-secondary" id="closeSaveBtn" style="margin-top: 20px; width: 100%;">
+                Cancel
+            </button>
+        </div>
+    </div>
+
     <!-- Audio elements for sound effects -->
     <audio id="flipSound" preload="auto">
         <source src="flip2.wav" type="audio/wav">
@@ -730,6 +849,10 @@
         let newCard = { frontImage: null, backText: '', backImage: null };
         let clearAllClickCount = 0;
         let clearAllTimeout = null;
+        let renameTimeout = null;
+        let gameTimeout = null;
+        let isRenameMode = false;
+        let isMultiRenameMode = false;
         let guessGameState = {
             currentCardIndex: 0,
             score: 0,
@@ -1051,6 +1174,24 @@
             
             window.speechSynthesis.cancel();
             
+            // Set rename mode flags
+            isRenameMode = true;
+            isMultiRenameMode = false;
+            
+            // Update modal title and label
+            document.getElementById('modalTitle').textContent = 'Rename Cards';
+            document.getElementById('modalLabel').textContent = 'Front Images (Rename current or multiple)';
+            
+            // Hide file input in rename mode
+            document.getElementById('frontImage').style.display = 'none';
+            
+            // Show Rename Multiple button
+            const renameMultiButton = document.getElementById('renameMultipleButton');
+            if (renameMultiButton) {
+                renameMultiButton.style.display = 'block';
+                renameMultiButton.textContent = '📝 Rename Multiple';
+            }
+            
             // Get current card
             const currentCard = cards[currentIndex];
             
@@ -1065,16 +1206,19 @@
                 '<img src="' + currentCard.frontImage + '" class="preview-image"><p style="margin-top: 10px; font-size: 0.9rem;">Current card image</p>';
             document.getElementById('frontUpload').classList.add('has-image');
             
+            // Disable click on upload area in rename mode
+            document.getElementById('frontUpload').onclick = null;
+            
             // Set the text
             const backTextElement = document.getElementById('backText');
             backTextElement.value = currentCard.backText;
             backTextElement.disabled = false;
             backTextElement.style.background = '';
             
-            // Change the button text to "Update Card"
+            // Change the button text to "Update"
             const addButton = document.querySelector('.form-actions .btn-success');
             if (addButton) {
-                addButton.textContent = '💾 Update Card';
+                addButton.textContent = '💾 Update';
             }
             
             // Disable background scrolling
@@ -1092,11 +1236,28 @@
 
         function resetForm() {
             newCard = { frontImage: null, backText: '', backImage: null, multipleFiles: null, editingIndex: null };
+            
+            // Reset rename mode flags
+            isRenameMode = false;
+            isMultiRenameMode = false;
+            
+            // Reset modal title and label to default
+            document.getElementById('modalTitle').textContent = 'Create New Cards';
+            document.getElementById('modalLabel').textContent = 'Front Images (Select one or multiple - up to 30 images)';
+            
+            // Keep file input hidden (it's triggered by clicking upload area)
+            document.getElementById('frontImage').style.display = 'none';
+            
+            // Restore upload area click handler
+            document.getElementById('frontUpload').onclick = function(event) {
+                handleUploadAreaClick(event);
+            };
+            
             document.getElementById('frontPreview').innerHTML = '<div class="upload-icon">📷</div><p style="font-weight: bold; font-size: 1.1rem;">Tap, drag & drop, or paste image(s)</p><p style="font-size: 0.9rem; color: #667eea; margin-top: 15px; font-weight: 600;">✨ TIP: Select multiple images from a folder!</p><p style="font-size: 0.8rem; color: #666; margin-top: 5px;">Cards will be created instantly with filenames as text</p><p style="font-size: 0.8rem; color: #ff6b6b; margin-top: 10px; font-weight: 600;">⚠️ Maximum 30 images (15MB each)</p>';
 
             const backTextElement = document.getElementById('backText');
             backTextElement.value = '';
-            backTextElement.disabled = false;
+            backTextElement.disabled = true;
             backTextElement.style.background = '';
             backTextElement.style.border = '';
 
@@ -1116,6 +1277,12 @@
                 renameButton.textContent = '✏️ Rename';
                 renameButton.classList.remove('btn-success');
                 renameButton.classList.add('btn-warning');
+            }
+
+            // Hide rename multiple button
+            const renameMultiButton = document.getElementById('renameMultipleButton');
+            if (renameMultiButton) {
+                renameMultiButton.style.display = 'none';
             }
 
             // Hide add more button
@@ -1142,12 +1309,18 @@
             if (!files || files.length === 0) return;
 
             let previewHTML = '<div style="text-align: center; padding: 10px 5px;">';
-            previewHTML += '<p style="font-size: 1.2rem; font-weight: bold; color: #667eea; margin-bottom: 10px;">' + files.length + ' images selected</p>';
             
-            // Add "Add More" button if not at limit
-            const totalCards = cards.length + files.length;
-            if (totalCards < 30) {
-                previewHTML += '<button onclick="addMoreImages(); event.stopPropagation();" style="margin-bottom: 10px; padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem;">➕ Add More Images</button>';
+            // Only show image count if NOT in rename mode
+            if (!isRenameMode) {
+                previewHTML += '<p style="font-size: 1.2rem; font-weight: bold; color: #667eea; margin-bottom: 10px;">' + files.length + ' images selected</p>';
+            }
+            
+            // Only show "Add More" button if NOT in rename mode and not at limit
+            if (!isRenameMode) {
+                const totalCards = cards.length + files.length;
+                if (totalCards < 30) {
+                    previewHTML += '<button onclick="addMoreImages(); event.stopPropagation();" style="margin-bottom: 10px; padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem;">➕ Add More Images</button>';
+                }
             }
             
             previewHTML += '<div id="imagePreviewGrid" class="responsive-grid" style="display: grid; gap: 12px; max-height: 550px; overflow-y: auto; padding: 5px;"></div>';
@@ -1174,9 +1347,18 @@
             }
 
             // Show filenames in the Back (Text) textarea
-            document.getElementById('backText').value = '📝 Card names preview:\n\n' + fileNames.map((name, i) => (i + 1) + '. ' + name).join('\n');
-            document.getElementById('backText').disabled = true;
-            document.getElementById('backText').style.background = '#f8f9fa';
+            const backTextElement = document.getElementById('backText');
+            
+            if (isRenameMode) {
+                // In rename mode, set value but keep it editable
+                backTextElement.value = '📝 Edit names:\n\n' + fileNames.map((name, i) => (i + 1) + '. ' + name).join('\n');
+                // Don't disable or change background - already handled in toggleMultiRenameMode
+            } else {
+                // Normal import mode
+                backTextElement.value = '📝 Card names preview:\n\n' + fileNames.map((name, i) => (i + 1) + '. ' + name).join('\n');
+                backTextElement.disabled = true;
+                backTextElement.style.background = '#f8f9fa';
+            }
 
             // Create mini previews for ALL images
             const grid = document.getElementById('imagePreviewGrid');
@@ -1188,9 +1370,12 @@
                     container.className = 'preview-image-container';
                     container.dataset.index = i;
                     
+                    // Only show X button if NOT in rename mode
+                    const deleteButton = isRenameMode ? '' : '<div class="preview-image-delete" onclick="event.preventDefault(); event.stopPropagation(); deletePreviewImage(' + i + ');">✕</div>';
+                    
                     container.innerHTML = `
                         <img src="${e.target.result}" style="width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 8px;" draggable="false">
-                        <div class="preview-image-delete" onclick="event.preventDefault(); event.stopPropagation(); deletePreviewImage(${i});">✕</div>
+                        ${deleteButton}
                     `;
                     
                     container.onclick = function(event) {
@@ -1422,6 +1607,93 @@
             clickTimer = setTimeout(() => {
                 clickCount = 0;
             }, 500);
+        }
+
+        function toggleMultiRenameMode() {
+            const renameMultiButton = document.getElementById('renameMultipleButton');
+            
+            if (!isMultiRenameMode) {
+                // Switch to multi-rename mode
+                isMultiRenameMode = true;
+                renameMultiButton.textContent = '← Rename Previous';
+                
+                // Create fake file list from all cards
+                const cardFiles = [];
+                cards.forEach((card, index) => {
+                    // Create a blob from base64 image
+                    const byteString = atob(card.frontImage.split(',')[1]);
+                    const mimeString = card.frontImage.split(',')[0].split(':')[1].split(';')[0];
+                    const ab = new ArrayBuffer(byteString.length);
+                    const ia = new Uint8Array(ab);
+                    for (let i = 0; i < byteString.length; i++) {
+                        ia[i] = byteString.charCodeAt(i);
+                    }
+                    const blob = new Blob([ab], {type: mimeString});
+                    const file = new File([blob], card.backText || `Card ${index + 1}`, {type: mimeString});
+                    cardFiles.push(file);
+                });
+                
+                // Set multipleFiles
+                try {
+                    const dataTransfer = new DataTransfer();
+                    cardFiles.forEach(file => dataTransfer.items.add(file));
+                    newCard.multipleFiles = dataTransfer.files;
+                } catch (e) {
+                    newCard.multipleFiles = cardFiles;
+                }
+                
+                // Render all cards as images
+                renderImagePreviews();
+                
+                // Auto-enable editing mode for the text area
+                const backTextElement = document.getElementById('backText');
+                backTextElement.disabled = false;
+                backTextElement.style.background = '#fff';
+                backTextElement.style.border = '2px solid #667eea';
+                
+                // Add event listeners for protection
+                backTextElement.addEventListener('keydown', protectNumberedList);
+                backTextElement.addEventListener('dblclick', handleDoubleClick);
+                backTextElement.addEventListener('click', handleTripleClick);
+                backTextElement.addEventListener('mouseup', handleSelectionEnd);
+                
+                // Change button text
+                const addButton = document.querySelector('.form-actions .btn-success');
+                if (addButton) {
+                    addButton.textContent = '💾 Update All Cards';
+                }
+                
+            } else {
+                // Go back to single rename mode
+                isMultiRenameMode = false;
+                renameMultiButton.textContent = '📝 Rename Multiple';
+                
+                // Clear multiple files
+                newCard.multipleFiles = null;
+                
+                // Show current card again
+                const currentCard = cards[currentIndex];
+                document.getElementById('frontPreview').innerHTML = 
+                    '<img src="' + currentCard.frontImage + '" class="preview-image"><p style="margin-top: 10px; font-size: 0.9rem;">Current card image</p>';
+                
+                const backTextElement = document.getElementById('backText');
+                backTextElement.value = currentCard.backText;
+                backTextElement.disabled = false;
+                backTextElement.style.background = '';
+                backTextElement.style.border = '';
+                
+                // Remove event listeners
+                backTextElement.removeEventListener('keydown', protectNumberedList);
+                backTextElement.removeEventListener('dblclick', handleDoubleClick);
+                backTextElement.removeEventListener('click', handleTripleClick);
+                backTextElement.removeEventListener('mouseup', handleSelectionEnd);
+                
+                // Change button text back
+                const addButton = document.querySelector('.form-actions .btn-success');
+                if (addButton) {
+                    addButton.textContent = '💾 Update';
+                }
+            }
         }
 
         function handleDoubleClick(e) {
@@ -1816,7 +2088,46 @@
         }
 
         function addCard() {
-            // Check if we're editing an existing card
+            // Check if we're in multi-rename mode
+            if (isMultiRenameMode && newCard.multipleFiles && newCard.multipleFiles.length > 0) {
+                // Parse edited names from textarea
+                const backTextContent = document.getElementById('backText').value;
+                const lines = backTextContent.split('\n').filter(line => line.trim());
+                const namesByIndex = {};
+
+                // Extract names with their original indices
+                for (let line of lines) {
+                    // Skip header lines
+                    if (line.includes('Edit names') || line.includes('Card names preview')) continue;
+
+                    // Match pattern like "1. filename"
+                    const match = line.match(/^(\d+)\.\s*(.+)$/);
+                    if (match) {
+                        const index = parseInt(match[1]) - 1; // Convert to 0-based index
+                        const name = match[2].trim();
+                        if (name) {
+                            namesByIndex[index] = name;
+                        }
+                    }
+                }
+
+                // Update all cards with new names
+                Object.keys(namesByIndex).forEach(index => {
+                    const cardIndex = parseInt(index);
+                    if (cards[cardIndex]) {
+                        cards[cardIndex].backText = namesByIndex[index];
+                    }
+                });
+
+                saveCards();
+                closeCreateModal();
+                renderDisplay();
+                
+                showToast('✅ All cards updated!', 2000);
+                return;
+            }
+            
+            // Check if we're editing an existing card (single rename)
             if (newCard.editingIndex !== undefined && newCard.editingIndex !== null) {
                 // Update existing card
                 const backText = document.getElementById('backText').value;
@@ -1836,7 +2147,7 @@
                 return;
             }
             
-            // Handle multiple files
+            // Handle multiple files (new import)
             if (newCard.multipleFiles && newCard.multipleFiles.length > 1) {
                 const files = Array.from(newCard.multipleFiles);
 
@@ -2108,6 +2419,297 @@
             }
         }
 
+        function toggleSaveButton() {
+            const saveBtn = document.getElementById('saveBtn');
+            
+            if (saveBtn.classList.contains('expanded')) {
+                // If already expanded, collapse it
+                saveBtn.classList.remove('expanded');
+                document.removeEventListener('click', collapseSaveButton);
+            } else {
+                // First click - collapse others and expand this one
+                collapseOtherExpandableButtons('saveBtn');
+                saveBtn.classList.add('expanded');
+                
+                // Add click-outside listener after a small delay
+                setTimeout(() => {
+                    document.addEventListener('click', collapseSaveButton);
+                }, 100);
+            }
+        }
+
+        function collapseSaveButton(event) {
+            const saveBtn = document.getElementById('saveBtn');
+            
+            // If clicking outside, collapse without opening
+            if (!event.target.closest('#saveBtn')) {
+                saveBtn.classList.remove('expanded');
+                document.removeEventListener('click', collapseSaveButton);
+            } else {
+                // If clicking the button again, open save options and collapse
+                document.removeEventListener('click', collapseSaveButton);
+                openSaveOptions();
+                saveBtn.classList.remove('expanded');
+            }
+        }
+
+        function openSaveOptions() {
+            console.log('openSaveOptions called');
+            document.body.style.overflow = 'hidden';
+            document.getElementById('saveOptionsModal').classList.add('active');
+            console.log('Modal should be visible now');
+        }
+
+        function closeSaveOptions() {
+            document.body.style.overflow = '';
+            document.getElementById('saveOptionsModal').classList.remove('active');
+        }
+
+        function saveAsJSON() {
+            console.log('=== saveAsJSON START ===');
+            console.log('Cards array:', cards);
+            console.log('Cards length:', cards.length);
+            
+            if (cards.length === 0) {
+                console.log('No cards to save, showing toast');
+                showToast('⚠️ No cards to save!', 2000);
+                closeSaveOptions();
+                return;
+            }
+
+            try {
+                // Create JSON data
+                const saveData = {
+                    version: '1.0',
+                    createdDate: new Date().toISOString(),
+                    totalCards: cards.length,
+                    cards: cards
+                };
+                console.log('Save data created:', saveData);
+
+                // Convert to JSON string with formatting
+                const jsonString = JSON.stringify(saveData, null, 2);
+                console.log('JSON string length:', jsonString.length);
+                
+                // Create blob and download
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                console.log('Blob created:', blob);
+                
+                const url = URL.createObjectURL(blob);
+                console.log('URL created:', url);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                const filename = `flashcards_${new Date().toISOString().split('T')[0]}.json`;
+                a.download = filename;
+                console.log('Download link created with filename:', filename);
+                
+                document.body.appendChild(a);
+                console.log('Link appended to body');
+                
+                a.click();
+                console.log('Link clicked');
+                
+                document.body.removeChild(a);
+                console.log('Link removed from body');
+                
+                URL.revokeObjectURL(url);
+                console.log('URL revoked');
+
+                closeSaveOptions();
+                showToast('✅ Saved as JSON!', 2000);
+                console.log('=== saveAsJSON END ===');
+            } catch (error) {
+                console.error('Error in saveAsJSON:', error);
+                alert('Error saving file: ' + error.message);
+            }
+        }
+
+        function saveAsZIP() {
+            if (cards.length === 0) {
+                showToast('⚠️ No cards to save!', 2000);
+                closeSaveOptions();
+                return;
+            }
+
+            // Check if JSZip is available
+            if (typeof JSZip === 'undefined') {
+                alert('📦 ZIP Export requires network access\n\nTo use ZIP export:\n1. Go to Settings (gear icon)\n2. Enable "Network access"\n3. Refresh the page\n4. Try again\n\nFor now, please use Quick Save (JSON) instead.');
+                return;
+            }
+
+            const zip = new JSZip();
+            
+            // Create data.json with metadata (no images)
+            const metadata = {
+                version: '1.0',
+                createdDate: new Date().toISOString(),
+                totalCards: cards.length,
+                cards: cards.map((card, index) => ({
+                    id: index + 1,
+                    backText: card.backText,
+                    frontImageFile: `images/card_${index + 1}.jpg`,
+                    backImage: card.backImage
+                }))
+            };
+            
+            zip.file('data.json', JSON.stringify(metadata, null, 2));
+            
+            // Add images folder
+            const imagesFolder = zip.folder('images');
+            
+            // Add each image as a separate file
+            cards.forEach((card, index) => {
+                if (card.frontImage) {
+                    // Convert base64 to blob
+                    const base64Data = card.frontImage.split(',')[1];
+                    const mimeType = card.frontImage.split(',')[0].split(':')[1].split(';')[0];
+                    const extension = mimeType.split('/')[1];
+                    
+                    imagesFolder.file(`card_${index + 1}.${extension}`, base64Data, { base64: true });
+                }
+            });
+            
+            // Generate ZIP and download
+            zip.generateAsync({ type: 'blob' }).then(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `flashcards_${new Date().toISOString().split('T')[0]}.zip`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                closeSaveOptions();
+                showToast('✅ Saved as ZIP!', 2000);
+            });
+        }
+
+        function collapseOtherExpandableButtons(exceptButton) {
+            const buttons = ['renameCardBtn', 'gameBtn', 'saveBtn'];
+            
+            buttons.forEach(btnId => {
+                if (btnId !== exceptButton) {
+                    const btn = document.getElementById(btnId);
+                    if (btn && btn.classList.contains('expanded')) {
+                        btn.classList.remove('expanded');
+                    }
+                }
+            });
+            
+            // Clear all timeouts and remove event listeners
+            if (exceptButton !== 'renameCardBtn') {
+                if (renameTimeout) clearTimeout(renameTimeout);
+                document.removeEventListener('click', collapseRenameButton);
+            }
+            if (exceptButton !== 'gameBtn') {
+                if (gameTimeout) clearTimeout(gameTimeout);
+                document.removeEventListener('click', collapseGameButton);
+            }
+            if (exceptButton !== 'saveBtn') {
+                document.removeEventListener('click', collapseSaveButton);
+            }
+        }
+
+        function toggleRenameButton() {
+            const renameBtn = document.getElementById('renameCardBtn');
+            
+            if (renameBtn.classList.contains('expanded')) {
+                // Second click - open rename modal and collapse
+                clearTimeout(renameTimeout);
+                document.removeEventListener('click', collapseRenameButton);
+                openRenameModal();
+                renameBtn.classList.remove('expanded');
+            } else {
+                // First click - collapse others and expand this one
+                collapseOtherExpandableButtons('renameCardBtn');
+                renameBtn.classList.add('expanded');
+                
+                // Clear any existing timeout
+                if (renameTimeout) {
+                    clearTimeout(renameTimeout);
+                }
+                
+                // Add click-outside listener after a small delay
+                setTimeout(() => {
+                    document.addEventListener('click', collapseRenameButton);
+                }, 100);
+                
+                // Auto-collapse after 3 seconds if not clicked again
+                renameTimeout = setTimeout(() => {
+                    renameBtn.classList.remove('expanded');
+                    document.removeEventListener('click', collapseRenameButton);
+                }, 3000);
+            }
+        }
+
+        function collapseRenameButton(event) {
+            const renameBtn = document.getElementById('renameCardBtn');
+            
+            // If clicking outside, collapse without opening
+            if (!event.target.closest('#renameCardBtn')) {
+                renameBtn.classList.remove('expanded');
+                clearTimeout(renameTimeout);
+                document.removeEventListener('click', collapseRenameButton);
+            } else {
+                // If clicking the button again, open modal and collapse
+                clearTimeout(renameTimeout);
+                document.removeEventListener('click', collapseRenameButton);
+                openRenameModal();
+                renameBtn.classList.remove('expanded');
+            }
+        }
+
+        function toggleGameButton() {
+            const gameBtn = document.getElementById('gameBtn');
+            
+            if (gameBtn.classList.contains('expanded')) {
+                // Second click - open game menu and collapse
+                clearTimeout(gameTimeout);
+                document.removeEventListener('click', collapseGameButton);
+                openGameMenu();
+                gameBtn.classList.remove('expanded');
+            } else {
+                // First click - collapse others and expand this one
+                collapseOtherExpandableButtons('gameBtn');
+                gameBtn.classList.add('expanded');
+                
+                // Clear any existing timeout
+                if (gameTimeout) {
+                    clearTimeout(gameTimeout);
+                }
+                
+                // Add click-outside listener after a small delay
+                setTimeout(() => {
+                    document.addEventListener('click', collapseGameButton);
+                }, 100);
+                
+                // Auto-collapse after 3 seconds if not clicked again
+                gameTimeout = setTimeout(() => {
+                    gameBtn.classList.remove('expanded');
+                    document.removeEventListener('click', collapseGameButton);
+                }, 3000);
+            }
+        }
+
+        function collapseGameButton(event) {
+            const gameBtn = document.getElementById('gameBtn');
+            
+            // If clicking outside, collapse without opening
+            if (!event.target.closest('#gameBtn')) {
+                gameBtn.classList.remove('expanded');
+                clearTimeout(gameTimeout);
+                document.removeEventListener('click', collapseGameButton);
+            } else {
+                // If clicking the button again, open menu and collapse
+                clearTimeout(gameTimeout);
+                document.removeEventListener('click', collapseGameButton);
+                openGameMenu();
+                gameBtn.classList.remove('expanded');
+            }
+        }
+
         function openGameMenu() {
             window.speechSynthesis.cancel();
             if (cards.length === 0) {
@@ -2310,6 +2912,8 @@
                 if (renameCardBtn) renameCardBtn.disabled = true;
                 const gameBtn = document.getElementById('gameBtn');
                 if (gameBtn) gameBtn.disabled = true;
+                const saveBtn = document.getElementById('saveBtn');
+                if (saveBtn) saveBtn.disabled = true;
                 return;
             }
 
@@ -2319,6 +2923,8 @@
             if (renameCardBtn) renameCardBtn.disabled = false;
             const gameBtn = document.getElementById('gameBtn');
             if (gameBtn) gameBtn.disabled = false;
+            const saveBtn = document.getElementById('saveBtn');
+            if (saveBtn) saveBtn.disabled = false;
             const card = cards[currentIndex];
 
             // Determine if text should auto-scale (not a sentence)
@@ -2373,6 +2979,34 @@
                 textElement.style.fontSize = fontSize + 'rem';
             }
         }
+
+        // Add event listeners for save modal buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            const saveJSONBtn = document.getElementById('saveJSONBtn');
+            const saveZIPBtn = document.getElementById('saveZIPBtn');
+            const closeSaveBtn = document.getElementById('closeSaveBtn');
+
+            if (saveJSONBtn) {
+                saveJSONBtn.addEventListener('click', function() {
+                    console.log('JSON button clicked');
+                    saveAsJSON();
+                });
+            }
+
+            if (saveZIPBtn) {
+                saveZIPBtn.addEventListener('click', function() {
+                    console.log('ZIP button clicked');
+                    saveAsZIP();
+                });
+            }
+
+            if (closeSaveBtn) {
+                closeSaveBtn.addEventListener('click', function() {
+                    console.log('Close button clicked');
+                    closeSaveOptions();
+                });
+            }
+        });
     </script>
 </body>
 </html>
