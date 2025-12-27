@@ -590,6 +590,9 @@
     <audio id="errorSound" preload="auto">
         <source src="error.wav" type="audio/wav">
     </audio>
+    <audio id="shuffleSound" preload="auto">
+        <source src="Shuffle Chips.wav" type="audio/wav">
+    </audio>
 
     <script>
         let cards = [];
@@ -1042,7 +1045,8 @@
         function shuffleCards() {
             window.speechSynthesis.cancel();
             if (cards.length === 0) return;
-            
+
+            playSound('shuffleSound');
             cards.sort(() => Math.random() - 0.5);
             currentIndex = 0;
             isFlipped = false;
