@@ -733,7 +733,10 @@
             <button class="btn btn-success game-btn" onclick="toggleGameButton()" id="gameBtn" disabled>
                 🎮
             </button>
-            <button class="btn btn-info save-btn" id="saveBtn" onclick="toggleSaveButton()" disabled>
+            <button class="btn btn-info" id="loadBtn" onclick="openLoadOptions()">
+                📂
+            </button>
+            <button class="btn btn-info" id="saveBtn" onclick="openSaveOptions()" disabled>
                 💾
             </button>
         </div>
@@ -831,6 +834,37 @@
         </div>
     </div>
 
+    <!-- Load Options Modal -->
+    <div class="modal" id="loadOptionsModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <h2>📂 Load Flashcard Session</h2>
+            <p style="margin-bottom: 20px; color: #666;">Select a saved flashcard file (.json or .zip)</p>
+            
+            <input type="file" id="loadFileInput" accept=".json,.zip" style="display: none;" onchange="handleFileLoad(event)">
+            
+            <button class="btn btn-primary" onclick="document.getElementById('loadFileInput').click()" style="width: 100%; padding: 15px; margin-bottom: 15px;">
+                📁 Choose File
+            </button>
+            
+            <div id="loadFileInfo" style="display: none; background: #f0f4ff; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <p style="margin-bottom: 10px;"><strong>Selected File:</strong> <span id="loadFileName"></span></p>
+                <p style="margin-bottom: 15px;"><strong>Cards Found:</strong> <span id="loadFileCards"></span></p>
+                
+                <p style="margin-bottom: 10px; font-weight: 600;">Load Options:</p>
+                <button class="btn btn-warning" id="replaceAllBtn" onclick="loadSession('replace')" style="width: 100%; margin-bottom: 10px;">
+                    ⚠️ Replace All Cards
+                </button>
+                <button class="btn btn-success" id="addToExistingBtn" onclick="loadSession('add')" style="width: 100%;">
+                    ➕ Add to Existing Cards
+                </button>
+            </div>
+            
+            <button class="btn btn-secondary" onclick="closeLoadOptions()" style="width: 100%;">
+                Cancel
+            </button>
+        </div>
+    </div>
+
     <!-- Audio elements for sound effects -->
     <audio id="flipSound" preload="auto">
         <source src="flip2.wav" type="audio/wav">
@@ -840,9 +874,6 @@
     </audio>
     <audio id="errorSound" preload="auto">
         <source src="error.wav" type="audio/wav">
-    </audio>
-    <audio id="shuffleSound" preload="auto">
-        <source src="Shuffle_Chips.wav" type="audio/wav">
     </audio>
 
     <script>
@@ -2293,8 +2324,7 @@
         function shuffleCards() {
             window.speechSynthesis.cancel();
             if (cards.length === 0) return;
-
-            playSound('shuffleSound');
+            
             cards.sort(() => Math.random() - 0.5);
             currentIndex = 0;
             isFlipped = false;
@@ -2423,45 +2453,9 @@
             }
         }
 
-        function toggleSaveButton() {
-            const saveBtn = document.getElementById('saveBtn');
-            
-            if (saveBtn.classList.contains('expanded')) {
-                // If already expanded, collapse it
-                saveBtn.classList.remove('expanded');
-                document.removeEventListener('click', collapseSaveButton);
-            } else {
-                // First click - collapse others and expand this one
-                collapseOtherExpandableButtons('saveBtn');
-                saveBtn.classList.add('expanded');
-                
-                // Add click-outside listener after a small delay
-                setTimeout(() => {
-                    document.addEventListener('click', collapseSaveButton);
-                }, 100);
-            }
-        }
-
-        function collapseSaveButton(event) {
-            const saveBtn = document.getElementById('saveBtn');
-            
-            // If clicking outside, collapse without opening
-            if (!event.target.closest('#saveBtn')) {
-                saveBtn.classList.remove('expanded');
-                document.removeEventListener('click', collapseSaveButton);
-            } else {
-                // If clicking the button again, open save options and collapse
-                document.removeEventListener('click', collapseSaveButton);
-                openSaveOptions();
-                saveBtn.classList.remove('expanded');
-            }
-        }
-
         function openSaveOptions() {
-            console.log('openSaveOptions called');
             document.body.style.overflow = 'hidden';
             document.getElementById('saveOptionsModal').classList.add('active');
-            console.log('Modal should be visible now');
         }
 
         function closeSaveOptions() {
@@ -2470,12 +2464,7 @@
         }
 
         function saveAsJSON() {
-            console.log('=== saveAsJSON START ===');
-            console.log('Cards array:', cards);
-            console.log('Cards length:', cards.length);
-            
             if (cards.length === 0) {
-                console.log('No cards to save, showing toast');
                 showToast('⚠️ No cards to save!', 2000);
                 closeSaveOptions();
                 return;
@@ -2489,43 +2478,26 @@
                     totalCards: cards.length,
                     cards: cards
                 };
-                console.log('Save data created:', saveData);
 
                 // Convert to JSON string with formatting
                 const jsonString = JSON.stringify(saveData, null, 2);
-                console.log('JSON string length:', jsonString.length);
                 
                 // Create blob and download
                 const blob = new Blob([jsonString], { type: 'application/json' });
-                console.log('Blob created:', blob);
-                
                 const url = URL.createObjectURL(blob);
-                console.log('URL created:', url);
-                
                 const a = document.createElement('a');
                 a.href = url;
-                const filename = `flashcards_${new Date().toISOString().split('T')[0]}.json`;
-                a.download = filename;
-                console.log('Download link created with filename:', filename);
-                
+                a.download = `flashcards_${new Date().toISOString().split('T')[0]}.json`;
                 document.body.appendChild(a);
-                console.log('Link appended to body');
-                
                 a.click();
-                console.log('Link clicked');
-                
                 document.body.removeChild(a);
-                console.log('Link removed from body');
-                
                 URL.revokeObjectURL(url);
-                console.log('URL revoked');
 
                 closeSaveOptions();
                 showToast('✅ Saved as JSON!', 2000);
-                console.log('=== saveAsJSON END ===');
             } catch (error) {
                 console.error('Error in saveAsJSON:', error);
-                alert('Error saving file: ' + error.message);
+                showToast('⚠️ Error saving file: ' + error.message, 3000);
             }
         }
 
@@ -2590,8 +2562,108 @@
             });
         }
 
+        let loadedSessionData = null;
+
+        function openLoadOptions() {
+            document.body.style.overflow = 'hidden';
+            document.getElementById('loadOptionsModal').classList.add('active');
+            // Reset file input and info
+            document.getElementById('loadFileInput').value = '';
+            document.getElementById('loadFileInfo').style.display = 'none';
+            loadedSessionData = null;
+        }
+
+        function closeLoadOptions() {
+            document.body.style.overflow = '';
+            document.getElementById('loadOptionsModal').classList.remove('active');
+            loadedSessionData = null;
+        }
+
+        function handleFileLoad(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const fileName = file.name;
+            const fileExt = fileName.split('.').pop().toLowerCase();
+
+            if (fileExt === 'json') {
+                // Handle JSON file
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        
+                        // Validate JSON structure
+                        if (!data.cards || !Array.isArray(data.cards)) {
+                            showToast('⚠️ Invalid flashcard file format', 3000);
+                            return;
+                        }
+
+                        loadedSessionData = data;
+                        
+                        // Show file info
+                        document.getElementById('loadFileName').textContent = fileName;
+                        document.getElementById('loadFileCards').textContent = data.cards.length;
+                        document.getElementById('loadFileInfo').style.display = 'block';
+
+                        // Disable "Add to Existing" if would exceed 30 cards
+                        const addBtn = document.getElementById('addToExistingBtn');
+                        if (cards.length + data.cards.length > 30) {
+                            addBtn.disabled = true;
+                            addBtn.textContent = `➕ Add to Existing (Would exceed 30 limit)`;
+                        } else {
+                            addBtn.disabled = false;
+                            addBtn.textContent = `➕ Add to Existing Cards`;
+                        }
+
+                    } catch (error) {
+                        showToast('⚠️ Error reading JSON file: ' + error.message, 3000);
+                    }
+                };
+                reader.readAsText(file);
+            } else if (fileExt === 'zip') {
+                showToast('📦 ZIP import requires network access. Please use JSON format.', 3000);
+            } else {
+                showToast('⚠️ Please select a .json or .zip file', 3000);
+            }
+        }
+
+        function loadSession(mode) {
+            if (!loadedSessionData) {
+                showToast('⚠️ No file loaded', 2000);
+                return;
+            }
+
+            try {
+                if (mode === 'replace') {
+                    // Replace all cards
+                    cards = loadedSessionData.cards;
+                    currentIndex = 0;
+                } else if (mode === 'add') {
+                    // Add to existing
+                    const newCards = loadedSessionData.cards;
+                    const totalAfter = cards.length + newCards.length;
+                    
+                    if (totalAfter > 30) {
+                        showToast('⚠️ Would exceed 30 card limit', 3000);
+                        return;
+                    }
+                    
+                    cards = cards.concat(newCards);
+                }
+
+                saveCards();
+                closeLoadOptions();
+                renderDisplay();
+                showToast(`✅ Loaded ${loadedSessionData.cards.length} cards!`, 2000);
+                
+            } catch (error) {
+                showToast('⚠️ Error loading session: ' + error.message, 3000);
+            }
+        }
+
         function collapseOtherExpandableButtons(exceptButton) {
-            const buttons = ['renameCardBtn', 'gameBtn', 'saveBtn'];
+            const buttons = ['renameCardBtn', 'gameBtn'];
             
             buttons.forEach(btnId => {
                 if (btnId !== exceptButton) {
@@ -2610,9 +2682,6 @@
             if (exceptButton !== 'gameBtn') {
                 if (gameTimeout) clearTimeout(gameTimeout);
                 document.removeEventListener('click', collapseGameButton);
-            }
-            if (exceptButton !== 'saveBtn') {
-                document.removeEventListener('click', collapseSaveButton);
             }
         }
 
@@ -2918,6 +2987,7 @@
                 if (gameBtn) gameBtn.disabled = true;
                 const saveBtn = document.getElementById('saveBtn');
                 if (saveBtn) saveBtn.disabled = true;
+                // Load button stays enabled
                 return;
             }
 
@@ -2929,6 +2999,7 @@
             if (gameBtn) gameBtn.disabled = false;
             const saveBtn = document.getElementById('saveBtn');
             if (saveBtn) saveBtn.disabled = false;
+            // Load button already enabled
             const card = cards[currentIndex];
 
             // Determine if text should auto-scale (not a sentence)
