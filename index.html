@@ -137,10 +137,6 @@
             cursor: pointer;
         }
 
-        .card.swiping {
-            transition: none;
-        }
-
         .card.flipped {
             transform: rotateY(180deg);
         }
@@ -298,30 +294,6 @@
         .audio-btn:active {
             transform: scale(0.9);
             background: #5568d3;
-        }
-
-        /* Swipe indicators */
-        .swipe-indicator {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 4rem;
-            opacity: 0;
-            transition: opacity 0.3s;
-            z-index: 5;
-            pointer-events: none;
-        }
-
-        .swipe-indicator.left {
-            left: 30px;
-        }
-
-        .swipe-indicator.right {
-            right: 30px;
-        }
-
-        .swipe-indicator.visible {
-            opacity: 0.7;
         }
 
         .empty-state {
@@ -920,14 +892,6 @@
             score: 0,
             answered: []
         };
-
-        // Swipe functionality variables
-        let touchStartX = 0;
-        let touchStartY = 0;
-        let touchCurrentX = 0;
-        let touchCurrentY = 0;
-        let isSwiping = false;
-        let isDragging = false;
 
         // Allow zoom between 75% and 125% (25% margin each way)
         let currentZoom = 1.0;
@@ -3000,147 +2964,6 @@
             renderGuessGame();
         }
 
-        // Swipe functionality
-        function initSwipeHandlers() {
-            const cardContainer = document.querySelector('.card-container');
-            if (!cardContainer) return;
-
-            const card = cardContainer.querySelector('.card');
-            if (!card) return;
-
-            // Remove existing listeners
-            card.removeEventListener('touchstart', handleTouchStart);
-            card.removeEventListener('touchmove', handleTouchMove);
-            card.removeEventListener('touchend', handleTouchEnd);
-
-            // Add touch event listeners
-            card.addEventListener('touchstart', handleTouchStart, { passive: false });
-            card.addEventListener('touchmove', handleTouchMove, { passive: false });
-            card.addEventListener('touchend', handleTouchEnd, { passive: false });
-        }
-
-        function handleTouchStart(e) {
-            if (e.touches.length !== 1) return;
-            
-            const touch = e.touches[0];
-            touchStartX = touch.clientX;
-            touchStartY = touch.clientY;
-            touchCurrentX = touch.clientX;
-            touchCurrentY = touch.clientY;
-            isSwiping = false;
-            isDragging = false;
-        }
-
-        function handleTouchMove(e) {
-            if (e.touches.length !== 1) return;
-            
-            const touch = e.touches[0];
-            touchCurrentX = touch.clientX;
-            touchCurrentY = touch.clientY;
-            
-            const deltaX = touchCurrentX - touchStartX;
-            const deltaY = touchCurrentY - touchStartY;
-            
-            // Determine if this is a horizontal swipe
-            if (Math.abs(deltaX) > 10 && Math.abs(deltaX) > Math.abs(deltaY) * 2) {
-                isSwiping = true;
-                isDragging = true;
-                e.preventDefault(); // Prevent scrolling
-                
-                const card = e.currentTarget;
-                card.classList.add('swiping');
-                
-                // Apply visual feedback based on swipe direction
-                const rotation = deltaX / 20;
-                const translateX = deltaX * 0.5;
-                
-                if (isFlipped) {
-                    card.style.transform = `rotateY(180deg) translateX(${translateX}px) rotate(${rotation}deg)`;
-                } else {
-                    card.style.transform = `translateX(${translateX}px) rotate(${rotation}deg)`;
-                }
-                
-                // Show swipe indicators
-                updateSwipeIndicators(deltaX);
-            }
-        }
-
-        function handleTouchEnd(e) {
-            if (!isDragging) {
-                // This was a tap, not a swipe - let the onclick handler take care of it
-                return;
-            }
-            
-            const card = e.currentTarget;
-            const deltaX = touchCurrentX - touchStartX;
-            const threshold = window.innerWidth * 0.3; // 30% of screen width
-            
-            card.classList.remove('swiping');
-            
-            // Hide swipe indicators
-            hideSwipeIndicators();
-            
-            // Determine if swipe was strong enough
-            if (Math.abs(deltaX) > threshold) {
-                if (deltaX > 0) {
-                    // Swiped right - go to previous card
-                    prevCard();
-                } else {
-                    // Swiped left - go to next card
-                    nextCard();
-                }
-            }
-            
-            // Reset transform
-            if (isFlipped) {
-                card.style.transform = 'rotateY(180deg)';
-            } else {
-                card.style.transform = '';
-            }
-            
-            isSwiping = false;
-            isDragging = false;
-        }
-
-        function updateSwipeIndicators(deltaX) {
-            let leftIndicator = document.querySelector('.swipe-indicator.left');
-            let rightIndicator = document.querySelector('.swipe-indicator.right');
-            
-            if (!leftIndicator) {
-                leftIndicator = document.createElement('div');
-                leftIndicator.className = 'swipe-indicator left';
-                leftIndicator.textContent = '◀';
-                document.querySelector('.card-container').appendChild(leftIndicator);
-            }
-            
-            if (!rightIndicator) {
-                rightIndicator = document.createElement('div');
-                rightIndicator.className = 'swipe-indicator right';
-                rightIndicator.textContent = '▶';
-                document.querySelector('.card-container').appendChild(rightIndicator);
-            }
-            
-            const threshold = window.innerWidth * 0.3;
-            const progress = Math.min(Math.abs(deltaX) / threshold, 1);
-            
-            if (deltaX > 0) {
-                leftIndicator.classList.add('visible');
-                leftIndicator.style.opacity = progress * 0.7;
-                rightIndicator.classList.remove('visible');
-            } else {
-                rightIndicator.classList.add('visible');
-                rightIndicator.style.opacity = progress * 0.7;
-                leftIndicator.classList.remove('visible');
-            }
-        }
-
-        function hideSwipeIndicators() {
-            const indicators = document.querySelectorAll('.swipe-indicator');
-            indicators.forEach(indicator => {
-                indicator.classList.remove('visible');
-            });
-        }
-
         function renderDisplay() {
             const display = document.getElementById('cardDisplay');
             const shuffleBtn = document.getElementById('shuffleBtn');
@@ -3185,15 +3008,15 @@
 
             display.innerHTML = `
                 <div class="card-container">
-                    <div class="card ${isFlipped ? 'flipped' : ''}" onclick="if(!isDragging) flipCard()">
+                    <div class="card ${isFlipped ? 'flipped' : ''}" onclick="flipCard()">
                         <div class="card-face card-front">
                             <img src="${card.frontImage}" class="card-image">
-                            <p class="hint">Tap to flip or swipe left/right</p>
+                            <p class="hint">Tap to flip</p>
                         </div>
                         <div class="card-face card-back">
                             ${card.backImage ? '<img src="' + card.backImage + '" class="card-image">' : ''}
                             ${card.backText ? '<p class="' + textClass + '">' + highlightVowels(card.backText) + '</p>' : ''}
-                            <p class="hint">Tap to flip or swipe left/right</p>
+                            <p class="hint">Tap to flip back</p>
                         </div>
                     </div>
                     <div class="navigation">
@@ -3208,10 +3031,7 @@
             `;
             
             // Auto-scale text to fit on one line if needed
-            setTimeout(() => {
-                scaleTextToFit();
-                initSwipeHandlers();
-            }, 10);
+            setTimeout(() => scaleTextToFit(), 10);
         }
 
         function scaleTextToFit() {
@@ -3265,4 +3085,5 @@
     </script>
 </body>
 </html>
+
 
