@@ -1007,6 +1007,9 @@
     <audio id="shuffleSound" preload="auto">
         <source src="Shuffle_Chips.wav" type="audio/wav">
     </audio>
+    <audio id="explosionSound" preload="auto">
+        <source src="explosion.wav" type="audio/wav">
+    </audio>
 
     <script>
         let cards = [];
@@ -3266,7 +3269,7 @@
             
             if (card.isBomb) {
                 // Hit the bomb!
-                playSound('errorSound');
+                playSound('explosionSound');
                 showBombReveal(cardIndex, true);
             } else {
                 // Safe card
