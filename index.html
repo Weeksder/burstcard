@@ -199,9 +199,13 @@
         }
 
         .hint {
-            margin-top: 10px;
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             font-size: 0.7rem;
             opacity: 0.7;
+            z-index: 5;
         }
 
         .navigation {
@@ -2530,9 +2534,9 @@
             const clearBtn = document.getElementById('clearBtn');
             
             if (clearAllClickCount === 1) {
-                // First tap - change button appearance and show warning
-                clearBtn.textContent = '⚠️ TAP AGAIN to confirm delete ALL ' + cards.length + ' cards';
-                clearBtn.style.background = '#dc3545';
+                // First tap - change button text to confirm
+                clearBtn.textContent = '⚠️ Tap again to delete all ' + cards.length + ' cards';
+                // Keep the same warning color (don't change background)
                 
                 // Add click-outside listener to cancel
                 setTimeout(() => {
@@ -2543,7 +2547,6 @@
                 clearAllTimeout = setTimeout(() => {
                     clearAllClickCount = 0;
                     clearBtn.textContent = '⚠️ Clear All';
-                    clearBtn.style.background = '';
                     document.removeEventListener('click', cancelClearAll);
                 }, 3000);
             } else if (clearAllClickCount === 2) {
@@ -2562,7 +2565,6 @@
                     // Reset button
                     clearAllClickCount = 0;
                     clearBtn.textContent = '⚠️ Clear All';
-                    clearBtn.style.background = '';
                     
                     alert('All cards have been deleted!');
                 } catch (e) {
@@ -2572,7 +2574,6 @@
                     // Reset button even on error
                     clearAllClickCount = 0;
                     clearBtn.textContent = '⚠️ Clear All';
-                    clearBtn.style.background = '';
                 }
             }
         }
@@ -2585,7 +2586,6 @@
                 clearTimeout(clearAllTimeout);
                 clearAllClickCount = 0;
                 clearBtn.textContent = '⚠️ Clear All';
-                clearBtn.style.background = '';
                 document.removeEventListener('click', cancelClearAll);
             }
         }
@@ -3117,25 +3117,57 @@
                     </div>
                 `;
                 shuffleBtn.disabled = true;
-                if (clearBtn) clearBtn.disabled = true;
-                if (deleteBtn) deleteBtn.disabled = true;
-                if (renameCardBtn) renameCardBtn.disabled = true;
+                shuffleBtn.style.display = 'none';
+                if (clearBtn) {
+                    clearBtn.disabled = true;
+                    clearBtn.style.display = 'none';
+                }
+                if (deleteBtn) {
+                    deleteBtn.disabled = true;
+                    deleteBtn.style.display = 'none';
+                }
+                if (renameCardBtn) {
+                    renameCardBtn.disabled = true;
+                    renameCardBtn.style.display = 'none';
+                }
                 const gameBtn = document.getElementById('gameBtn');
-                if (gameBtn) gameBtn.disabled = true;
+                if (gameBtn) {
+                    gameBtn.disabled = true;
+                    gameBtn.style.display = 'none';
+                }
                 const saveBtn = document.getElementById('saveBtn');
-                if (saveBtn) saveBtn.disabled = true;
-                // Load button stays enabled
+                if (saveBtn) {
+                    saveBtn.disabled = true;
+                    saveBtn.style.display = 'none';
+                }
+                // Load button stays enabled and visible
                 return;
             }
 
             shuffleBtn.disabled = false;
-            if (clearBtn) clearBtn.disabled = false;
-            if (deleteBtn) deleteBtn.disabled = false;
-            if (renameCardBtn) renameCardBtn.disabled = false;
+            shuffleBtn.style.display = '';
+            if (clearBtn) {
+                clearBtn.disabled = false;
+                clearBtn.style.display = '';
+            }
+            if (deleteBtn) {
+                deleteBtn.disabled = false;
+                deleteBtn.style.display = '';
+            }
+            if (renameCardBtn) {
+                renameCardBtn.disabled = false;
+                renameCardBtn.style.display = '';
+            }
             const gameBtn = document.getElementById('gameBtn');
-            if (gameBtn) gameBtn.disabled = false;
+            if (gameBtn) {
+                gameBtn.disabled = false;
+                gameBtn.style.display = '';
+            }
             const saveBtn = document.getElementById('saveBtn');
-            if (saveBtn) saveBtn.disabled = false;
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.style.display = '';
+            }
             // Load button already enabled
             const card = cards[currentIndex];
 
