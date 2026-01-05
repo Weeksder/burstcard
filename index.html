@@ -232,14 +232,18 @@
             align-items: center;
             justify-content: center;
             background: #51cf66;
+            position: absolute;
+            top: 20px;
         }
-        
+
         .nav-btn.prev {
             background: #51cf66;
+            left: 20px;
         }
-        
+
         .nav-btn.next {
             background: #51cf66;
+            right: 20px;
         }
 
         .nav-btn:active {
@@ -258,6 +262,10 @@
             background: rgba(0,0,0,0.3);
             padding: 10px 20px;
             border-radius: 15px;
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
         }
 
         .delete-btn {
@@ -550,17 +558,25 @@
                 width: 60px;
                 height: 60px;
                 font-size: 1.6rem;
+                top: 15px;
             }
-            
+
+            .nav-btn.prev {
+                left: 15px;
+            }
+
+            .nav-btn.next {
+                right: 15px;
+            }
+
             .audio-btn {
                 width: 60px;
                 height: 60px;
                 font-size: 1.6rem;
             }
-            
-            .navigation {
+
+            .counter {
                 bottom: 15px;
-                padding: 0 15px;
             }
         }
         
@@ -568,21 +584,34 @@
             .card {
                 height: calc(100vh - 85px);
             }
-            
+
             .card-text {
                 font-size: 6rem;
             }
-            
+
             .nav-btn {
                 width: 65px;
                 height: 65px;
                 font-size: 1.8rem;
+                top: 18px;
             }
-            
+
+            .nav-btn.prev {
+                left: 18px;
+            }
+
+            .nav-btn.next {
+                right: 18px;
+            }
+
             .audio-btn {
                 width: 65px;
                 height: 65px;
                 font-size: 1.8rem;
+            }
+
+            .counter {
+                bottom: 18px;
             }
         }
         
@@ -1042,6 +1071,7 @@
             loadCards();
             renderDisplay();
             setupDragAndDrop();
+            setupSwipeGestures();
         };
 
         // Setup drag and drop for upload area
@@ -1083,6 +1113,59 @@
                     files: files
                 };
                 handleImageUpload('front', fakeInput);
+            }
+        }
+
+        // Setup touch swipe gestures for card navigation
+        function setupSwipeGestures() {
+            let touchStartX = 0;
+            let touchStartY = 0;
+            let touchEndX = 0;
+            let touchEndY = 0;
+            const minSwipeDistance = 50; // minimum distance for a swipe to register
+
+            document.addEventListener('touchstart', function(e) {
+                // Only track swipes on the card display area, not on buttons or modals
+                const target = e.target;
+                if (target.closest('.modal') || target.closest('.btn') || target.closest('.nav-btn') || target.closest('.audio-btn')) {
+                    return;
+                }
+
+                touchStartX = e.changedTouches[0].screenX;
+                touchStartY = e.changedTouches[0].screenY;
+            }, { passive: true });
+
+            document.addEventListener('touchend', function(e) {
+                // Only process swipes on the card display area
+                const target = e.target;
+                if (target.closest('.modal') || target.closest('.btn') || target.closest('.nav-btn') || target.closest('.audio-btn')) {
+                    return;
+                }
+
+                touchEndX = e.changedTouches[0].screenX;
+                touchEndY = e.changedTouches[0].screenY;
+
+                handleSwipe();
+            }, { passive: true });
+
+            function handleSwipe() {
+                const deltaX = touchEndX - touchStartX;
+                const deltaY = touchEndY - touchStartY;
+
+                // Check if horizontal swipe is dominant (more horizontal than vertical)
+                if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
+                    if (deltaX > 0) {
+                        // Swipe right - go to previous card
+                        if (cards.length > 0) {
+                            prevCard();
+                        }
+                    } else {
+                        // Swipe left - go to next card
+                        if (cards.length > 0) {
+                            nextCard();
+                        }
+                    }
+                }
             }
         }
 
