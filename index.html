@@ -1421,16 +1421,22 @@
                 const unlockAudio = () => {
                     if (this.audioUnlocked) return;
 
-                    // Try to play and immediately pause all sounds to unlock audio context
+                    // Silently unlock audio context by muting, playing, and restoring volume
                     Object.values(this.sounds).forEach(audio => {
                         if (audio) {
+                            // Mute before playing to avoid audible sound
+                            audio.volume = 0;
+
                             const playPromise = audio.play();
                             if (playPromise !== undefined) {
                                 playPromise.then(() => {
                                     audio.pause();
                                     audio.currentTime = 0;
+                                    // Restore volume after unlock
+                                    audio.volume = 1.0;
                                 }).catch(() => {
-                                    // Ignore errors during unlock
+                                    // Restore volume even on error
+                                    audio.volume = 1.0;
                                 });
                             }
                         }
