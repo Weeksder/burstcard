@@ -1183,6 +1183,7 @@
             renderDisplay();
             setupDragAndDrop();
             setupSwipeGestures();
+            audioManager.init(); // Initialize audio system
         };
 
         // Setup drag and drop for upload area
@@ -1360,13 +1361,101 @@
             }
         });
 
-        // Helper function to play sound effects
-        function playSound(soundId) {
-            const sound = document.getElementById(soundId);
-            if (sound) {
-                sound.currentTime = 0; // Reset to start
-                sound.play().catch(err => console.log('Sound play failed:', err));
+        // Audio management system for reliable sound playback
+        const audioManager = {
+            sounds: {},
+            audioUnlocked: false,
+
+            // Initialize and preload all sounds
+            init: function() {
+                const soundIds = ['flipSound', 'correctSound', 'errorSound', 'shuffleSound', 'explosionSound'];
+
+                soundIds.forEach(id => {
+                    const audio = document.getElementById(id);
+                    if (audio) {
+                        // Store reference
+                        this.sounds[id] = audio;
+
+                        // Preload
+                        audio.load();
+
+                        // Set volume to ensure it's audible
+                        audio.volume = 1.0;
+                    }
+                });
+
+                // Unlock audio on first user interaction (for mobile browsers)
+                this.setupAutoplayUnlock();
+            },
+
+            // Setup audio unlock for mobile browsers
+            setupAutoplayUnlock: function() {
+                const unlockAudio = () => {
+                    if (this.audioUnlocked) return;
+
+                    // Try to play and immediately pause all sounds to unlock audio context
+                    Object.values(this.sounds).forEach(audio => {
+                        if (audio) {
+                            const playPromise = audio.play();
+                            if (playPromise !== undefined) {
+                                playPromise.then(() => {
+                                    audio.pause();
+                                    audio.currentTime = 0;
+                                }).catch(() => {
+                                    // Ignore errors during unlock
+                                });
+                            }
+                        }
+                    });
+
+                    this.audioUnlocked = true;
+
+                    // Remove listeners after first unlock
+                    document.removeEventListener('touchstart', unlockAudio);
+                    document.removeEventListener('touchend', unlockAudio);
+                    document.removeEventListener('click', unlockAudio);
+                };
+
+                // Listen for first user interaction
+                document.addEventListener('touchstart', unlockAudio, { once: true, passive: true });
+                document.addEventListener('touchend', unlockAudio, { once: true, passive: true });
+                document.addEventListener('click', unlockAudio, { once: true, passive: true });
+            },
+
+            // Play sound with retry logic
+            play: function(soundId, retries = 3) {
+                const audio = this.sounds[soundId];
+
+                if (!audio) {
+                    console.warn(`Sound not found: ${soundId}`);
+                    return;
+                }
+
+                // Stop current playback and reset
+                audio.pause();
+                audio.currentTime = 0;
+
+                // Attempt to play
+                const playPromise = audio.play();
+
+                if (playPromise !== undefined) {
+                    playPromise.catch(err => {
+                        console.log(`Sound play failed for ${soundId}:`, err.message);
+
+                        // Retry if we have retries left
+                        if (retries > 0) {
+                            setTimeout(() => {
+                                this.play(soundId, retries - 1);
+                            }, 100);
+                        }
+                    });
+                }
             }
+        };
+
+        // Helper function to play sound effects (backwards compatible)
+        function playSound(soundId) {
+            audioManager.play(soundId);
         }
 
         // Helper function to show toast notification
