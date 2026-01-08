@@ -51,6 +51,10 @@
             text-align: center;
             margin-bottom: 10px;
             color: white;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         .header h1 {
@@ -71,6 +75,10 @@
             flex-wrap: wrap;
             justify-content: center;
             align-items: center;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         .btn {
@@ -86,6 +94,10 @@
             align-items: center;
             gap: 5px;
             touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         .btn:active {
@@ -211,6 +223,10 @@
             overflow: hidden;
             transform: translateZ(0);
             -webkit-transform: translateZ(0);
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         .card-front {
@@ -254,6 +270,10 @@
             word-wrap: break-word;
             overflow-wrap: break-word;
             padding: 0 10px;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         .card-text-auto-scale {
@@ -262,7 +282,7 @@
         }
         
         .vowel {
-            color: red;
+            color: #ff9500;
         }
 
         .hint {
@@ -307,6 +327,10 @@
             align-items: center;
             justify-content: center;
             background: #51cf66;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         .nav-btn.prev {
@@ -339,6 +363,10 @@
             transform: translateX(-50%);
             z-index: 10;
             pointer-events: none;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
         
         .counter > * {
@@ -374,6 +402,10 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
         
         .audio-btn:active {
@@ -811,6 +843,12 @@
                 transform: translateX(-50%) translateY(0);
             }
         }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+            20%, 40%, 60%, 80% { transform: translateX(10px); }
+        }
     </style>
 </head>
 <body>
@@ -899,12 +937,16 @@
             <p style="margin-bottom: 20px; color: #666;">Select a game to play with your flashcards!</p>
             
             <div style="display: flex; flex-direction: column; gap: 15px;">
-                <button class="btn btn-success" onclick="startGame('guess')" style="padding: 20px; font-size: 1.2rem; justify-content: center;">
+                <button id="guessGameBtn" class="btn btn-success" onclick="startGame('guess')" style="padding: 20px; font-size: 1.2rem; justify-content: center;">
                     🎯 Guess the Word
                 </button>
                 
                 <button class="btn btn-success" onclick="startGame('bomb')" style="padding: 20px; font-size: 1.2rem; justify-content: center;">
                     💣 Bomb Game
+                </button>
+                
+                <button class="btn btn-success" onclick="startGame('spelling')" style="padding: 20px; font-size: 1.2rem; justify-content: center;">
+                    🔤 Spelling Game
                 </button>
                 
                 <button class="btn btn-secondary" onclick="closeGameMenu()" style="padding: 15px; justify-content: center;">
@@ -920,9 +962,12 @@
             
             <div id="guessGameContent"></div>
             
-            <div style="margin-top: 20px;">
-                <button class="btn btn-secondary" onclick="closeGuessGame()" style="width: 100%; padding: 15px; justify-content: center;">
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                <button class="btn btn-secondary" onclick="closeGuessGame()" style="flex: 1; padding: 15px; justify-content: center;">
                     ← Back to Game Menu
+                </button>
+                <button class="btn btn-primary" onclick="startNewGuessGame()" style="padding: 15px; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; min-width: 60px;" title="Start New Game">
+                    🔄
                 </button>
             </div>
         </div>
@@ -937,6 +982,21 @@
             <div style="margin-top: 20px;">
                 <button class="btn btn-secondary" onclick="closeBombGame()" style="width: 100%; padding: 15px; justify-content: center;">
                     ← Back to Game Menu
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="spellingGameModal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div id="spellingGameContent"></div>
+            
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                <button class="btn btn-secondary" onclick="closeSpellingGame()" style="flex: 1; padding: 15px; justify-content: center;">
+                    ← Back to Game Menu
+                </button>
+                <button class="btn btn-primary" onclick="startNewSpellingGame()" style="padding: 15px; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; min-width: 60px;" title="Start New Game">
+                    🔄
                 </button>
             </div>
         </div>
@@ -1039,6 +1099,15 @@
             eliminated: false,
             cardsRemaining: 0,
             bombCount: 2
+        };
+
+        let spellingGameState = {
+            currentCardIndex: 0,
+            gameCards: [],
+            scrambledLetters: [],
+            answerSlots: [],
+            selectedLetter: null,
+            correctWord: ''
         };
 
         // Allow zoom between 75% and 125% (25% margin each way)
@@ -1387,7 +1456,7 @@
             
             if (!backText) return;
             
-            // Prevent delete/backspace when multiple lines are selected
+            // Replace multi-line selection text with blank but keep index numbers
             backText.addEventListener('keydown', function(e) {
                 // Check if Delete or Backspace key is pressed
                 if (e.key === 'Delete' || e.key === 'Backspace') {
@@ -1398,13 +1467,51 @@
                     // Check if selection spans multiple lines (contains newline character)
                     if (selectedText.includes('\n')) {
                         e.preventDefault();
-                        showToast('⚠️ Cannot delete multiple lines at once!<br>Delete one line at a time', 2000);
+                        
+                        // Get all lines of the textarea
+                        const allLines = this.value.split('\n');
+                        
+                        // Find which lines are affected by the selection
+                        let charCount = 0;
+                        let startLineIndex = -1;
+                        let endLineIndex = -1;
+                        
+                        for (let i = 0; i < allLines.length; i++) {
+                            const lineLength = allLines[i].length + 1; // +1 for newline
+                            
+                            if (startLineIndex === -1 && charCount + lineLength > selectionStart) {
+                                startLineIndex = i;
+                            }
+                            
+                            if (charCount < selectionEnd) {
+                                endLineIndex = i;
+                            }
+                            
+                            charCount += lineLength;
+                        }
+                        
+                        // Replace only the text after the index number on affected lines
+                        for (let i = startLineIndex; i <= endLineIndex; i++) {
+                            const line = allLines[i];
+                            // Match pattern like "1. something" and keep just "1. "
+                            const match = line.match(/^(\d+\.\s*)/);
+                            if (match) {
+                                allLines[i] = match[1]; // Keep just "1. " part
+                            }
+                        }
+                        
+                        // Reconstruct the textarea value
+                        this.value = allLines.join('\n');
+                        
+                        // Set cursor position
+                        this.selectionStart = this.selectionEnd = selectionStart;
+                        
                         return false;
                     }
                 }
             });
             
-            // Also prevent cut operation when multiple lines are selected
+            // Also handle cut operation - keep index numbers
             backText.addEventListener('cut', function(e) {
                 const selectionStart = this.selectionStart;
                 const selectionEnd = this.selectionEnd;
@@ -1413,7 +1520,50 @@
                 // Check if selection spans multiple lines
                 if (selectedText.includes('\n')) {
                     e.preventDefault();
-                    showToast('⚠️ Cannot cut multiple lines at once!', 2000);
+                    
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(selectedText).catch(err => {
+                        console.log('Clipboard write failed:', err);
+                    });
+                    
+                    // Get all lines of the textarea
+                    const allLines = this.value.split('\n');
+                    
+                    // Find which lines are affected by the selection
+                    let charCount = 0;
+                    let startLineIndex = -1;
+                    let endLineIndex = -1;
+                    
+                    for (let i = 0; i < allLines.length; i++) {
+                        const lineLength = allLines[i].length + 1; // +1 for newline
+                        
+                        if (startLineIndex === -1 && charCount + lineLength > selectionStart) {
+                            startLineIndex = i;
+                        }
+                        
+                        if (charCount < selectionEnd) {
+                            endLineIndex = i;
+                        }
+                        
+                        charCount += lineLength;
+                    }
+                    
+                    // Replace only the text after the index number on affected lines
+                    for (let i = startLineIndex; i <= endLineIndex; i++) {
+                        const line = allLines[i];
+                        // Match pattern like "1. something" and keep just "1. "
+                        const match = line.match(/^(\d+\.\s*)/);
+                        if (match) {
+                            allLines[i] = match[1]; // Keep just "1. " part
+                        }
+                    }
+                    
+                    // Reconstruct the textarea value
+                    this.value = allLines.join('\n');
+                    
+                    // Set cursor position
+                    this.selectionStart = this.selectionEnd = selectionStart;
+                    
                     return false;
                 }
             });
@@ -1831,6 +1981,9 @@
                     
                     container.innerHTML = `
                         <img src="${e.target.result}" style="width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 8px;" draggable="false">
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 3rem; font-weight: bold; color: rgba(255, 255, 255, 0.9); text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8), -1px -1px 2px rgba(0, 0, 0, 0.8); pointer-events: none;">
+                            ${i + 1}
+                        </div>
                         ${deleteButton}
                     `;
                     
@@ -2546,32 +2699,31 @@
         function addCard() {
             // Check if we're in multi-rename mode
             if (isMultiRenameMode && newCard.multipleFiles && newCard.multipleFiles.length > 0) {
-                // Parse edited names from textarea
+                // Parse edited names from textarea - DO NOT filter blank lines
                 const backTextContent = document.getElementById('backText').value;
-                const lines = backTextContent.split('\n').filter(line => line.trim());
+                const lines = backTextContent.split('\n');
                 const namesByIndex = {};
 
-                // Extract names with their original indices
+                // Extract names with their original indices (including blank names)
                 for (let line of lines) {
                     // Skip header lines
                     if (line.includes('Edit names') || line.includes('Card names preview')) continue;
 
-                    // Match pattern like "1. filename"
-                    const match = line.match(/^(\d+)\.\s*(.+)$/);
+                    // Match pattern like "1. filename" or just "1." for blank
+                    const match = line.match(/^(\d+)\.\s*(.*)$/);
                     if (match) {
                         const index = parseInt(match[1]) - 1; // Convert to 0-based index
                         const name = match[2].trim();
-                        if (name) {
-                            namesByIndex[index] = name;
-                        }
+                        // Store name even if empty/blank
+                        namesByIndex[index] = name;
                     }
                 }
 
-                // Update all cards with new names
+                // Update all cards with new names (including blank ones)
                 Object.keys(namesByIndex).forEach(index => {
                     const cardIndex = parseInt(index);
                     if (cards[cardIndex]) {
-                        cards[cardIndex].backText = namesByIndex[index];
+                        cards[cardIndex].backText = namesByIndex[index]; // Can be blank
                     }
                 });
 
@@ -2607,41 +2759,40 @@
             if (newCard.multipleFiles && newCard.multipleFiles.length > 1) {
                 const files = Array.from(newCard.multipleFiles);
 
-                // Parse edited names from textarea and track which indices to keep
+                // Parse edited names from textarea - DO NOT filter blank lines
                 const backTextContent = document.getElementById('backText').value;
-                const lines = backTextContent.split('\n').filter(line => line.trim());
+                const lines = backTextContent.split('\n');
                 const namesByIndex = {};
 
-                // Extract names with their original indices
+                // Extract names with their original indices (including blank names)
                 for (let line of lines) {
                     // Skip header line
                     if (line.includes('Card names preview')) continue;
 
-                    // Match pattern like "1. filename"
-                    const match = line.match(/^(\d+)\.\s*(.+)$/);
+                    // Match pattern like "1. filename" or just "1." for blank
+                    const match = line.match(/^(\d+)\.\s*(.*)$/);
                     if (match) {
                         const index = parseInt(match[1]) - 1; // Convert to 0-based index
                         const name = match[2].trim();
-                        if (name) {
-                            namesByIndex[index] = name;
-                        }
+                        // Store name even if empty/blank
+                        namesByIndex[index] = name;
                     }
                 }
 
-                // Filter files to only include those with valid names
+                // Process ALL files with their corresponding names (including blank)
                 const filesToProcess = [];
                 const namesToProcess = [];
                 
                 for (let i = 0; i < files.length; i++) {
                     if (namesByIndex.hasOwnProperty(i)) {
                         filesToProcess.push(files[i]);
-                        namesToProcess.push(namesByIndex[i]);
+                        namesToProcess.push(namesByIndex[i]); // This can be blank/empty
                     }
                 }
 
-                // If no valid files, show error
+                // If no files to process at all
                 if (filesToProcess.length === 0) {
-                    showToastWithButton('⚠️ No valid cards to create!<br>Please add names.');
+                    showToastWithButton('⚠️ No cards to create!');
                     return;
                 }
 
@@ -2652,7 +2803,7 @@
 
                 for (let i = 0; i < filesToProcess.length; i++) {
                     const file = filesToProcess[i];
-                    const fileName = namesToProcess[i];
+                    const fileName = namesToProcess[i]; // Can be empty string
 
                     const reader = new FileReader();
                     reader.onload = function(e) {
@@ -2660,7 +2811,7 @@
 
                         // Check for duplicate
                         if (isDuplicateImage(imageData)) {
-                            duplicates.push(fileName);
+                            duplicates.push(fileName || `Card ${i + 1}`);
                         } else {
                             cards.push({
                                 id: Date.now() + i + Math.random(),
@@ -3210,6 +3361,23 @@
             }
             document.body.style.overflow = 'hidden'; // Disable background scrolling
             document.getElementById('gameMenuModal').classList.add('active');
+            
+            // Check if there's an active game session AND at least one card has been flipped
+            const hasActiveSession = guessGameState.gameCards && 
+                                    guessGameState.gameCards.length > 0 && 
+                                    guessGameState.currentCardIndex < guessGameState.gameCards.length &&
+                                    guessGameState.currentCardOrder > 0; // Must have flipped at least one card
+            
+            // Update button text
+            const guessBtn = document.getElementById('guessGameBtn');
+            
+            if (hasActiveSession) {
+                // Active session exists with progress
+                guessBtn.innerHTML = '🎯 Guess the Word (Continue)';
+            } else {
+                // No active session or no progress yet
+                guessBtn.innerHTML = '🎯 Guess the Word';
+            }
         }
 
         function closeGameMenu() {
@@ -3217,20 +3385,42 @@
             document.getElementById('gameMenuModal').classList.remove('active');
         }
 
+        function startNewGuessGame() {
+            // Force reset the game state
+            guessGameState = {
+                currentCardIndex: 0,
+                score: 0,
+                answered: [],
+                gameCards: []
+            };
+            
+            // Start a fresh game
+            startGame('guess');
+        }
+
         function startGame(gameType) {
             closeGameMenu();
             
             if (gameType === 'guess') {
-                // Reset game state
-                guessGameState = {
-                    currentCardIndex: 0,
-                    score: 0,
-                    answered: []
-                };
+                // Check if there's an existing session to continue AND at least one card flipped
+                const hasActiveSession = guessGameState.gameCards && 
+                                        guessGameState.gameCards.length > 0 && 
+                                        guessGameState.currentCardIndex < guessGameState.gameCards.length &&
+                                        guessGameState.currentCardOrder > 0; // Must have flipped at least one card
                 
-                // Shuffle cards for the game
-                const gameCards = [...cards].sort(() => Math.random() - 0.5);
-                guessGameState.gameCards = gameCards;
+                if (!hasActiveSession) {
+                    // Start new game - reset game state
+                    guessGameState = {
+                        currentCardIndex: 0,
+                        score: 0,
+                        answered: []
+                    };
+                    
+                    // Shuffle cards for the game
+                    const gameCards = [...cards].sort(() => Math.random() - 0.5);
+                    guessGameState.gameCards = gameCards;
+                }
+                // If hasActiveSession is true, we continue with existing state
                 
                 document.body.style.overflow = 'hidden'; // Disable background scrolling
                 document.getElementById('guessGameModal').classList.add('active');
@@ -3257,10 +3447,44 @@
                 document.body.style.overflow = 'hidden';
                 document.getElementById('bombGameModal').classList.add('active');
                 renderBombGame();
+            } else if (gameType === 'spelling') {
+                // Initialize spelling game
+                if (cards.length === 0) {
+                    alert('Please add some cards first!');
+                    openGameMenu();
+                    return;
+                }
+                
+                // Filter cards that have backText
+                const cardsWithText = cards.filter(card => card.backText && card.backText.trim().length > 0);
+                
+                if (cardsWithText.length === 0) {
+                    alert('You need cards with text to play Spelling Game!');
+                    openGameMenu();
+                    return;
+                }
+                
+                // Shuffle cards
+                spellingGameState.gameCards = [...cardsWithText].sort(() => Math.random() - 0.5);
+                spellingGameState.currentCardIndex = 0;
+                
+                document.body.style.overflow = 'hidden';
+                document.getElementById('spellingGameModal').classList.add('active');
+                renderSpellingGame();
             }
         }
 
         function closeGuessGame() {
+            // If game is finished, clear the state
+            if (guessGameState.currentCardIndex >= guessGameState.gameCards.length) {
+                guessGameState = {
+                    currentCardIndex: 0,
+                    score: 0,
+                    answered: [],
+                    gameCards: []
+                };
+            }
+            
             document.getElementById('guessGameModal').classList.remove('active');
             openGameMenu(); // This will handle scroll state
         }
@@ -3313,50 +3537,54 @@
                         Progress: ${guessGameState.currentCardOrder} / ${roundCards.length} cards
                     </p>
                     
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px; max-width: 800px; margin-left: auto; margin-right: auto;">
-                        ${roundCards.map((card, index) => {
-                            const isCorrect = guessGameState.correctCards[index];
-                            const isCurrentCard = index === currentCardIndex;
-                            const isSelected = guessGameState.selectedCard === index;
-                            const canFlip = index === currentCardIndex && !isCardFlipped;
-                            const isFlipped = isCorrect || isSelected;
-                            
-                            return `
-                                <div style="position: relative;">
-                                    <div onclick="${canFlip ? 'flipOptionCard(' + index + ')' : ''}" 
-                                         style="cursor: ${canFlip ? 'pointer' : 'not-allowed'}; 
-                                                aspect-ratio: 1; 
-                                                position: relative;
-                                                ${!canFlip && !isCorrect ? 'opacity: 0.6;' : ''}">
-                                        <div style="width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s; ${isFlipped ? 'transform: rotateY(180deg);' : ''}">
-                                            <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); ${isCurrentCard && !isFlipped ? 'border: 3px solid #ffc107;' : ''}">
-                                                <span style="font-size: 4rem; color: white;">❓</span>
-                                            </div>
-                                            <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: white; border-radius: 15px; display: flex; align-items: center; justify-content: center; padding: 10px; transform: rotateY(180deg); box-shadow: 0 4px 15px rgba(0,0,0,0.3); ${isSelected ? 'border: 4px solid #51cf66;' : ''}">
-                                                <img src="${card.frontImage}" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 10px;">
-                                                ${isCorrect ? '<div style="position: absolute; top: 5px; right: 5px; background: #51cf66; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;"><span style="color: white; font-size: 1.5rem;">✓</span></div>' : ''}
+                    <div style="position: relative; max-width: 800px; margin: 0 auto;">
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px; transition: opacity 0.5s; ${allCorrect ? 'opacity: 0.3;' : 'opacity: 1;'}">
+                            ${roundCards.map((card, index) => {
+                                const isCorrect = guessGameState.correctCards[index];
+                                const isCurrentCard = index === currentCardIndex;
+                                const isSelected = guessGameState.selectedCard === index;
+                                const canFlip = index === currentCardIndex && !isCardFlipped;
+                                const isFlipped = isCorrect || isSelected;
+                                
+                                return `
+                                    <div style="position: relative;">
+                                        <div onclick="${canFlip ? 'flipOptionCard(' + index + ')' : ''}" 
+                                             style="cursor: ${canFlip ? 'pointer' : 'not-allowed'}; 
+                                                    aspect-ratio: 1; 
+                                                    position: relative;
+                                                    ${!canFlip && !isCorrect ? 'opacity: 0.6;' : ''}">
+                                            <div style="width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s; ${isFlipped ? 'transform: rotateY(180deg);' : ''}">
+                                                <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); ${isCurrentCard && !isFlipped ? 'border: 3px solid #ffc107;' : ''}">
+                                                    <span style="font-size: 4rem; color: white;">❓</span>
+                                                </div>
+                                                <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: white; border-radius: 15px; display: flex; align-items: center; justify-content: center; padding: 10px; transform: rotateY(180deg); box-shadow: 0 4px 15px rgba(0,0,0,0.3); ${isSelected ? 'border: 4px solid #51cf66;' : ''}">
+                                                    <img src="${card.frontImage}" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 10px;">
+                                                    ${isCorrect ? '<div style="position: absolute; top: 5px; right: 5px; background: #51cf66; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;"><span style="color: white; font-size: 1.5rem;">✓</span></div>' : ''}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            `;
-                        }).join('')}
+                                `;
+                            }).join('')}
+                        </div>
+                        
+                        <div id="guessGameButtons" style="display: ${isCardFlipped ? 'flex' : 'none'}; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); flex-direction: column; gap: 15px; z-index: 10;">
+                            <button class="btn btn-success" onclick="markCorrect()" style="padding: 15px 40px; font-size: 1.2rem; min-width: 200px; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.3);">
+                                ✓ Correct!
+                            </button>
+                            <button class="btn btn-secondary" onclick="markWrong()" style="padding: 15px 40px; font-size: 1.2rem; min-width: 200px; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.3);">
+                                ✗ Wrong - Reset All
+                            </button>
+                        </div>
+                        
+                        ${allCorrect ? `
+                            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
+                                <button class="btn btn-success" onclick="nextRound()" style="padding: 15px 40px; font-size: 1.2rem; min-width: 200px; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.3);">
+                                    ➡️ Next Round
+                                </button>
+                            </div>
+                        ` : ''}
                     </div>
-                    
-                    <div id="guessGameButtons" style="display: ${isCardFlipped ? 'flex' : 'none'}; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                        <button class="btn btn-success" onclick="markCorrect()" style="padding: 15px 40px; font-size: 1.2rem; min-width: 200px; justify-content: center;">
-                            ✓ Correct!
-                        </button>
-                        <button class="btn btn-secondary" onclick="markWrong()" style="padding: 15px 40px; font-size: 1.2rem; min-width: 200px; justify-content: center;">
-                            ✗ Wrong - Reset All
-                        </button>
-                    </div>
-                    
-                    ${allCorrect ? `
-                        <button class="btn btn-success" onclick="nextRound()" style="padding: 15px 40px; font-size: 1.2rem; width: 100%; max-width: 400px; justify-content: center; margin-top: 20px;">
-                            ➡️ Next Round
-                        </button>
-                    ` : ''}
                 </div>
             `;
         }
@@ -3484,6 +3712,263 @@
                 
                 renderBombGame();
             }
+        }
+
+        function closeSpellingGame() {
+            document.getElementById('spellingGameModal').classList.remove('active');
+            openGameMenu();
+        }
+
+        function startNewSpellingGame() {
+            spellingGameState.currentCardIndex = 0;
+            renderSpellingGame();
+        }
+
+        function renderSpellingGame() {
+            const content = document.getElementById('spellingGameContent');
+            const { currentCardIndex, gameCards } = spellingGameState;
+            
+            if (currentCardIndex >= gameCards.length) {
+                // Game over
+                content.innerHTML = `
+                    <div style="text-align: center; padding: 20px;">
+                        <h2 style="font-size: clamp(2rem, 8vw, 3rem); margin-bottom: 20px;">🎉 All words spelled!</h2>
+                        <p style="font-size: clamp(1rem, 4vw, 1.5rem); margin-bottom: 20px;">Great job!</p>
+                        <button class="btn btn-success" onclick="startNewSpellingGame()" style="padding: 15px 30px; font-size: 1.2rem;">
+                            🔄 Play Again
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            const currentCard = gameCards[currentCardIndex];
+            const word = currentCard.backText.trim().toUpperCase();
+            spellingGameState.correctWord = word;
+            
+            // Check if it's multiple words (contains space)
+            const words = word.split(' ');
+            const isMultiWord = words.length > 1;
+            
+            // Determine block size based on total character count (excluding spaces)
+            const totalChars = word.replace(/\s/g, '').length;
+            let blockSize, fontSize, gap;
+            
+            if (totalChars <= 6) {
+                blockSize = 'clamp(50px, 12vw, 60px)';
+                fontSize = 'clamp(1.5rem, 4vw, 2rem)';
+                gap = '10px';
+            } else if (totalChars <= 10) {
+                blockSize = 'clamp(45px, 10vw, 50px)';
+                fontSize = 'clamp(1.3rem, 3.5vw, 1.8rem)';
+                gap = '8px';
+            } else if (totalChars <= 15) {
+                blockSize = 'clamp(40px, 9vw, 45px)';
+                fontSize = 'clamp(1.2rem, 3vw, 1.5rem)';
+                gap = '8px';
+            } else {
+                blockSize = 'clamp(35px, 8vw, 40px)';
+                fontSize = 'clamp(1rem, 2.5vw, 1.3rem)';
+                gap = '6px';
+            }
+            
+            // Scramble all letters but keep track of spaces
+            const letters = word.split('');
+            const lettersWithoutSpaces = letters.filter(l => l !== ' ');
+            
+            // Keep scrambling until it's different from original
+            let scrambled;
+            do {
+                scrambled = [...lettersWithoutSpaces].sort(() => Math.random() - 0.5);
+            } while (scrambled.join('') === lettersWithoutSpaces.join(''));
+            
+            // Create answer slots with space gaps
+            const answerSlotsArray = [];
+            const scrambledArray = [];
+            let scrambledIndex = 0;
+            
+            letters.forEach((char, index) => {
+                if (char === ' ') {
+                    answerSlotsArray.push('SPACE');
+                } else {
+                    answerSlotsArray.push(null);
+                    scrambledArray.push(scrambled[scrambledIndex]);
+                    scrambledIndex++;
+                }
+            });
+            
+            spellingGameState.scrambledLetters = scrambledArray;
+            spellingGameState.answerSlots = answerSlotsArray;
+            spellingGameState.selectedLetter = null;
+            
+            // Build answer rows for multi-word
+            let answerRowsHTML = '';
+            if (isMultiWord) {
+                let slotIndex = 0;
+                words.forEach((w, wordIndex) => {
+                    const wordSlots = w.split('').map((letter, letterIndex) => {
+                        const currentSlotIndex = slotIndex;
+                        slotIndex++;
+                        return `
+                            <div onclick="selectAnswerSlot(${currentSlotIndex})" 
+                                 class="answer-slot" 
+                                 data-index="${currentSlotIndex}"
+                                 style="width: ${blockSize}; height: ${blockSize}; border: 3px solid #667eea; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: ${fontSize}; font-weight: bold; background: white; cursor: pointer; user-select: none;">
+                                ${spellingGameState.answerSlots[currentSlotIndex] === 'SPACE' ? '' : (spellingGameState.answerSlots[currentSlotIndex] || '')}
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    answerRowsHTML += `
+                        <div style="display: flex; gap: ${gap}; justify-content: center; align-items: center; margin-bottom: ${wordIndex < words.length - 1 ? '15px' : '0'};">
+                            ${wordSlots}
+                        </div>
+                    `;
+                    
+                    slotIndex++; // Skip space position in answer slots
+                });
+            } else {
+                answerRowsHTML = `
+                    <div style="display: flex; gap: ${gap}; justify-content: center; flex-wrap: wrap;">
+                        ${spellingGameState.answerSlots.map((letter, index) => `
+                            <div onclick="selectAnswerSlot(${index})" 
+                                 class="answer-slot" 
+                                 data-index="${index}"
+                                 style="width: ${blockSize}; height: ${blockSize}; border: 3px solid #667eea; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: ${fontSize}; font-weight: bold; background: white; cursor: pointer; user-select: none;">
+                                ${letter === 'SPACE' ? '' : (letter || '')}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            content.innerHTML = `
+                <div style="text-align: center; padding: 10px;">
+                    <div style="margin-bottom: 20px;">
+                        <img src="${currentCard.frontImage}" style="max-width: min(90vw, 300px); max-height: min(40vh, 300px); width: auto; height: auto; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                    </div>
+                    
+                    <p style="font-size: clamp(1rem, 3vw, 1.2rem); margin-bottom: 20px; color: #667eea; font-weight: 600;">
+                        Card ${currentCardIndex + 1} / ${gameCards.length}
+                    </p>
+                    
+                    <!-- Answer slots -->
+                    <div id="answerRow" style="margin-bottom: 30px;">
+                        ${answerRowsHTML}
+                    </div>
+                    
+                    <!-- Letter tiles -->
+                    <div id="letterRow" style="display: flex; gap: ${gap}; justify-content: center; flex-wrap: wrap; max-width: 90vw; margin: 0 auto;">
+                        ${spellingGameState.scrambledLetters.map((letter, index) => {
+                            const isVowel = ['A', 'E', 'I', 'O', 'U'].includes(letter);
+                            const letterColor = isVowel ? '#ff9500' : 'white';
+                            return `
+                                <div onclick="selectLetter(${index})" 
+                                     class="letter-tile" 
+                                     data-index="${index}"
+                                     style="width: ${blockSize}; height: ${blockSize}; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: ${fontSize}; font-weight: bold; color: ${letterColor}; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); user-select: none;">
+                                    ${letter}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                    
+                    <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                        <button class="btn btn-success" onclick="checkSpelling()" style="padding: 15px 40px; font-size: clamp(1rem, 3vw, 1.2rem);">
+                            ✓ Check Answer
+                        </button>
+                        <button class="btn btn-primary" onclick="skipSpellingCard()" style="padding: 15px 40px; font-size: clamp(1rem, 3vw, 1.2rem);">
+                            ➡️ Skip
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function selectLetter(letterIndex) {
+            // Find first empty slot
+            const firstEmptySlot = spellingGameState.answerSlots.findIndex(slot => slot === null);
+            
+            if (firstEmptySlot === -1) return; // All slots filled
+            
+            // Move letter to first empty slot
+            const letter = spellingGameState.scrambledLetters[letterIndex];
+            spellingGameState.answerSlots[firstEmptySlot] = letter;
+            spellingGameState.scrambledLetters[letterIndex] = null;
+            
+            // Re-render
+            renderSpellingGameState();
+        }
+
+        function selectAnswerSlot(slotIndex) {
+            // Skip if it's a space placeholder
+            if (spellingGameState.answerSlots[slotIndex] === 'SPACE') return;
+            
+            // Return letter to scrambled row
+            if (spellingGameState.answerSlots[slotIndex] !== null) {
+                const letter = spellingGameState.answerSlots[slotIndex];
+                
+                // Find empty spot in scrambled letters or original position
+                const emptyIndex = spellingGameState.scrambledLetters.findIndex(l => l === null);
+                if (emptyIndex !== -1) {
+                    spellingGameState.scrambledLetters[emptyIndex] = letter;
+                }
+                
+                spellingGameState.answerSlots[slotIndex] = null;
+                
+                // Re-render
+                renderSpellingGameState();
+            }
+        }
+
+        function renderSpellingGameState() {
+            // Update answer slots
+            const answerSlots = document.querySelectorAll('.answer-slot');
+            answerSlots.forEach((slot, index) => {
+                const value = spellingGameState.answerSlots[index];
+                slot.innerHTML = (value === 'SPACE' || value === null) ? '' : value;
+            });
+            
+            // Update letter tiles
+            const letterTiles = document.querySelectorAll('.letter-tile');
+            letterTiles.forEach((tile, index) => {
+                if (spellingGameState.scrambledLetters[index] === null) {
+                    tile.style.visibility = 'hidden';
+                } else {
+                    tile.style.visibility = 'visible';
+                    tile.innerHTML = spellingGameState.scrambledLetters[index];
+                }
+            });
+        }
+
+        function checkSpelling() {
+            const answer = spellingGameState.answerSlots.map(slot => slot === 'SPACE' ? ' ' : slot).join('');
+            const correct = spellingGameState.correctWord;
+            
+            if (answer === correct) {
+                playSound('correctSound');
+                showToast('✅ Correct!', 1500);
+                
+                setTimeout(() => {
+                    spellingGameState.currentCardIndex++;
+                    renderSpellingGame();
+                }, 1500);
+            } else {
+                playSound('errorSound');
+                showToast('❌ Try again!', 1500);
+                
+                // Shake animation
+                const content = document.getElementById('spellingGameContent');
+                content.style.animation = 'shake 0.5s';
+                setTimeout(() => {
+                    content.style.animation = '';
+                }, 500);
+            }
+        }
+
+        function skipSpellingCard() {
+            spellingGameState.currentCardIndex++;
+            renderSpellingGame();
         }
 
         function flipOptionCard(cardIndex) {
