@@ -30,6 +30,7 @@
         html {
             touch-action: pan-y;
             -ms-touch-action: pan-y;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
         body {
@@ -546,6 +547,7 @@
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
+            position: relative;
         }
 
         .modal-content h2 {
@@ -591,9 +593,16 @@
         }
 
         .upload-icon {
-            font-size: 3rem;
             margin-bottom: 10px;
-            color: #999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .upload-icon img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
         }
 
         .preview-image {
@@ -639,6 +648,7 @@
             display: flex;
             gap: 15px;
             margin-top: 30px;
+            justify-content: center;
         }
 
         .form-actions button {
@@ -826,13 +836,6 @@
             }
         }
 
-        /* 5 columns on screens 1000px and wider */
-        @media (min-width: 1000px) {
-            .responsive-grid {
-                grid-template-columns: repeat(5, 1fr);
-            }
-        }
-
         @keyframes slideDown {
             from {
                 opacity: 0;
@@ -849,6 +852,38 @@
             10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
             20%, 40%, 60%, 80% { transform: translateX(10px); }
         }
+
+        @keyframes bounce {
+            0%, 100% { 
+                transform: translateY(0);
+                animation-timing-function: ease-in;
+            }
+            50% { 
+                transform: translateY(-8px);
+                animation-timing-function: ease-out;
+            }
+        }
+
+        .scroll-indicator {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 48px;
+            height: 48px;
+            opacity: 0.4;
+            animation: bounce 1.5s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 10001;
+            transition: opacity 0.3s ease;
+        }
+
+        .scroll-indicator svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -862,19 +897,19 @@
             <button class="btn btn-primary" onclick="openCreateModal()">
                 ➕ Add Cards
             </button>
-            <button class="btn btn-primary" onclick="shuffleCards()" id="shuffleBtn" disabled>
+            <button class="btn btn-primary" onclick="shuffleCards()" id="shuffleBtn" disabled style="display: none;">
                 🔀 Shuffle
             </button>
-            <button class="btn btn-secondary" onclick="deleteCard()" id="deleteBtn" disabled>
+            <button class="btn btn-secondary" onclick="deleteCard()" id="deleteBtn" disabled style="display: none;">
                 🗑️ Delete This
             </button>
-            <button class="btn btn-warning" onclick="clearAllCards()" id="clearBtn" disabled>
+            <button class="btn btn-warning" onclick="clearAllCards()" id="clearBtn" disabled style="display: none;">
                 ⚠️ Clear All
             </button>
-            <button class="btn btn-primary rename-btn" onclick="toggleRenameButton()" id="renameCardBtn" disabled>
+            <button class="btn btn-primary rename-btn" onclick="toggleRenameButton()" id="renameCardBtn" disabled style="display: none;">
                 ✏️
             </button>
-            <button class="btn btn-success game-btn" onclick="toggleGameButton()" id="gameBtn" disabled>
+            <button class="btn btn-success game-btn" onclick="toggleGameButton()" id="gameBtn" disabled style="display: none;">
                 🎮
             </button>
             <button class="btn btn-info" id="loadBtn" onclick="openLoadOptions()" style="background: white; width: 50px; padding: 8px 16px; display: flex; align-items: center; justify-content: center;">
@@ -883,7 +918,7 @@
                     <path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z" fill="#333"/>
                 </svg>
             </button>
-            <button class="btn btn-info" id="saveBtn" onclick="openSaveOptions()" disabled style="background: white; width: 50px; padding: 8px 16px; display: flex; align-items: center; justify-content: center;">
+            <button class="btn btn-info" id="saveBtn" onclick="openSaveOptions()" disabled style="background: white; width: 50px; padding: 8px 16px; display: none; align-items: center; justify-content: center;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="3" y="3" width="18" height="18" rx="2" fill="#333"/>
                     <rect x="6" y="6" width="12" height="5" fill="white"/>
@@ -899,18 +934,17 @@
     </div>
 
     <div class="modal" id="createModal">
-        <div class="modal-content">
+        <div class="modal-content" id="createModalContent">
             <h2 id="modalTitle">Create New Cards</h2>
             
             <div class="form-group">
-                <label id="modalLabel">Front Images (Select one or multiple - up to 30 images)</label>
+                <label id="modalLabel">Front Image(s) (Up to 30 images Max)</label>
                 <div class="upload-area" id="frontUpload" onclick="handleUploadAreaClick(event)">
                     <div id="frontPreview">
-                        <div class="upload-icon">📷</div>
+                        <div class="upload-icon"><img src="data:image/webp;base64,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" alt="Add Image" style="width: 80px; height: 80px;"></div>
                         <p style="font-weight: bold; font-size: 1.1rem;">Tap, drag & drop, or paste image(s)</p>
-                        <p style="font-size: 0.9rem; color: #667eea; margin-top: 15px; font-weight: 600;">✨ TIP: Select multiple images from a folder!</p>
-                        <p style="font-size: 0.8rem; color: #666; margin-top: 5px;">Cards will be created instantly with filenames as text</p>
-                        <p style="font-size: 0.8rem; color: #ff6b6b; margin-top: 10px; font-weight: 600;">⚠️ Maximum 30 images (15MB each)</p>
+                        <p style="font-size: 0.95rem; color: #666; margin-top: 15px;">Card names = Image filenames</p>
+                        <p style="font-size: 0.95rem; color: #ff6b6b; margin-top: 10px; font-weight: 600;">⚠️ Maximum 30 images (15MB each)</p>
                     </div>
                 </div>
                 <input type="file" id="frontImage" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/bmp,image/svg+xml,image/heic,image/heif,image/avif" multiple title="Select up to 30 images (max 15MB each)" onchange="handleImageUpload('front', this)">
@@ -928,6 +962,16 @@
                 <button class="btn btn-info" id="renameMultipleButton" onclick="toggleMultiRenameMode()" style="display: none;">📝 Rename Multiple</button>
                 <button class="btn btn-secondary" onclick="closeCreateModal()" style="padding: 8px 12px;">Cancel</button>
             </div>
+        </div>
+        
+        <!-- Scroll indicator -->
+        <div id="scrollIndicator" class="scroll-indicator" style="display: none;">
+            <svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- First chevron (top) -->
+                <path d="M256 298.3L95.03 137.3c-9.38-9.38-24.56-9.37-33.94 0s-9.37 24.56 0 33.94l178.5 178.5c9.38 9.38 24.56 9.38 33.94 0l178.5-178.5c9.38-9.38 9.37-24.56 0-33.94s-24.56-9.37-33.94 0L256 298.3z" fill="white"/>
+                <!-- Second chevron (bottom) -->
+                <path d="M256 426.3L95.03 265.3c-9.38-9.38-24.56-9.37-33.94 0s-9.37 24.56 0 33.94l178.5 178.5c9.38 9.38 24.56 9.38 33.94 0l178.5-178.5c9.38-9.38 9.37-24.56 0-33.94s-24.56-9.37-33.94 0L256 426.3z" fill="white"/>
+            </svg>
         </div>
     </div>
 
@@ -1773,6 +1817,70 @@
             document.body.style.overflow = 'hidden'; // Disable background scrolling
             document.getElementById('createModal').classList.add('active');
             resetForm();
+            
+            // Setup scroll indicator
+            setTimeout(setupScrollIndicator, 100);
+        }
+
+        let scrollIndicatorTimeout = null;
+
+        function setupScrollIndicator() {
+            const modalContent = document.getElementById('createModalContent');
+            const indicator = document.getElementById('scrollIndicator');
+            
+            if (!modalContent || !indicator) return;
+            
+            // Remove any existing scroll listener
+            modalContent.removeEventListener('scroll', handleModalScroll);
+            
+            // Check if content is scrollable
+            const isScrollable = modalContent.scrollHeight > modalContent.clientHeight;
+            
+            if (isScrollable) {
+                // Show indicator if at top
+                if (modalContent.scrollTop < 50) {
+                    indicator.style.display = 'block';
+                    indicator.style.opacity = '0.4';
+                } else {
+                    indicator.style.display = 'none';
+                }
+                
+                // Add scroll listener
+                modalContent.addEventListener('scroll', handleModalScroll);
+            } else {
+                indicator.style.display = 'none';
+            }
+        }
+
+        function handleModalScroll() {
+            const modalContent = document.getElementById('createModalContent');
+            const indicator = document.getElementById('scrollIndicator');
+            
+            if (!modalContent || !indicator) return;
+            
+            // Clear existing timeout
+            if (scrollIndicatorTimeout) {
+                clearTimeout(scrollIndicatorTimeout);
+            }
+            
+            const scrollTop = modalContent.scrollTop;
+            const isAtTop = scrollTop < 50;
+            
+            if (isAtTop) {
+                // At top - show indicator
+                indicator.style.display = 'block';
+                indicator.style.opacity = '0.4';
+            } else {
+                // Scrolled down - hide indicator
+                indicator.style.opacity = '0';
+                
+                // Fade out then hide
+                scrollIndicatorTimeout = setTimeout(() => {
+                    if (modalContent.scrollTop >= 50) {
+                        indicator.style.display = 'none';
+                    }
+                }, 300);
+            }
         }
 
         function openRenameModal() {
@@ -1849,7 +1957,7 @@
             
             // Reset modal title and label to default
             document.getElementById('modalTitle').textContent = 'Create New Cards';
-            document.getElementById('modalLabel').textContent = 'Front Images (Select one or multiple - up to 30 images)';
+            document.getElementById('modalLabel').textContent = 'Front Image(s) (Up to 30 images Max)';
             
             // Keep file input hidden (it's triggered by clicking upload area)
             document.getElementById('frontImage').style.display = 'none';
@@ -1859,7 +1967,7 @@
                 handleUploadAreaClick(event);
             };
             
-            document.getElementById('frontPreview').innerHTML = '<div class="upload-icon">📷</div><p style="font-weight: bold; font-size: 1.1rem;">Tap, drag & drop, or paste image(s)</p><p style="font-size: 0.9rem; color: #667eea; margin-top: 15px; font-weight: 600;">✨ TIP: Select multiple images from a folder!</p><p style="font-size: 0.8rem; color: #666; margin-top: 5px;">Cards will be created instantly with filenames as text</p><p style="font-size: 0.8rem; color: #ff6b6b; margin-top: 10px; font-weight: 600;">⚠️ Maximum 30 images (15MB each)</p>';
+            document.getElementById('frontPreview').innerHTML = '<div class="upload-icon"><img src="data:image/webp;base64,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" alt="Add Image" style="width: 80px; height: 80px;"></div><p style="font-weight: bold; font-size: 1.1rem;">Tap, drag & drop, or paste image(s)</p><p style="font-size: 0.95rem; color: #666; margin-top: 15px;">Card names = Image filenames</p><p style="font-size: 0.95rem; color: #ff6b6b; margin-top: 10px; font-weight: 600;">⚠️ Maximum 30 images (15MB each)</p>';
 
             const backTextElement = document.getElementById('backText');
             backTextElement.value = '';
@@ -1916,23 +2024,28 @@
 
             let previewHTML = '<div style="text-align: center; padding: 10px 5px;">';
             
-            // Only show image count if NOT in rename mode
-            if (!isRenameMode) {
-                previewHTML += '<p style="font-size: 1.2rem; font-weight: bold; color: #667eea; margin-bottom: 10px;">' + files.length + ' images selected</p>';
-            }
-            
-            // Only show "Add More" button if NOT in rename mode and not at limit
+            // Only show image count and button if NOT in rename mode
             if (!isRenameMode) {
                 const totalCards = cards.length + files.length;
-                if (totalCards < 30) {
-                    previewHTML += '<button onclick="addMoreImages(); event.stopPropagation();" style="margin-bottom: 10px; padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem;">➕ Add More Images</button>';
+                const showAddButton = totalCards < 30;
+                
+                previewHTML += '<div style="display: flex; align-items: center; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 8px;">';
+                previewHTML += '<p style="font-size: 1.2rem; font-weight: bold; color: #667eea; margin: 0;">' + files.length + ' selected</p>';
+                
+                if (showAddButton) {
+                    previewHTML += '<button onclick="addMoreImages(); event.stopPropagation();" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem;">➕ Add More</button>';
                 }
+                
+                previewHTML += '</div>';
             }
             
             previewHTML += '<div id="imagePreviewGrid" class="responsive-grid" style="display: grid; gap: 12px; max-height: 550px; overflow-y: auto; padding: 5px;"></div>';
             previewHTML += '</div>';
 
             document.getElementById('frontPreview').innerHTML = previewHTML;
+            
+            // Check scroll indicator after content is loaded
+            setTimeout(setupScrollIndicator, 100);
 
             // Extract and display all filenames
             const fileNames = [];
@@ -1981,7 +2094,7 @@
                     
                     container.innerHTML = `
                         <img src="${e.target.result}" style="width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 8px;" draggable="false">
-                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 3rem; font-weight: bold; color: rgba(255, 255, 255, 0.9); text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8), -1px -1px 2px rgba(0, 0, 0, 0.8); pointer-events: none;">
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 3rem; font-weight: bold; color: rgba(255, 255, 255, 0.6); text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.7), 0 0 3px rgba(0, 0, 0, 0.5); pointer-events: none;">
                             ${i + 1}
                         </div>
                         ${deleteButton}
@@ -2071,7 +2184,7 @@
             // Update button text
             const addButton = document.querySelector('.form-actions .btn-success');
             if (addButton) {
-                addButton.textContent = '✨ Create ' + files.length + ' Cards';
+                addButton.textContent = '✨ Create';
             }
         }
 
@@ -2154,7 +2267,7 @@
                         // Update button count
                         const addButton = document.querySelector('.form-actions .btn-success');
                         if (addButton) {
-                            addButton.textContent = '✨ Create ' + newFiles.length + ' Cards';
+                            addButton.textContent = '✨ Create';
                         }
                     } else {
                         // No files left
@@ -2620,7 +2733,7 @@
                 // Change button text to indicate multiple cards will be created
                 const addButton = document.querySelector('.form-actions .btn-success');
                 if (addButton) {
-                    addButton.textContent = '✨ Create ' + files.length + ' Cards';
+                    addButton.textContent = '✨ Create';
                 }
 
                 // Show rename button
@@ -4059,28 +4172,28 @@
             }
 
             shuffleBtn.disabled = false;
-            shuffleBtn.style.display = '';
+            shuffleBtn.style.display = 'flex';
             if (clearBtn) {
                 clearBtn.disabled = false;
-                clearBtn.style.display = '';
+                clearBtn.style.display = 'flex';
             }
             if (deleteBtn) {
                 deleteBtn.disabled = false;
-                deleteBtn.style.display = '';
+                deleteBtn.style.display = 'flex';
             }
             if (renameCardBtn) {
                 renameCardBtn.disabled = false;
-                renameCardBtn.style.display = '';
+                renameCardBtn.style.display = 'flex';
             }
             const gameBtn = document.getElementById('gameBtn');
             if (gameBtn) {
                 gameBtn.disabled = false;
-                gameBtn.style.display = '';
+                gameBtn.style.display = 'flex';
             }
             const saveBtn = document.getElementById('saveBtn');
             if (saveBtn) {
                 saveBtn.disabled = false;
-                saveBtn.style.display = '';
+                saveBtn.style.display = 'flex';
             }
             // Load button already enabled
             const card = cards[currentIndex];
