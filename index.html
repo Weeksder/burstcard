@@ -995,19 +995,20 @@
     </div>
 
     <!-- Audio elements for sound effects -->
-    <audio id="flipSound" preload="auto">
+    <!-- Using preload="metadata" to minimize audio session interruption on mobile devices -->
+    <audio id="flipSound" preload="metadata" playsinline>
         <source src="flip2.wav" type="audio/wav">
     </audio>
-    <audio id="correctSound" preload="auto">
+    <audio id="correctSound" preload="metadata" playsinline>
         <source src="correct.wav" type="audio/wav">
     </audio>
-    <audio id="errorSound" preload="auto">
+    <audio id="errorSound" preload="metadata" playsinline>
         <source src="error.wav" type="audio/wav">
     </audio>
-    <audio id="shuffleSound" preload="auto">
+    <audio id="shuffleSound" preload="metadata" playsinline>
         <source src="Shuffle_Chips.wav" type="audio/wav">
     </audio>
-    <audio id="explosionSound" preload="auto">
+    <audio id="explosionSound" preload="metadata" playsinline>
         <source src="explosion.wav" type="audio/wav">
     </audio>
 
@@ -1365,6 +1366,7 @@
         const audioManager = {
             sounds: {},
             audioUnlocked: false,
+            isMobile: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent),
 
             // Initialize and preload all sounds
             init: function() {
@@ -1379,8 +1381,15 @@
                         // Preload
                         audio.load();
 
-                        // Set volume to ensure it's audible
-                        audio.volume = 1.0;
+                        // Set volume much lower on mobile to avoid interrupting background media
+                        // On mobile devices, lower volume means less aggressive audio session takeover
+                        audio.volume = this.isMobile ? 0.25 : 1.0;
+
+                        // Try to prevent interrupting other audio on mobile
+                        // Note: This is limited by browser capabilities, but helps minimize disruption
+                        if (this.isMobile) {
+                            audio.preservesPitch = false;
+                        }
                     }
                 });
 
@@ -1405,8 +1414,10 @@
                         playPromise.then(() => {
                             firstSound.pause();
                             firstSound.currentTime = 0;
+                            // Restore to appropriate volume (lower on mobile)
                             firstSound.volume = originalVolume;
                         }).catch(() => {
+                            // Restore volume even on error
                             firstSound.volume = originalVolume;
                         });
                     }
