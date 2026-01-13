@@ -867,10 +867,10 @@
                         <p style="font-weight: bold; font-size: 1.1rem;">Tap, drag & drop, or paste image(s)</p>
                         <p style="font-size: 0.9rem; color: #667eea; margin-top: 15px; font-weight: 600;">✨ TIP: Select multiple images from a folder!</p>
                         <p style="font-size: 0.8rem; color: #666; margin-top: 5px;">Cards will be created instantly with filenames as text</p>
-                        <p style="font-size: 0.8rem; color: #ff6b6b; margin-top: 10px; font-weight: 600;">⚠️ Maximum 30 images (15MB each)</p>
+                        <p style="font-size: 0.8rem; color: #4caf50; margin-top: 10px; font-weight: 600;">✅ Images automatically compressed to 500KB each</p>
                     </div>
                 </div>
-                <input type="file" id="frontImage" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/bmp,image/svg+xml,image/heic,image/heif,image/avif" multiple title="Select up to 30 images (max 15MB each)" onchange="handleImageUpload('front', this)">
+                <input type="file" id="frontImage" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/bmp,image/svg+xml,image/heic,image/heif,image/avif" multiple title="Select up to 30 images (auto-compressed to 500KB)" onchange="handleImageUpload('front', this)">
             </div>
 
             <div class="form-group">
@@ -946,8 +946,8 @@
             <div style="display: flex; flex-direction: column; gap: 15px;">
                 <button class="btn btn-primary" id="saveJSONBtn" style="padding: 20px; text-align: left; white-space: normal; line-height: 1.5;">
                     <strong style="font-size: 1.2rem; display: block; margin-bottom: 5px;">📄 Quick Save (JSON)</strong>
-                    <span style="font-size: 0.85rem; display: block; opacity: 0.9;">Fast and simple • Human-readable • ~5-15MB</span>
-                    <span style="font-size: 0.8rem; display: block; opacity: 0.7; margin-top: 5px;">Best for: Quick backups, small decks (1-30 cards)</span>
+                    <span style="font-size: 0.85rem; display: block; opacity: 0.9;">Fast and simple • Human-readable • Compressed images</span>
+                    <span style="font-size: 0.8rem; display: block; opacity: 0.7; margin-top: 5px;">Best for: Quick backups, small to medium decks (1-30 cards)</span>
                 </button>
                 
                 <button class="btn btn-success" id="saveZIPBtn" style="padding: 20px; text-align: left; white-space: normal; line-height: 1.5;">
@@ -1773,35 +1773,37 @@
             const grid = document.getElementById('imagePreviewGrid');
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
-                const reader = new FileReader();
-                reader.onload = function(e) {
+
+                // Use compressed image for preview
+                compressImage(file, 500).then(compressedData => {
                     const container = document.createElement('div');
                     container.className = 'preview-image-container';
                     container.dataset.index = i;
-                    
+
                     // Only show X button if NOT in rename mode
                     const deleteButton = isRenameMode ? '' : '<div class="preview-image-delete" onclick="event.preventDefault(); event.stopPropagation(); deletePreviewImage(' + i + ');">✕</div>';
-                    
+
                     container.innerHTML = `
-                        <img src="${e.target.result}" style="width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 8px;" draggable="false">
+                        <img src="${compressedData}" style="width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 8px;" draggable="false">
                         ${deleteButton}
                     `;
-                    
+
                     container.onclick = function(event) {
                         if (!event.target.classList.contains('preview-image-delete')) {
                             toggleImageSelection(i);
                         }
                     };
-                    
+
                     // Prevent drag and drop on images
                     container.ondragstart = function(e) {
                         e.preventDefault();
                         return false;
                     };
-                    
+
                     grid.appendChild(container);
-                };
-                reader.readAsDataURL(file);
+                }).catch(err => {
+                    console.error('Preview compression failed:', err);
+                });
             }
         }
 
@@ -2291,45 +2293,108 @@
             tempInput.click();
         }
 
+        // Compress image to target size (500KB or less)
+        async function compressImage(file, maxSizeKB = 500) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const img = new Image();
+
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+
+                        // Calculate dimensions (max 1920px on longest side)
+                        let width = img.width;
+                        let height = img.height;
+                        const maxDimension = 1920;
+
+                        if (width > maxDimension || height > maxDimension) {
+                            if (width > height) {
+                                height = (height / width) * maxDimension;
+                                width = maxDimension;
+                            } else {
+                                width = (width / height) * maxDimension;
+                                height = maxDimension;
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // Try different quality levels to get under maxSizeKB
+                        const tryCompress = (quality) => {
+                            canvas.toBlob((blob) => {
+                                if (!blob) {
+                                    reject(new Error('Compression failed'));
+                                    return;
+                                }
+
+                                const sizeKB = blob.size / 1024;
+
+                                // If size is good or quality is already very low, accept it
+                                if (sizeKB <= maxSizeKB || quality <= 0.3) {
+                                    // Convert blob to base64
+                                    const blobReader = new FileReader();
+                                    blobReader.onload = function(e) {
+                                        resolve(e.target.result);
+                                    };
+                                    blobReader.readAsDataURL(blob);
+                                } else {
+                                    // Try with lower quality
+                                    tryCompress(quality - 0.1);
+                                }
+                            }, 'image/jpeg', quality);
+                        };
+
+                        // Start with 0.85 quality
+                        tryCompress(0.85);
+                    };
+
+                    img.onerror = function() {
+                        reject(new Error('Failed to load image'));
+                    };
+
+                    img.src = e.target.result;
+                };
+
+                reader.onerror = function() {
+                    reject(new Error('Failed to read file'));
+                };
+
+                reader.readAsDataURL(file);
+            });
+        }
+
         function handleImageUpload(side, input) {
             let files = input.files;
             if (files.length === 0) return;
 
-            // Validate file types and sizes
+            // Validate file types
             const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/svg+xml', 'image/heic', 'image/heif', 'image/avif'];
-            const maxSize = 15 * 1024 * 1024; // 15MB per file
-            
+
             const validFiles = [];
             const rejectedFiles = [];
-            const oversizedFiles = [];
-            
+
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
-                
+
                 // Check file type
                 if (!validTypes.includes(file.type.toLowerCase())) {
                     rejectedFiles.push(file.name);
                     continue;
                 }
-                
-                // Check file size
-                if (file.size > maxSize) {
-                    oversizedFiles.push(file.name);
-                    continue;
-                }
-                
+
                 validFiles.push(file);
             }
-            
+
             // Show notifications for rejected files
             if (rejectedFiles.length > 0) {
                 showToastWithButton('⚠️ ' + rejectedFiles.length + ' file(s) rejected<br>Only image files allowed');
             }
-            
-            if (oversizedFiles.length > 0) {
-                showToastWithButton('⚠️ ' + oversizedFiles.length + ' file(s) too large<br>Maximum 15MB per file');
-            }
-            
+
             // If no valid files, exit
             if (validFiles.length === 0) {
                 if (input.value) {
@@ -2337,7 +2402,7 @@
                 }
                 return;
             }
-            
+
             // Replace files with valid files only
             try {
                 const dataTransfer = new DataTransfer();
@@ -2455,9 +2520,8 @@
                     fileName = truncated;
                 }
 
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const imageData = e.target.result;
+                // Compress image before using
+                compressImage(file, 500).then(imageData => {
                     if (side === 'front') {
                         newCard.frontImage = imageData;
                         newCard.backText = fileName;
@@ -2491,8 +2555,10 @@
                             addMoreButton.style.display = 'none';
                         }
                     }
-                };
-                reader.readAsDataURL(file);
+                }).catch(err => {
+                    console.error('Image compression failed:', err);
+                    showToast('⚠️ Failed to compress image', 3000);
+                });
             }
         }
 
@@ -2603,14 +2669,12 @@
                 let duplicates = [];
                 const totalFiles = filesToProcess.length;
 
+                // Process files with compression
                 for (let i = 0; i < filesToProcess.length; i++) {
                     const file = filesToProcess[i];
                     const fileName = namesToProcess[i];
 
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const imageData = e.target.result;
-
+                    compressImage(file, 500).then(imageData => {
                         // Check for duplicate
                         if (isDuplicateImage(imageData)) {
                             duplicates.push(fileName);
@@ -2641,8 +2705,26 @@
                                 showToastWithButton('⚠️ ' + duplicates.length + ' duplicate' + (duplicates.length === 1 ? '' : 's') + ' detected<br>Skipped');
                             }
                         }
-                    };
-                    reader.readAsDataURL(file);
+                    }).catch(err => {
+                        console.error('Image compression failed:', err);
+                        processed++;
+
+                        // Still check if all done even on error
+                        if (processed === totalFiles) {
+                            saveCards();
+                            closeCreateModal();
+
+                            if (added > 0) {
+                                currentIndex = cards.length - added;
+                                isFlipped = false;
+                                renderDisplay();
+                            }
+
+                            if (duplicates.length > 0) {
+                                showToastWithButton('⚠️ ' + duplicates.length + ' duplicate' + (duplicates.length === 1 ? '' : 's') + ' detected<br>Skipped');
+                            }
+                        }
+                    });
                 }
                 return;
             }
