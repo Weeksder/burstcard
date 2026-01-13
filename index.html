@@ -1210,6 +1210,74 @@
             correctWord: ''
         };
 
+        // DOM Cache - Performance optimization to avoid repeated queries
+        const domCache = {
+            cardDisplay: null,
+            shuffleBtn: null,
+            clearBtn: null,
+            deleteBtn: null,
+            renameCardBtn: null,
+            gameBtn: null,
+            saveBtn: null,
+            loadBtn: null,
+            moreDropdown: null,
+            createModal: null,
+            backText: null,
+            frontPreview: null,
+            frontUpload: null,
+            init: function() {
+                // Initialize all cached elements when DOM is ready
+                this.cardDisplay = document.getElementById('cardDisplay');
+                this.shuffleBtn = document.getElementById('shuffleBtn');
+                this.clearBtn = document.getElementById('clearBtn');
+                this.deleteBtn = document.getElementById('deleteBtn');
+                this.renameCardBtn = document.getElementById('renameCardBtn');
+                this.gameBtn = document.getElementById('gameBtn');
+                this.saveBtn = document.getElementById('saveBtn');
+                this.loadBtn = document.getElementById('loadBtn');
+                this.moreDropdown = document.getElementById('moreDropdown');
+                this.createModal = document.getElementById('createModal');
+                this.backText = document.getElementById('backText');
+                this.frontPreview = document.getElementById('frontPreview');
+                this.frontUpload = document.getElementById('frontUpload');
+            }
+        };
+
+        // Image hash cache for fast duplicate detection
+        const imageHashCache = new Map();
+
+        // Simple fast hash function for base64 strings
+        function fastHash(str) {
+            let hash = 0;
+            const len = Math.min(str.length, 10000); // Sample first 10K chars for speed
+            for (let i = 0; i < len; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // Convert to 32-bit integer
+            }
+            return hash;
+        }
+
+        // Rebuild hash cache from cards
+        function rebuildHashCache() {
+            imageHashCache.clear();
+            cards.forEach(card => {
+                if (card.frontImage) {
+                    imageHashCache.set(fastHash(card.frontImage), card.frontImage);
+                }
+            });
+        }
+
+        // Fisher-Yates shuffle - O(n) unbiased shuffle algorithm
+        function fisherYatesShuffle(array) {
+            const arr = [...array]; // Create copy to avoid mutating original
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
         // Allow zoom between 75% and 125% (25% margin each way)
         let currentZoom = 1.0;
         const minZoom = 0.75;
@@ -1353,7 +1421,9 @@
 
         // Load cards from browser storage on startup
         window.onload = function() {
+            domCache.init(); // Initialize DOM cache for performance
             loadCards();
+            rebuildHashCache(); // Build image hash cache after loading cards
             renderDisplay();
             setupDragAndDrop();
             setupSwipeGestures();
@@ -2073,7 +2143,12 @@
         }
 
         function isDuplicateImage(imageData) {
-            return cards.some(card => card.frontImage === imageData);
+            // Fast hash-based duplicate detection - O(1) instead of O(n)
+            const hash = fastHash(imageData);
+            const cached = imageHashCache.get(hash);
+            if (!cached) return false;
+            // Double-check with full comparison (hash collisions are rare but possible)
+            return cached === imageData;
         }
 
         function handleUploadAreaClick(event) {
@@ -3046,28 +3121,54 @@
                 let duplicates = [];
                 const totalFiles = filesToProcess.length;
 
-                // Process files with compression
-                for (let i = 0; i < filesToProcess.length; i++) {
-                    const file = filesToProcess[i];
-                    const fileName = namesToProcess[i]; // Can be empty string
+                // PERFORMANCE FIX: Batch file processing to avoid memory spikes
+                // Process 5 files at a time instead of all 30 simultaneously
+                const batchSize = 5;
+                let currentBatch = 0;
 
-                    compressImage(file, 500).then(imageData => {
-                        // Check for duplicate
-                        if (isDuplicateImage(imageData)) {
-                            duplicates.push(fileName || `Card ${i + 1}`);
+                function processBatch() {
+                    const startIdx = currentBatch * batchSize;
+                    const endIdx = Math.min(startIdx + batchSize, filesToProcess.length);
+
+                    const promises = [];
+                    for (let i = startIdx; i < endIdx; i++) {
+                        const file = filesToProcess[i];
+                        const fileName = namesToProcess[i];
+
+                        const promise = compressImage(file, 500).then(imageData => {
+                            // Check for duplicate
+                            if (isDuplicateImage(imageData)) {
+                                duplicates.push(fileName || `Card ${i + 1}`);
+                            } else {
+                                const card = {
+                                    id: Date.now() + i + Math.random(),
+                                    frontImage: imageData,
+                                    backText: fileName,
+                                    backImage: null
+                                };
+                                cards.push(card);
+                                // Update hash cache
+                                imageHashCache.set(fastHash(imageData), imageData);
+                                added++;
+                            }
+                            processed++;
+                        }).catch(err => {
+                            console.error('Image compression failed:', err);
+                            processed++;
+                        });
+
+                        promises.push(promise);
+                    }
+
+                    // Wait for batch to complete before starting next batch
+                    Promise.all(promises).then(() => {
+                        currentBatch++;
+
+                        if (currentBatch * batchSize < totalFiles) {
+                            // Process next batch
+                            processBatch();
                         } else {
-                            cards.push({
-                                id: Date.now() + i + Math.random(),
-                                frontImage: imageData,
-                                backText: fileName,
-                                backImage: null
-                            });
-                            added++;
-                        }
-                        processed++;
-
-                        // When all files are processed
-                        if (processed === totalFiles) {
+                            // All files processed
                             saveCards();
                             closeCreateModal();
 
@@ -3082,27 +3183,11 @@
                                 showToastWithButton('⚠️ ' + duplicates.length + ' duplicate' + (duplicates.length === 1 ? '' : 's') + ' detected<br>Skipped');
                             }
                         }
-                    }).catch(err => {
-                        console.error('Image compression failed:', err);
-                        processed++;
-
-                        // Still check if all done even on error
-                        if (processed === totalFiles) {
-                            saveCards();
-                            closeCreateModal();
-
-                            if (added > 0) {
-                                currentIndex = cards.length - added;
-                                isFlipped = false;
-                                renderDisplay();
-                            }
-
-                            if (duplicates.length > 0) {
-                                showToastWithButton('⚠️ ' + duplicates.length + ' duplicate' + (duplicates.length === 1 ? '' : 's') + ' detected<br>Skipped');
-                            }
-                        }
                     });
                 }
+
+                // Start processing first batch
+                processBatch();
                 return;
             }
 
@@ -3122,12 +3207,16 @@
             const backText = document.getElementById('backText').value;
             newCard.backText = backText;
 
-            cards.push({
+            const card = {
                 id: Date.now(),
                 frontImage: newCard.frontImage,
                 backText: newCard.backText,
                 backImage: newCard.backImage
-            });
+            };
+            cards.push(card);
+
+            // Update hash cache
+            imageHashCache.set(fastHash(newCard.frontImage), newCard.frontImage);
 
             saveCards();
             closeCreateModal();
@@ -3143,7 +3232,14 @@
                 alert('No cards to delete!');
                 return;
             }
-            
+
+            // Remove from hash cache before deleting
+            const deletedCard = cards[currentIndex];
+            if (deletedCard && deletedCard.frontImage) {
+                const hash = fastHash(deletedCard.frontImage);
+                imageHashCache.delete(hash);
+            }
+
             // Simple approach - just delete without confirm for iPad compatibility
             cards.splice(currentIndex, 1);
             if (currentIndex >= cards.length && cards.length > 0) {
@@ -3160,7 +3256,7 @@
             if (cards.length === 0) return;
 
             playSound('shuffleSound');
-            cards.sort(() => Math.random() - 0.5);
+            cards = fisherYatesShuffle(cards); // Use proper Fisher-Yates O(n) shuffle
             currentIndex = 0;
             isFlipped = false;
             saveCards();
@@ -3253,6 +3349,8 @@
                     cards = [];
                     currentIndex = 0;
                     isFlipped = false;
+                    // Clear hash cache
+                    imageHashCache.clear();
                     sessionStorage.removeItem('flashcards');
                     renderDisplay();
                     
@@ -3678,7 +3776,7 @@
                     };
                     
                     // Shuffle cards for the game
-                    const gameCards = [...cards].sort(() => Math.random() - 0.5);
+                    const gameCards = fisherYatesShuffle(cards);
                     guessGameState.gameCards = gameCards;
                 }
                 // If hasActiveSession is true, we continue with existing state
@@ -3695,12 +3793,11 @@
                 }
                 
                 // Shuffle and take up to 7 normal cards
-                const shuffled = [...cards].sort(() => Math.random() - 0.5);
+                const shuffled = fisherYatesShuffle(cards);
                 const selectedCards = shuffled.slice(0, Math.min(7, cards.length));
-                
+
                 // Add 2 bomb cards initially and shuffle
-                bombGameState.gameCards = [...selectedCards, { isBomb: true }, { isBomb: true }];
-                bombGameState.gameCards.sort(() => Math.random() - 0.5);
+                bombGameState.gameCards = fisherYatesShuffle([...selectedCards, { isBomb: true }, { isBomb: true }]);
                 bombGameState.eliminated = false;
                 bombGameState.cardsRemaining = selectedCards.length;
                 bombGameState.bombCount = 2;
@@ -3726,7 +3823,7 @@
                 }
                 
                 // Shuffle cards
-                spellingGameState.gameCards = [...cardsWithText].sort(() => Math.random() - 0.5);
+                spellingGameState.gameCards = fisherYatesShuffle(cardsWithText);
                 spellingGameState.currentCardIndex = 0;
                 
                 document.body.style.overflow = 'hidden';
@@ -3773,7 +3870,7 @@
             
             // Get random cards for this round
             if (!guessGameState.currentRoundCards) {
-                let roundCards = [...allCards].sort(() => Math.random() - 0.5).slice(0, optionsCount);
+                let roundCards = fisherYatesShuffle(allCards).slice(0, optionsCount);
                 guessGameState.currentRoundCards = roundCards;
                 guessGameState.correctCards = {};
                 guessGameState.selectedCard = null;
@@ -3947,7 +4044,7 @@
                 
                 // Add new bomb back
                 bombGameState.gameCards.push({ isBomb: true });
-                bombGameState.gameCards.sort(() => Math.random() - 0.5);
+                bombGameState.gameCards = fisherYatesShuffle(bombGameState.gameCards);
                 
                 renderBombGame();
             } else {
@@ -4040,7 +4137,7 @@
             // Keep scrambling until it's different from original
             let scrambled;
             do {
-                scrambled = [...lettersWithoutSpaces].sort(() => Math.random() - 0.5);
+                scrambled = fisherYatesShuffle(lettersWithoutSpaces);
             } while (scrambled.join('') === lettersWithoutSpaces.join(''));
             
             // Create answer slots with space gaps
@@ -4277,11 +4374,16 @@
         }
 
         function renderDisplay() {
-            const display = document.getElementById('cardDisplay');
-            const shuffleBtn = document.getElementById('shuffleBtn');
-            const clearBtn = document.getElementById('clearBtn');
-            const deleteBtn = document.getElementById('deleteBtn');
-            const renameCardBtn = document.getElementById('renameCardBtn');
+            // PERFORMANCE FIX: Use cached DOM references
+            const display = domCache.cardDisplay || document.getElementById('cardDisplay');
+            const shuffleBtn = domCache.shuffleBtn || document.getElementById('shuffleBtn');
+            const clearBtn = domCache.clearBtn || document.getElementById('clearBtn');
+            const deleteBtn = domCache.deleteBtn || document.getElementById('deleteBtn');
+            const renameCardBtn = domCache.renameCardBtn || document.getElementById('renameCardBtn');
+            const gameBtn = domCache.gameBtn || document.getElementById('gameBtn');
+            const saveBtn = domCache.saveBtn || document.getElementById('saveBtn');
+            const loadBtn = domCache.loadBtn || document.getElementById('loadBtn');
+            const moreDropdown = domCache.moreDropdown || document.getElementById('moreDropdown');
 
             if (cards.length === 0) {
                 display.innerHTML = `
@@ -4291,8 +4393,10 @@
                         <p>Tap "Add Card" to create your first flashcard</p>
                     </div>
                 `;
-                shuffleBtn.disabled = true;
-                shuffleBtn.style.display = 'none';
+                if (shuffleBtn) {
+                    shuffleBtn.disabled = true;
+                    shuffleBtn.style.display = 'none';
+                }
                 if (clearBtn) {
                     clearBtn.disabled = true;
                     clearBtn.style.display = 'none';
@@ -4305,52 +4409,47 @@
                     renameCardBtn.disabled = true;
                     renameCardBtn.style.display = 'none';
                 }
-                const gameBtn = document.getElementById('gameBtn');
                 if (gameBtn) {
                     gameBtn.disabled = true;
                     gameBtn.style.display = 'none';
                 }
-                const saveBtn = document.getElementById('saveBtn');
                 if (saveBtn) {
                     saveBtn.disabled = true;
                     saveBtn.style.display = 'none';
                 }
-                
+
                 // Hide dropdown when no cards
-                const moreDropdown = document.getElementById('moreDropdown');
                 if (moreDropdown) {
                     moreDropdown.style.display = 'none';
                 }
-                
+
                 // Load button stays visible on default page
-                const loadBtn = document.getElementById('loadBtn');
                 if (loadBtn) {
                     loadBtn.style.display = 'flex';
                 }
-                
+
                 return;
             }
 
-            shuffleBtn.disabled = false;
-            shuffleBtn.style.display = 'flex';
+            if (shuffleBtn) {
+                shuffleBtn.disabled = false;
+                shuffleBtn.style.display = 'flex';
+            }
             if (deleteBtn) {
                 deleteBtn.disabled = false;
                 deleteBtn.style.display = 'flex';
             }
-            const gameBtn = document.getElementById('gameBtn');
             if (gameBtn) {
                 gameBtn.disabled = false;
                 gameBtn.style.display = 'flex';
             }
-            
+
             // Show dropdown when cards are loaded
-            const moreDropdown = document.getElementById('moreDropdown');
             if (moreDropdown) {
                 moreDropdown.style.display = 'inline-block';
             }
-            
+
             // Hide Load button when cards are loaded (it's now in dropdown)
-            const loadBtn = document.getElementById('loadBtn');
             if (loadBtn) {
                 loadBtn.style.display = 'none';
             }
@@ -4394,30 +4493,46 @@
                     </div>
                 </div>
             `;
-            
-            // Auto-scale text to fit on one line if needed
-            setTimeout(() => scaleTextToFit(), 10);
+
+            // Auto-scale text to fit on one line if needed - use requestAnimationFrame for proper timing
+            requestAnimationFrame(() => scaleTextToFit());
         }
 
         function scaleTextToFit() {
             const textElement = document.querySelector('.card-text-auto-scale');
             if (!textElement) return;
-            
+
             const container = textElement.closest('.card-back');
             if (!container) return;
-            
-            // Start with maximum font size
-            let fontSize = 7.5; // rem
-            textElement.style.fontSize = fontSize + 'rem';
-            
-            // Get container width (with some padding)
+
+            // PERFORMANCE FIX: Batch DOM reads and writes to avoid layout thrashing
+            // Read phase - get all measurements at once
             const maxWidth = container.offsetWidth - 40; // 20px padding on each side
-            
-            // Reduce font size until text fits
-            while (textElement.scrollWidth > maxWidth && fontSize > 1) {
-                fontSize -= 0.1;
-                textElement.style.fontSize = fontSize + 'rem';
+
+            // Binary search for optimal font size instead of linear decrease
+            // This reduces the number of reflows from ~65 to ~6-7
+            let minSize = 1;
+            let maxSize = 7.5;
+            let optimalSize = maxSize;
+
+            // Write phase - test with binary search
+            while (maxSize - minSize > 0.1) {
+                const testSize = (minSize + maxSize) / 2;
+                textElement.style.fontSize = testSize + 'rem';
+
+                // Force single reflow here
+                const currentWidth = textElement.scrollWidth;
+
+                if (currentWidth <= maxWidth) {
+                    optimalSize = testSize;
+                    minSize = testSize;
+                } else {
+                    maxSize = testSize;
+                }
             }
+
+            // Final write - set optimal size
+            textElement.style.fontSize = optimalSize + 'rem';
         }
 
         // Add event listeners for save modal buttons
