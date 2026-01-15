@@ -3926,11 +3926,11 @@
                             }).join('')}
                         </div>
                         
-                        <div id="guessGameButtons" style="display: ${isCardFlipped ? 'flex' : 'none'}; position: sticky; top: 0; left: 0; right: 0; justify-content: center; gap: 15px; padding: 15px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); box-shadow: 0 4px 20px rgba(0,0,0,0.1); z-index: 100; margin-bottom: 15px; border-radius: 12px;">
-                            <button class="btn btn-success" onclick="markCorrect()" style="padding: 15px 40px; font-size: 1.2rem; min-width: 150px; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+                        <div id="guessGameButtons" style="display: ${isCardFlipped ? 'flex' : 'none'}; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); flex-direction: column; gap: 15px; z-index: 10;">
+                            <button class="btn btn-success" onclick="markCorrect()" style="padding: 15px 40px; font-size: 1.2rem; min-width: 200px; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.3);">
                                 ✓ Correct!
                             </button>
-                            <button class="btn btn-secondary" onclick="markWrong()" style="padding: 15px 40px; font-size: 1.2rem; min-width: 150px; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+                            <button class="btn btn-secondary" onclick="markWrong()" style="padding: 15px 40px; font-size: 1.2rem; min-width: 200px; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.3);">
                                 ✗ Wrong - Reset All
                             </button>
                         </div>
