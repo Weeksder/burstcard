@@ -926,6 +926,47 @@
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
             display: block;
         }
+
+        /* Confetti Animation */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #f0f;
+            position: absolute;
+            animation: confetti-fall 3s linear infinite;
+        }
+
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        .confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            overflow: hidden;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
     </style>
 </head>
 <body>
@@ -1057,18 +1098,23 @@
 
     <div class="modal" id="guessGameModal">
         <div class="modal-content" style="max-width: 800px;">
-            <h2>🎯 Guess the Word</h2>
-            
             <div id="guessGameContent"></div>
-            
-            <div style="margin-top: 20px; display: flex; gap: 10px;">
-                <button class="btn btn-secondary" onclick="closeGuessGame()" style="flex: 1; padding: 15px; justify-content: center;">
-                    ← Back to Game Menu
-                </button>
-                <button class="btn btn-primary" onclick="startNewGuessGame()" style="padding: 15px; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; min-width: 60px;" title="Start New Game">
-                    🔄
-                </button>
+        </div>
+    </div>
+
+    <!-- Help Modal for Guess Game -->
+    <div class="modal" id="guessGameHelpModal">
+        <div class="modal-content" style="max-width: 500px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <h2 style="color: white;">📖 How to Play</h2>
+            <div style="text-align: left; line-height: 1.8; font-size: 1.1rem;">
+                <p style="margin-bottom: 10px;"><strong>1.</strong> Player 1 guesses card #1 out loud</p>
+                <p style="margin-bottom: 10px;"><strong>2.</strong> Flip the card to check</p>
+                <p style="margin-bottom: 10px;"><strong>3.</strong> <span style="color: #51cf66; font-weight: bold;">Correct?</span> Keep going! <span style="color: #ff6b6b; font-weight: bold;">Wrong?</span> Next player starts over</p>
+                <p style="margin-bottom: 20px;"><strong>4.</strong> Complete all 9 cards to win!</p>
             </div>
+            <button class="btn btn-primary" onclick="closeGuessGameHelp()" style="width: 100%; padding: 15px; justify-content: center; background: white; color: #667eea;">
+                Got it!
+            </button>
         </div>
     </div>
 
@@ -3847,6 +3893,16 @@
             openGameMenu(); // This will handle scroll state
         }
 
+        function openGuessGameHelp() {
+            document.body.style.overflow = 'hidden';
+            document.getElementById('guessGameHelpModal').classList.add('active');
+        }
+
+        function closeGuessGameHelp() {
+            document.body.style.overflow = 'hidden'; // Keep overflow hidden since we're still in guessGameModal
+            document.getElementById('guessGameHelpModal').classList.remove('active');
+        }
+
         function renderGuessGame() {
             const content = document.getElementById('guessGameContent');
             
@@ -3888,12 +3944,20 @@
             
             content.innerHTML = `
                 <div style="text-align: center;">
-                    <p style="font-size: 1.2rem; margin-bottom: 20px; color: #666;">
-                        Flip cards from left to right, top to bottom. One wrong answer resets all!
-                    </p>
-                    <p style="font-size: 1rem; margin-bottom: 30px; color: #667eea; font-weight: 600;">
-                        Progress: ${guessGameState.currentCardOrder} / ${roundCards.length} cards
-                    </p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                        <button class="btn btn-secondary" onclick="closeGuessGame()" style="padding: 10px 16px; display: flex; align-items: center; gap: 6px; font-size: 0.9rem;">
+                            ← Menu
+                        </button>
+                        <h2 style="margin: 0;">🎯 Guess the Word</h2>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-primary" onclick="startNewGuessGame()" style="padding: 10px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border-radius: 8px;" title="Shuffle Cards">
+                                🔄
+                            </button>
+                            <button onclick="openGuessGameHelp()" style="background: #17a2b8; color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 1.2rem; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; transition: all 0.3s;" title="How to Play">
+                                ❓
+                            </button>
+                        </div>
+                    </div>
                     
                     <div style="position: relative; max-width: 800px; margin: 0 auto;">
                         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px; transition: opacity 0.5s; ${allCorrect ? 'opacity: 0.3;' : 'opacity: 1;'}">
@@ -3903,6 +3967,7 @@
                                 const isSelected = guessGameState.selectedCard === index;
                                 const canFlip = index === currentCardIndex && !isCardFlipped;
                                 const isFlipped = isCorrect || isSelected;
+                                const cardNumber = index + 1; // Display 1-9 instead of 0-8
                                 
                                 return `
                                     <div style="position: relative;">
@@ -3913,11 +3978,10 @@
                                                     ${!canFlip && !isCorrect ? 'opacity: 0.6;' : ''}">
                                             <div style="width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s; ${isFlipped ? 'transform: rotateY(180deg);' : ''}">
                                                 <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); ${isCurrentCard && !isFlipped ? 'border: 3px solid #ffc107;' : ''}">
-                                                    <span style="font-size: 4rem; color: white;">❓</span>
+                                                    <span style="font-size: 4rem; color: white; font-weight: bold;">${cardNumber}</span>
                                                 </div>
                                                 <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: white; border-radius: 15px; display: flex; align-items: center; justify-content: center; padding: 10px; transform: rotateY(180deg); box-shadow: 0 4px 15px rgba(0,0,0,0.3); ${isSelected ? 'border: 4px solid #51cf66;' : ''}">
                                                     <img src="${card.frontImage}" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 10px;">
-                                                    ${isCorrect ? '<div style="position: absolute; top: 5px; right: 5px; background: #51cf66; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;"><span style="color: white; font-size: 1.5rem;">✓</span></div>' : ''}
                                                 </div>
                                             </div>
                                         </div>
@@ -3926,25 +3990,60 @@
                             }).join('')}
                         </div>
                         
-                        <div id="guessGameButtons" style="display: ${isCardFlipped ? 'flex' : 'none'}; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); flex-direction: column; gap: 15px; z-index: 10;">
-                            <button class="btn btn-success" onclick="markCorrect()" style="padding: 15px 40px; font-size: 1.2rem; min-width: 200px; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.3);">
-                                ✓ Correct!
+                        <div id="guessGameButtons" style="display: ${isCardFlipped ? 'flex' : 'none'};">
+                            <button class="btn btn-success" onclick="markCorrect()" style="width: 80px; height: 80px; min-width: 80px; padding: 0; border-radius: 50%; font-size: 2.5rem; font-weight: bold; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.4); background: linear-gradient(135deg, #51cf66 0%, #40c057 100%); color: white; border: none; cursor: pointer; transition: all 0.3s; position: absolute; top: 50%; left: 33.33%; transform: translate(-50%, -50%); z-index: 10;" onmouseover="this.style.transform='translate(-50%, -50%) scale(1.1)'" onmouseout="this.style.transform='translate(-50%, -50%) scale(1)'">
+                                ✓
                             </button>
-                            <button class="btn btn-secondary" onclick="markWrong()" style="padding: 15px 40px; font-size: 1.2rem; min-width: 200px; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.3);">
-                                ✗ Wrong - Reset All
+                            <button class="btn btn-secondary" onclick="markWrong()" style="width: 80px; height: 80px; min-width: 80px; padding: 0; border-radius: 50%; font-size: 2.5rem; font-weight: bold; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.4); background: linear-gradient(135deg, #ff6b6b 0%, #fa5252 100%); color: white; border: none; cursor: pointer; transition: all 0.3s; position: absolute; top: 50%; left: 66.66%; transform: translate(-50%, -50%); z-index: 10;" onmouseover="this.style.transform='translate(-50%, -50%) scale(1.1)'" onmouseout="this.style.transform='translate(-50%, -50%) scale(1)'">
+                                ✗
                             </button>
                         </div>
                         
                         ${allCorrect ? `
-                            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
-                                <button class="btn btn-success" onclick="nextRound()" style="padding: 15px 40px; font-size: 1.2rem; min-width: 200px; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.3);">
-                                    ➡️ Next Round
+                            <div id="confettiContainer" class="confetti-container"></div>
+                            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; text-align: center;">
+                                <div style="position: relative; margin-bottom: 20px;">
+                                    <span style="position: absolute; top: -60px; left: -60px; font-size: 4rem; animation: pulse 1.5s ease-in-out infinite;">🎉</span>
+                                    <span style="position: absolute; top: -60px; right: -60px; font-size: 4rem; animation: pulse 1.5s ease-in-out infinite;">🎉</span>
+                                </div>
+                                <button class="btn btn-success" onclick="nextRound()" style="padding: 15px 30px; font-size: 1.2rem; min-width: 180px; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.3); animation: pulse 1.5s ease-in-out infinite; margin-top: 40px;">
+                                    ➡️ New Round
                                 </button>
                             </div>
                         ` : ''}
                     </div>
                 </div>
             `;
+            
+            // Trigger confetti when all cards are correct
+            if (allCorrect) {
+                setTimeout(() => createConfetti(), 100);
+            }
+        }
+
+        function createConfetti() {
+            const container = document.getElementById('confettiContainer');
+            if (!container) return;
+            
+            container.innerHTML = ''; // Clear existing confetti
+            
+            const colors = ['#ff6b6b', '#51cf66', '#ffd93d', '#6bcfff', '#c996ff', '#ff9ff3'];
+            const confettiCount = 50;
+            
+            for (let i = 0; i < confettiCount; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDelay = Math.random() * 3 + 's';
+                confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                container.appendChild(confetti);
+            }
+            
+            // Remove confetti after animation
+            setTimeout(() => {
+                if (container) container.innerHTML = '';
+            }, 5000);
         }
 
         function closeBombGame() {
@@ -3987,7 +4086,7 @@
                                         justify-content: center;
                                         box-shadow: 0 4px 15px rgba(0,0,0,0.3);
                                         position: relative;">
-                                <span style="font-size: clamp(2.5rem, 10vw, 4rem); color: white;">❓</span>
+                                <span style="font-size: clamp(2.5rem, 10vw, 4rem); color: white;">💣</span>
                             </div>
                         </div>
                     `).join('')}
