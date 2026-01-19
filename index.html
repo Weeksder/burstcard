@@ -1804,6 +1804,18 @@
                         // Store reference
                         this.sounds[id] = audio;
 
+                        // Add error event listener for debugging
+                        audio.addEventListener('error', (e) => {
+                            console.error(`❌ Audio load error for ${id}:`, e);
+                            console.error(`   Source: ${audio.src}`);
+                            console.error(`   Error code: ${audio.error ? audio.error.code : 'unknown'}`);
+                        });
+
+                        // Add canplay event for debugging
+                        audio.addEventListener('canplay', () => {
+                            console.log(`✅ Audio ready: ${id}`);
+                        });
+
                         // Preload
                         audio.load();
 
@@ -1812,6 +1824,7 @@
                         // On mobile devices, lower volume means less aggressive audio session takeover
                         if (id === 'winningSound') {
                             audio.volume = 0.8; // Louder for celebration
+                            console.log(`🔊 Winning sound volume set to: ${audio.volume}`);
                         } else {
                             audio.volume = this.isMobile ? 0.25 : 1.0;
                         }
@@ -1821,11 +1834,16 @@
                         if (this.isMobile) {
                             audio.preservesPitch = false;
                         }
+
+                        console.log(`🎵 Initialized ${id} (volume: ${audio.volume})`);
+                    } else {
+                        console.warn(`⚠️ Audio element not found: ${id}`);
                     }
                 });
 
                 // Note: Audio unlock now happens lazily on first playSound() call
                 // This prevents sounds from playing on initial page load
+                console.log('🎼 AudioManager initialized with sounds:', Object.keys(this.sounds));
             },
 
             // Unlock audio context silently (called only when needed)
@@ -1859,17 +1877,24 @@
 
             // Play sound with retry logic
             play: function(soundId, retries = 3) {
+                console.log(`🎵 Attempting to play: ${soundId} (retries left: ${retries})`);
+
                 // Unlock audio context on first play attempt (lazy unlock)
                 if (!this.audioUnlocked) {
+                    console.log('🔓 Unlocking audio context...');
                     this.unlockAudioContext();
                 }
 
                 const audio = this.sounds[soundId];
 
                 if (!audio) {
-                    console.warn(`Sound not found: ${soundId}`);
+                    console.warn(`⚠️ Sound not found: ${soundId}`);
+                    console.warn(`   Available sounds:`, Object.keys(this.sounds));
                     return;
                 }
+
+                console.log(`   Audio element found. Volume: ${audio.volume}, Ready state: ${audio.readyState}`);
+                console.log(`   Source: ${audio.currentSrc || audio.src}`);
 
                 // Stop current playback and reset
                 audio.pause();
@@ -1879,16 +1904,24 @@
                 const playPromise = audio.play();
 
                 if (playPromise !== undefined) {
-                    playPromise.catch(err => {
-                        console.log(`Sound play failed for ${soundId}:`, err.message);
+                    playPromise
+                        .then(() => {
+                            console.log(`✅ Successfully playing: ${soundId}`);
+                        })
+                        .catch(err => {
+                            console.error(`❌ Sound play failed for ${soundId}:`, err.message);
+                            console.error(`   Error type:`, err.name);
 
-                        // Retry if we have retries left
-                        if (retries > 0) {
-                            setTimeout(() => {
-                                this.play(soundId, retries - 1);
-                            }, 100);
-                        }
-                    });
+                            // Retry if we have retries left
+                            if (retries > 0) {
+                                console.log(`   Retrying in 100ms...`);
+                                setTimeout(() => {
+                                    this.play(soundId, retries - 1);
+                                }, 100);
+                            } else {
+                                console.error(`   ❌ All retry attempts exhausted for ${soundId}`);
+                            }
+                        });
                 }
             }
         };
