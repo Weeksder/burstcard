@@ -1226,7 +1226,7 @@
         let cards = [];
         let currentIndex = 0;
         let isFlipped = false;
-        let newCard = { frontImage: null, backText: '', backImage: null };
+        let newCard = { frontImage: null, backText: '', backImage: null, editedNames: null };
         let clearAllClickCount = 0;
         let clearAllTimeout = null;
         let renameTimeout = null;
@@ -2131,7 +2131,7 @@
         }
 
         function resetForm() {
-            newCard = { frontImage: null, backText: '', backImage: null, multipleFiles: null, editingIndex: null };
+            newCard = { frontImage: null, backText: '', backImage: null, multipleFiles: null, editingIndex: null, editedNames: null };
             
             // Reset rename mode flags
             isRenameMode = false;
@@ -2237,19 +2237,24 @@
             // Extract and display all filenames
             const fileNames = [];
             for (let i = 0; i < files.length; i++) {
-                let fileName = files[i].name.replace(/\.[^/.]+$/, "");
-                const charsWithoutSpaces = fileName.replace(/\s/g, '').length;
-                if (charsWithoutSpaces > 60) {
-                    let truncated = '';
-                    let charCount = 0;
-                    for (let char of fileName) {
-                        if (char !== ' ') charCount++;
-                        if (charCount > 60) break;
-                        truncated += char;
+                // Check if we have edited names stored
+                if (newCard.editedNames && newCard.editedNames[i]) {
+                    fileNames.push(newCard.editedNames[i]);
+                } else {
+                    let fileName = files[i].name.replace(/\.[^/.]+$/, "");
+                    const charsWithoutSpaces = fileName.replace(/\s/g, '').length;
+                    if (charsWithoutSpaces > 60) {
+                        let truncated = '';
+                        let charCount = 0;
+                        for (let char of fileName) {
+                            if (char !== ' ') charCount++;
+                            if (charCount > 60) break;
+                            truncated += char;
+                        }
+                        fileName = truncated;
                     }
-                    fileName = truncated;
+                    fileNames.push(fileName);
                 }
-                fileNames.push(fileName);
             }
 
             // Show filenames in the Back (Text) textarea
@@ -2268,15 +2273,25 @@
 
             // Create mini previews for ALL images (compressed)
             const grid = document.getElementById('imagePreviewGrid');
+            
+            // Create placeholder containers in order first
+            const containers = [];
+            for (let i = 0; i < files.length; i++) {
+                const container = document.createElement('div');
+                container.className = 'preview-image-container';
+                container.dataset.index = i;
+                container.style.minHeight = '100px'; // Prevent layout shift
+                containers.push(container);
+                grid.appendChild(container);
+            }
+            
+            // Then compress and fill them asynchronously
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
+                const container = containers[i];
 
                 // Use compressed image for preview
                 compressImage(file, 500).then(compressedData => {
-                    const container = document.createElement('div');
-                    container.className = 'preview-image-container';
-                    container.dataset.index = i;
-
                     // Only show X button if NOT in rename mode
                     const deleteButton = isRenameMode ? '' : '<div class="preview-image-delete" onclick="event.preventDefault(); event.stopPropagation(); deletePreviewImage(' + i + ');">✕</div>';
 
@@ -2299,8 +2314,6 @@
                         e.preventDefault();
                         return false;
                     };
-
-                    grid.appendChild(container);
                 }).catch(err => {
                     console.error('Preview compression failed:', err);
                 });
@@ -2403,15 +2416,14 @@
                 backTextElement.addEventListener('click', handleTripleClick);
                 backTextElement.addEventListener('mouseup', handleSelectionEnd);
             } else {
-                // Disable editing - process deletions and update images
+                // Disable editing - process edited names
                 backTextElement.removeEventListener('keydown', protectNumberedList);
                 backTextElement.removeEventListener('dblclick', handleDoubleClick);
                 backTextElement.removeEventListener('click', handleTripleClick);
                 backTextElement.removeEventListener('mouseup', handleSelectionEnd);
                 
                 const lines = backTextElement.value.split('\n').filter(line => line.trim());
-                const validIndices = [];
-                const validNames = [];
+                const editedNames = [];
                 
                 for (let line of lines) {
                     if (line.includes('Edit names') || line.includes('Card names preview')) continue;
@@ -2420,25 +2432,22 @@
                     // Check if line has number format
                     const match = line.match(/^(\d+)\.\s*(.*)$/);
                     if (match) {
-                        const index = parseInt(match[1]) - 1; // 0-based
                         const name = match[2].trim();
-                        if (name) {
-                            validIndices.push(index);
-                            validNames.push(name);
-                        }
+                        editedNames.push(name);
                     }
                 }
                 
-                // Update multipleFiles to only include images with valid names
-                if (newCard.multipleFiles) {
+                // Store edited names temporarily
+                if (newCard.multipleFiles && editedNames.length > 0) {
+                    // Create new files with edited names
                     const allFiles = Array.from(newCard.multipleFiles);
                     const newFiles = [];
                     
-                    validIndices.forEach(index => {
-                        if (allFiles[index]) {
-                            newFiles.push(allFiles[index]);
+                    for (let i = 0; i < Math.min(allFiles.length, editedNames.length); i++) {
+                        if (editedNames[i]) { // Only include if name is not empty
+                            newFiles.push(allFiles[i]);
                         }
-                    });
+                    }
                     
                     // Update the file list
                     if (newFiles.length > 0) {
@@ -2450,7 +2459,10 @@
                             newCard.multipleFiles = newFiles;
                         }
                         
-                        // Re-render preview with remaining images
+                        // Store the edited names to use when rendering
+                        newCard.editedNames = editedNames.filter(name => name); // Remove empty names
+                        
+                        // Re-render preview with edited names
                         renderImagePreviews();
                         
                         // Update button count
@@ -2706,9 +2718,46 @@
                 
                 // If there's a selection
                 if (selection.length > 0) {
-                    // Check if selection includes number pattern at start
-                    if (selection.match(/^\d+\.\s/)) {
+                    // Count how many numbered lines are being deleted
+                    // We need to check the actual lines in the textarea, not just the selection
+                    const lines = text.split('\n');
+                    let numberedLinesInSelection = 0;
+                    
+                    // Find which lines are affected by the selection
+                    let currentPos = 0;
+                    for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+                        const line = lines[lineIndex];
+                        const lineStart = currentPos;
+                        const lineEnd = currentPos + line.length;
+                        
+                        // Check if this line overlaps with the selection
+                        if ((lineStart >= start && lineStart < end) || 
+                            (lineEnd > start && lineEnd <= end) ||
+                            (lineStart < start && lineEnd > end)) {
+                            // This line is affected - check if it's a numbered line
+                            if (/^\d+\.\s/.test(line.trim())) {
+                                numberedLinesInSelection++;
+                            }
+                        }
+                        
+                        // Move to next line (+ 1 for the newline character)
+                        currentPos = lineEnd + 1;
+                    }
+                    
+                    // If trying to delete numbered lines, show confirmation
+                    if (numberedLinesInSelection > 0) {
                         e.preventDefault();
+                        
+                        // Show confirmation dialog
+                        const confirmDelete = confirm(`Delete ${numberedLinesInSelection} card${numberedLinesInSelection > 1 ? 's' : ''}?\n\nThis will permanently remove ${numberedLinesInSelection > 1 ? 'these cards' : 'this card'} from your list.`);
+                        
+                        if (confirmDelete) {
+                            // Allow deletion - manually delete just the selected text
+                            const newText = text.substring(0, start) + text.substring(end);
+                            textarea.value = newText;
+                            textarea.setSelectionRange(start, start);
+                        }
+                        
                         return false;
                     }
                     
@@ -2749,6 +2798,14 @@
             tempInput.onchange = function(e) {
                 const newFiles = Array.from(e.target.files);
                 
+                // Sort new files
+                newFiles.sort((a, b) => {
+                    return a.name.localeCompare(b.name, undefined, {
+                        numeric: true,
+                        sensitivity: 'base'
+                    });
+                });
+                
                 // Check if adding these would exceed the total limit
                 if (currentCount + newFiles.length + cards.length > 30) {
                     // Instead of blocking completely, take only the files that fit
@@ -2758,6 +2815,14 @@
                     // Combine existing files with the limited new files
                     const existingFiles = Array.from(newCard.multipleFiles || []);
                     const combinedFiles = existingFiles.concat(filesToAdd);
+                    
+                    // Sort combined files
+                    combinedFiles.sort((a, b) => {
+                        return a.name.localeCompare(b.name, undefined, {
+                            numeric: true,
+                            sensitivity: 'base'
+                        });
+                    });
                     
                     // Create a new FileList-like object
                     const dataTransfer = new DataTransfer();
@@ -2776,6 +2841,14 @@
                 // Combine existing files with new files
                 const existingFiles = Array.from(newCard.multipleFiles || []);
                 const combinedFiles = existingFiles.concat(newFiles);
+                
+                // Sort combined files
+                combinedFiles.sort((a, b) => {
+                    return a.name.localeCompare(b.name, undefined, {
+                        numeric: true,
+                        sensitivity: 'base'
+                    });
+                });
                 
                 // Create a new FileList-like object
                 const dataTransfer = new DataTransfer();
@@ -2906,9 +2979,23 @@
             // Replace files with valid files only
             try {
                 const dataTransfer = new DataTransfer();
+                // Sort files by name using natural/numeric sort
+                validFiles.sort((a, b) => {
+                    return a.name.localeCompare(b.name, undefined, {
+                        numeric: true,
+                        sensitivity: 'base'
+                    });
+                });
                 validFiles.forEach(file => dataTransfer.items.add(file));
                 files = dataTransfer.files;
             } catch (e) {
+                // Sort even in fallback
+                validFiles.sort((a, b) => {
+                    return a.name.localeCompare(b.name, undefined, {
+                        numeric: true,
+                        sensitivity: 'base'
+                    });
+                });
                 files = validFiles;
             }
 
@@ -3610,6 +3697,8 @@
             }
 
             try {
+                const cardCount = loadedSessionData.cards.length; // Save count before closing modal
+                
                 if (mode === 'replace') {
                     // Replace all cards
                     cards = loadedSessionData.cards;
@@ -3628,9 +3717,9 @@
                 }
 
                 saveCards();
-                closeLoadOptions();
+                closeLoadOptions(); // This sets loadedSessionData to null
                 renderDisplay();
-                showToast(`✅ Loaded ${loadedSessionData.cards.length} cards!`, 2000);
+                showToast(`✅ Loaded ${cardCount} cards!`, 2000); // Use saved count
                 
             } catch (error) {
                 showToast('⚠️ Error loading session: ' + error.message, 3000);
@@ -4002,11 +4091,7 @@
                         ${allCorrect ? `
                             <div id="confettiContainer" class="confetti-container"></div>
                             <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; text-align: center;">
-                                <div style="position: relative; margin-bottom: 20px;">
-                                    <span style="position: absolute; top: -60px; left: -60px; font-size: 4rem; animation: pulse 1.5s ease-in-out infinite;">🎉</span>
-                                    <span style="position: absolute; top: -60px; right: -60px; font-size: 4rem; animation: pulse 1.5s ease-in-out infinite;">🎉</span>
-                                </div>
-                                <button class="btn btn-success" onclick="nextRound()" style="padding: 15px 30px; font-size: 1.2rem; min-width: 180px; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.3); animation: pulse 1.5s ease-in-out infinite; margin-top: 40px;">
+                                <button class="btn btn-success" onclick="nextRound()" style="padding: 15px 30px; font-size: 1.2rem; min-width: 180px; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.3); animation: pulse 1.5s ease-in-out infinite;">
                                     ➡️ New Round
                                 </button>
                             </div>
@@ -4282,7 +4367,10 @@
                         </div>
                     `;
                     
-                    slotIndex++; // Skip space position in answer slots
+                    // Skip over the SPACE entry in answerSlots array (if not the last word)
+                    if (wordIndex < words.length - 1) {
+                        slotIndex++;
+                    }
                 });
             } else {
                 answerRowsHTML = `
@@ -4343,7 +4431,7 @@
         }
 
         function selectLetter(letterIndex) {
-            // Find first empty slot
+            // Find first empty slot (skip SPACE placeholders)
             const firstEmptySlot = spellingGameState.answerSlots.findIndex(slot => slot === null);
             
             if (firstEmptySlot === -1) return; // All slots filled
@@ -4379,9 +4467,10 @@
         }
 
         function renderSpellingGameState() {
-            // Update answer slots
+            // Update answer slots using their data-index attribute
             const answerSlots = document.querySelectorAll('.answer-slot');
-            answerSlots.forEach((slot, index) => {
+            answerSlots.forEach((slot) => {
+                const index = parseInt(slot.getAttribute('data-index'));
                 const value = spellingGameState.answerSlots[index];
                 slot.innerHTML = (value === 'SPACE' || value === null) ? '' : value;
             });
@@ -4717,6 +4806,9 @@
             cards = [];
             currentIndex = 0;
             isFlipped = false;
+            
+            // Clear the image hash cache to prevent false duplicate warnings
+            imageHashCache.clear();
             
             // Reset any game states
             if (typeof bombGameState !== 'undefined') {
