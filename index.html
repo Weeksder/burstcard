@@ -1175,6 +1175,9 @@
     <audio id="explosionSound" preload="metadata" playsinline>
         <source src="explosion.wav" type="audio/wav">
     </audio>
+    <audio id="winningSound" preload="metadata" playsinline>
+        <source src="Winning - Guess the word.wav" type="audio/wav">
+    </audio>
 
     <script>
         let cards = [];
@@ -1677,7 +1680,7 @@
 
             // Initialize and preload all sounds
             init: function() {
-                const soundIds = ['flipSound', 'correctSound', 'errorSound', 'shuffleSound', 'explosionSound'];
+                const soundIds = ['flipSound', 'correctSound', 'errorSound', 'shuffleSound', 'explosionSound', 'winningSound'];
 
                 soundIds.forEach(id => {
                     const audio = document.getElementById(id);
@@ -3672,7 +3675,8 @@
             const content = document.getElementById('guessGameContent');
             
             if (guessGameState.currentCardIndex >= guessGameState.gameCards.length) {
-                // Game over
+                // Game over - play winning sound
+                playSound('winningSound');
                 content.innerHTML = `
                     <div style="text-align: center; padding: 40px;">
                         <h2 style="font-size: 3rem; margin-bottom: 20px;">🎉 All cards revealed!</h2>
