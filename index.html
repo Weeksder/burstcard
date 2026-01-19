@@ -1808,8 +1808,13 @@
                         audio.load();
 
                         // Set volume much lower on mobile to avoid interrupting background media
+                        // Exception: winningSound should be louder since it's a celebration
                         // On mobile devices, lower volume means less aggressive audio session takeover
-                        audio.volume = this.isMobile ? 0.25 : 1.0;
+                        if (id === 'winningSound') {
+                            audio.volume = 0.8; // Louder for celebration
+                        } else {
+                            audio.volume = this.isMobile ? 0.25 : 1.0;
+                        }
 
                         // Try to prevent interrupting other audio on mobile
                         // Note: This is limited by browser capabilities, but helps minimize disruption
@@ -4000,7 +4005,11 @@
             
             if (guessGameState.currentCardIndex >= guessGameState.gameCards.length) {
                 // Game over - play winning sound
+                console.log('🎉 Game completed! Attempting to play winning sound...');
+
+                // Play immediately - audioManager will handle unlocking if needed
                 playSound('winningSound');
+
                 content.innerHTML = `
                     <div style="text-align: center; padding: 40px;">
                         <h2 style="font-size: 3rem; margin-bottom: 20px;">🎉 All cards revealed!</h2>
