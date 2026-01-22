@@ -3975,12 +3975,12 @@
                     // Compact layout: icon + name on left, action buttons on right (all in one row)
                     listContainer.innerHTML = units.map(unit => `
                         <div style="padding: 10px 12px; border-bottom: 1px solid #eee; background: white; display: flex; align-items: center; gap: 8px;">
-                            <span style="font-size: 16px;">${unit.sourceType === 'url' ? '☁️' : '💾'}</span>
-                            <div style="flex: 1; font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${unit.name}</div>
-                            <button class="quick-load-item" data-unit-id="${unit.id}" data-action="load" title="Load (Replace all cards)" style="padding: 6px 10px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; min-width: 36px;">
+                            <span style="font-size: 18px; flex-shrink: 0;">${unit.sourceType === 'url' ? '☁️' : '💾'}</span>
+                            <div style="flex: 1; min-width: 0; font-weight: 600; font-size: 15px; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.4;">${unit.name}</div>
+                            <button class="quick-load-item" data-unit-id="${unit.id}" data-action="load" title="Load (Replace all cards)" style="padding: 8px 12px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 18px; min-width: 40px; flex-shrink: 0;">
                                 📂
                             </button>
-                            <button class="quick-load-item" data-unit-id="${unit.id}" data-action="add" title="Add (Merge with existing)" style="padding: 6px 10px; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; min-width: 36px;">
+                            <button class="quick-load-item" data-unit-id="${unit.id}" data-action="add" title="Add (Merge with existing)" style="padding: 8px 12px; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 18px; min-width: 40px; flex-shrink: 0;">
                                 ➕
                             </button>
                         </div>
