@@ -1263,19 +1263,19 @@
                 <div style="margin-bottom: 10px;">
                     <label style="display: block; margin-bottom: 5px; font-weight: 600;">Source Type:</label>
                     <select id="newUnitSourceType" onchange="toggleSourceInput()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
-                        <option value="url">Cloud URL (OneDrive, Google Drive, etc.)</option>
-                        <option value="file">Upload File (will be cached locally)</option>
+                        <option value="file">📁 Upload File (Recommended - works offline)</option>
+                        <option value="url">☁️ Cloud URL (GitHub, etc. - OneDrive may not work)</option>
                     </select>
                 </div>
-                <div id="urlInputContainer" style="margin-bottom: 10px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">JSON File URL:</label>
-                    <input type="text" id="newUnitUrl" placeholder="https://..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
-                    <p style="font-size: 12px; color: #666; margin-top: 5px;">💡 Tip: Use a shared link from OneDrive or Google Drive (make sure it's publicly accessible)</p>
-                </div>
-                <div id="fileInputContainer" style="margin-bottom: 10px; display: none;">
+                <div id="fileInputContainer" style="margin-bottom: 10px;">
                     <label style="display: block; margin-bottom: 5px; font-weight: 600;">Select JSON File:</label>
                     <input type="file" id="newUnitFile" accept=".json" style="width: 100%; padding: 8px;">
                     <p style="font-size: 12px; color: #666; margin-top: 5px;">📁 File will be cached in your browser for quick access</p>
+                </div>
+                <div id="urlInputContainer" style="margin-bottom: 10px; display: none;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">JSON File URL:</label>
+                    <input type="text" id="newUnitUrl" placeholder="https://raw.githubusercontent.com/..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                    <p style="font-size: 12px; color: #666; margin-top: 5px;">💡 Tip: GitHub raw URLs work best. OneDrive links often fail due to CORS restrictions.</p>
                 </div>
                 <button class="btn btn-success" onclick="addNewUnit()" style="width: 100%; padding: 12px;">
                     ➕ Add Unit
