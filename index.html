@@ -3867,6 +3867,10 @@
         const DB_VERSION = 1;
         const UNITS_STORE = 'units';
 
+        // Cache for Quick Load units list (performance optimization)
+        let unitsCache = null;
+        let unitsCacheMap = new Map(); // Fast lookup by ID
+
         // Initialize IndexedDB
         function initDB() {
             return new Promise((resolve, reject) => {
@@ -3939,17 +3943,35 @@
             document.getElementById('quickLoadDropdownContent').style.display = 'none';
         }
 
-        // Load and display quick load list
-        async function loadQuickLoadList() {
+        // Invalidate units cache (call this after add/delete operations)
+        function invalidateUnitsCache() {
+            unitsCache = null;
+            unitsCacheMap.clear();
+        }
+
+        // Load and display quick load list (with caching for performance)
+        async function loadQuickLoadList(forceRefresh = false) {
             try {
-                const units = await loadUnitsFromDB();
+                // Use cache if available and not forcing refresh
+                let units;
+                if (!forceRefresh && unitsCache !== null) {
+                    units = unitsCache;
+                } else {
+                    units = await loadUnitsFromDB();
+                    // Update cache
+                    unitsCache = units;
+                    unitsCacheMap.clear();
+                    units.forEach(unit => unitsCacheMap.set(unit.id, unit));
+                }
+
                 const listContainer = document.getElementById('quickLoadList');
 
                 if (units.length === 0) {
                     listContainer.innerHTML = '<div style="padding: 15px; text-align: center; color: #666;">No units configured yet.<br>Click "Manage Units" to add.</div>';
                 } else {
+                    // Use data attributes instead of inline onclick for better performance
                     listContainer.innerHTML = units.map(unit => `
-                        <button onclick="quickLoadUnit(${unit.id})" style="width: 100%; padding: 12px; text-align: left; border: none; background: white; cursor: pointer; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 8px;">
+                        <button class="quick-load-item" data-unit-id="${unit.id}" style="width: 100%; padding: 12px; text-align: left; border: none; background: white; cursor: pointer; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 8px;">
                             <span style="font-size: 16px;">${unit.sourceType === 'url' ? '☁️' : '💾'}</span>
                             <div style="flex: 1;">
                                 <div style="font-weight: 600;">${unit.name}</div>
@@ -3970,8 +3992,14 @@
                 closeQuickLoadDropdown();
                 showToast('⏳ Loading unit...', 1000);
 
-                const units = await loadUnitsFromDB();
-                const unit = units.find(u => u.id === unitId);
+                // Use cache for fast lookup (O(1) instead of O(n))
+                let unit = unitsCacheMap.get(unitId);
+
+                // Fallback to DB if not in cache
+                if (!unit) {
+                    const units = await loadUnitsFromDB();
+                    unit = units.find(u => u.id === unitId);
+                }
 
                 if (!unit) {
                     showToast('⚠️ Unit not found', 2000);
@@ -4111,6 +4139,9 @@
                 await saveUnitToDB(unit);
                 showToast('✅ Unit added successfully!', 2000);
 
+                // Invalidate cache so Quick Load dropdown refreshes
+                invalidateUnitsCache();
+
                 // Clear form
                 document.getElementById('newUnitName').value = '';
                 document.getElementById('newUnitUrl').value = '';
@@ -4180,6 +4211,10 @@
             try {
                 await deleteUnitFromDB(unitId);
                 showToast('✅ Unit deleted', 2000);
+
+                // Invalidate cache so Quick Load dropdown refreshes
+                invalidateUnitsCache();
+
                 loadUnitsList();
             } catch (error) {
                 console.error('Error deleting unit:', error);
@@ -4190,6 +4225,18 @@
         // Initialize database when page loads
         initDB().catch(error => {
             console.error('Error initializing database:', error);
+        });
+
+        // Event delegation for Quick Load items (better performance than inline handlers)
+        document.addEventListener('click', function(event) {
+            const quickLoadItem = event.target.closest('.quick-load-item');
+            if (quickLoadItem) {
+                const unitId = parseInt(quickLoadItem.dataset.unitId, 10);
+                if (!isNaN(unitId)) {
+                    quickLoadUnit(unitId);
+                }
+                event.stopPropagation();
+            }
         });
 
         // Close dropdowns when clicking outside
