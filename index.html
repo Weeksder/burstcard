@@ -1046,9 +1046,9 @@
             </div>
 
             <!-- Dropdown Menu - Only shows after cards are loaded -->
-            <div class="dropdown" id="moreDropdown" style="display: none;">
-                <button class="dropdown-btn" onclick="toggleMoreDropdown()" ontouchend="handleDropdownTouch(event)">⋮ More</button>
-                <div class="dropdown-content" id="moreDropdownContent">
+            <div class="dropdown" id="moreDropdown" style="display: none; position: relative; z-index: 100;">
+                <button class="dropdown-btn" onclick="toggleMoreDropdown()" ontouchend="handleDropdownTouch(event)" style="position: relative; z-index: 101;">⋮ More</button>
+                <div class="dropdown-content" id="moreDropdownContent" style="z-index: 1100;">
                     <button onclick="openLoadOptions(); closeMoreDropdown();" ontouchend="handleMenuItemTouch(event, openLoadOptions)">📁 Load</button>
                     <button onclick="openSaveOptions(); closeMoreDropdown();" ontouchend="handleMenuItemTouch(event, openSaveOptions)">💾 Save</button>
                     <button onclick="openRenameModal(); closeMoreDropdown();" ontouchend="handleMenuItemTouch(event, openRenameModal)">✏️ Rename</button>
@@ -3929,6 +3929,9 @@
 
         // Toggle Quick Load dropdown
         function toggleQuickLoadDropdown() {
+            // Close More dropdown if open
+            closeMoreDropdown();
+
             const dropdown = document.getElementById('quickLoadDropdownContent');
             if (dropdown.style.display === 'none' || dropdown.style.display === '') {
                 loadQuickLoadList();
@@ -5353,6 +5356,9 @@
         });
         // Dropdown functions
         function toggleMoreDropdown() {
+            // Close Quick Load dropdown if open
+            closeQuickLoadDropdown();
+
             const content = document.getElementById('moreDropdownContent');
             content.classList.toggle('show');
         }
