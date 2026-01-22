@@ -10,7 +10,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, proxy-revalidate, max-age=0">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="last-modified" content="2025-12-20T00:00:00Z">
+    <meta name="last-modified" content="2026-01-22T14:30:00Z">
     <meta name="cache-control" content="no-cache">
     <meta name="cache-control" content="no-store">
     <meta name="cache-control" content="must-revalidate">
@@ -1250,7 +1250,7 @@
     <!-- Unit Configuration Modal -->
     <div class="modal" id="unitConfigModal">
         <div class="modal-content" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
-            <h2>⚙️ Manage Quick Load Units</h2>
+            <h2>⚙️ Manage Quick Load Units <span style="font-size: 12px; color: #999; font-weight: normal;">(v2.0)</span></h2>
             <p style="margin-bottom: 20px; color: #666;">Configure your units for quick access</p>
 
             <!-- Add New Unit Form -->
@@ -1263,19 +1263,19 @@
                 <div style="margin-bottom: 10px;">
                     <label style="display: block; margin-bottom: 5px; font-weight: 600;">Source Type:</label>
                     <select id="newUnitSourceType" onchange="toggleSourceInput()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
-                        <option value="url">Cloud URL (OneDrive, Google Drive, etc.)</option>
-                        <option value="file">Upload File (will be cached locally)</option>
+                        <option value="file">📁 Upload File (Recommended - works offline)</option>
+                        <option value="url">☁️ Cloud URL (GitHub, etc. - OneDrive may not work)</option>
                     </select>
                 </div>
-                <div id="urlInputContainer" style="margin-bottom: 10px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">JSON File URL:</label>
-                    <input type="text" id="newUnitUrl" placeholder="https://..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
-                    <p style="font-size: 12px; color: #666; margin-top: 5px;">💡 Tip: Use a shared link from OneDrive or Google Drive (make sure it's publicly accessible)</p>
-                </div>
-                <div id="fileInputContainer" style="margin-bottom: 10px; display: none;">
+                <div id="fileInputContainer" style="margin-bottom: 10px;">
                     <label style="display: block; margin-bottom: 5px; font-weight: 600;">Select JSON File:</label>
                     <input type="file" id="newUnitFile" accept=".json" style="width: 100%; padding: 8px;">
                     <p style="font-size: 12px; color: #666; margin-top: 5px;">📁 File will be cached in your browser for quick access</p>
+                </div>
+                <div id="urlInputContainer" style="margin-bottom: 10px; display: none;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">JSON File URL:</label>
+                    <input type="text" id="newUnitUrl" placeholder="https://raw.githubusercontent.com/..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                    <p style="font-size: 12px; color: #666; margin-top: 5px;">💡 Tip: GitHub raw URLs work best. OneDrive links often fail due to CORS restrictions.</p>
                 </div>
                 <button class="btn btn-success" onclick="addNewUnit()" style="width: 100%; padding: 12px;">
                     ➕ Add Unit
@@ -4089,6 +4089,8 @@
                 const name = document.getElementById('newUnitName').value.trim();
                 const sourceType = document.getElementById('newUnitSourceType').value;
 
+                console.log('Adding unit with sourceType:', sourceType); // Debug log
+
                 if (!name) {
                     showToast('⚠️ Please enter a unit name', 2000);
                     return;
@@ -4153,21 +4155,33 @@
                     const fileInput = document.getElementById('newUnitFile');
                     const file = fileInput.files[0];
 
+                    console.log('File input element:', fileInput); // Debug log
+                    console.log('Selected file:', file); // Debug log
+
                     if (!file) {
-                        showToast('⚠️ Please select a file', 2000);
+                        showToast('⚠️ Please select a JSON file using the "Choose File" button', 3000);
                         return;
                     }
 
                     // Read and validate the file
                     showToast('⏳ Reading file...', 1000);
                     const fileData = await readFileAsText(file);
-                    const jsonData = JSON.parse(fileData);
 
-                    if (!jsonData.cards || !Array.isArray(jsonData.cards)) {
-                        showToast('⚠️ Invalid flashcard file format', 3000);
+                    let jsonData;
+                    try {
+                        jsonData = JSON.parse(fileData);
+                    } catch (parseError) {
+                        console.error('JSON parse error:', parseError);
+                        showToast('⚠️ Invalid JSON file. Please check your file format.', 3000);
                         return;
                     }
 
+                    if (!jsonData.cards || !Array.isArray(jsonData.cards)) {
+                        showToast('⚠️ Invalid format. File must contain: {"cards": [{"question": "...", "answer": "..."}]}', 4000);
+                        return;
+                    }
+
+                    console.log(`File validated successfully: ${jsonData.cards.length} cards found`);
                     unit.fileData = fileData;
                 }
 
