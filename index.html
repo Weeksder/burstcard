@@ -4089,6 +4089,8 @@
                 const name = document.getElementById('newUnitName').value.trim();
                 const sourceType = document.getElementById('newUnitSourceType').value;
 
+                console.log('Adding unit with sourceType:', sourceType); // Debug log
+
                 if (!name) {
                     showToast('⚠️ Please enter a unit name', 2000);
                     return;
@@ -4153,21 +4155,33 @@
                     const fileInput = document.getElementById('newUnitFile');
                     const file = fileInput.files[0];
 
+                    console.log('File input element:', fileInput); // Debug log
+                    console.log('Selected file:', file); // Debug log
+
                     if (!file) {
-                        showToast('⚠️ Please select a file', 2000);
+                        showToast('⚠️ Please select a JSON file using the "Choose File" button', 3000);
                         return;
                     }
 
                     // Read and validate the file
                     showToast('⏳ Reading file...', 1000);
                     const fileData = await readFileAsText(file);
-                    const jsonData = JSON.parse(fileData);
 
-                    if (!jsonData.cards || !Array.isArray(jsonData.cards)) {
-                        showToast('⚠️ Invalid flashcard file format', 3000);
+                    let jsonData;
+                    try {
+                        jsonData = JSON.parse(fileData);
+                    } catch (parseError) {
+                        console.error('JSON parse error:', parseError);
+                        showToast('⚠️ Invalid JSON file. Please check your file format.', 3000);
                         return;
                     }
 
+                    if (!jsonData.cards || !Array.isArray(jsonData.cards)) {
+                        showToast('⚠️ Invalid format. File must contain: {"cards": [{"question": "...", "answer": "..."}]}', 4000);
+                        return;
+                    }
+
+                    console.log(`File validated successfully: ${jsonData.cards.length} cards found`);
                     unit.fileData = fileData;
                 }
 
