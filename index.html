@@ -4010,11 +4010,27 @@
 
                 if (unit.sourceType === 'url') {
                     // Load from URL
-                    const response = await fetch(unit.url);
-                    if (!response.ok) {
-                        throw new Error('Failed to fetch file from URL');
+                    try {
+                        const response = await fetch(unit.url, {
+                            mode: 'cors',
+                            cache: 'no-cache'
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+
+                        jsonData = await response.json();
+                    } catch (fetchError) {
+                        console.error('Fetch error:', fetchError);
+                        if (fetchError.message.includes('Failed to fetch') ||
+                            fetchError.name === 'TypeError') {
+                            showToast('⚠️ CORS Error: Cannot access this URL. Consider re-uploading as a cached file instead.', 5000);
+                        } else {
+                            showToast('⚠️ Error: ' + fetchError.message, 4000);
+                        }
+                        return;
                     }
-                    jsonData = await response.json();
                 } else {
                     // Load from cached file data
                     jsonData = JSON.parse(unit.fileData);
@@ -4101,14 +4117,34 @@
 
                     // Try to fetch and validate the JSON
                     showToast('⏳ Validating URL...', 1000);
-                    const response = await fetch(url);
-                    if (!response.ok) {
-                        throw new Error('Failed to fetch file from URL');
+                    let response, jsonData;
+
+                    try {
+                        response = await fetch(url, {
+                            mode: 'cors',
+                            cache: 'no-cache'
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+
+                        jsonData = await response.json();
+                    } catch (fetchError) {
+                        console.error('Fetch error:', fetchError);
+
+                        // Check if it's a CORS error
+                        if (fetchError.message.includes('Failed to fetch') ||
+                            fetchError.name === 'TypeError') {
+                            showToast('⚠️ CORS Error: OneDrive/cloud links often block direct access. Try: 1) Use file upload instead, or 2) Use GitHub raw URL, or 3) Use a CORS-enabled host', 8000);
+                        } else {
+                            showToast('⚠️ Error: ' + fetchError.message, 4000);
+                        }
+                        return;
                     }
-                    const jsonData = await response.json();
 
                     if (!jsonData.cards || !Array.isArray(jsonData.cards)) {
-                        showToast('⚠️ Invalid flashcard file format', 3000);
+                        showToast('⚠️ Invalid flashcard file format - needs {cards: [...]}', 3000);
                         return;
                     }
 
