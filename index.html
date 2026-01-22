@@ -1029,11 +1029,11 @@
             </button>
 
             <!-- Quick Load Dropdown -->
-            <div class="dropdown" id="quickLoadDropdown" style="position: relative; display: inline-block;">
-                <button class="dropdown-btn" onclick="toggleQuickLoadDropdown()" style="background: white; border: 1px solid #ddd; border-radius: 8px; padding: 8px 12px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 5px;">
+            <div class="dropdown" id="quickLoadDropdown" style="position: relative; display: inline-block; z-index: 100;">
+                <button class="dropdown-btn" onclick="toggleQuickLoadDropdown()" style="background: white; border: 1px solid #ddd; border-radius: 8px; padding: 8px 12px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 5px; position: relative; z-index: 101;">
                     ⚡ Quick Load
                 </button>
-                <div class="dropdown-content" id="quickLoadDropdownContent" style="display: none; position: absolute; background-color: white; min-width: 200px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 1; border-radius: 8px; margin-top: 5px;">
+                <div class="dropdown-content" id="quickLoadDropdownContent" style="display: none; position: absolute; background-color: white; min-width: 200px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 1100; border-radius: 8px; margin-top: 5px;">
                     <div id="quickLoadList" style="max-height: 300px; overflow-y: auto;">
                         <!-- Quick load items will be populated here -->
                     </div>
@@ -3969,15 +3969,25 @@
                 if (units.length === 0) {
                     listContainer.innerHTML = '<div style="padding: 15px; text-align: center; color: #666;">No units configured yet.<br>Click "Manage Units" to add.</div>';
                 } else {
-                    // Use data attributes instead of inline onclick for better performance
+                    // Show two buttons per unit: Load (replace) and Add (merge)
                     listContainer.innerHTML = units.map(unit => `
-                        <button class="quick-load-item" data-unit-id="${unit.id}" style="width: 100%; padding: 12px; text-align: left; border: none; background: white; cursor: pointer; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 8px;">
-                            <span style="font-size: 16px;">${unit.sourceType === 'url' ? '☁️' : '💾'}</span>
-                            <div style="flex: 1;">
-                                <div style="font-weight: 600;">${unit.name}</div>
-                                <div style="font-size: 12px; color: #666;">${unit.sourceType === 'url' ? 'Cloud URL' : 'Cached File'}</div>
+                        <div style="padding: 12px; border-bottom: 1px solid #eee; background: white;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <span style="font-size: 16px;">${unit.sourceType === 'url' ? '☁️' : '💾'}</span>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600;">${unit.name}</div>
+                                    <div style="font-size: 12px; color: #666;">${unit.sourceType === 'url' ? 'Cloud URL' : 'Cached File'}</div>
+                                </div>
                             </div>
-                        </button>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="quick-load-item" data-unit-id="${unit.id}" data-action="load" style="flex: 1; padding: 8px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 13px; font-weight: 600;">
+                                    📂 Load
+                                </button>
+                                <button class="quick-load-item" data-unit-id="${unit.id}" data-action="add" style="flex: 1; padding: 8px; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 13px; font-weight: 600;">
+                                    ➕ Add
+                                </button>
+                            </div>
+                        </div>
                     `).join('');
                 }
             } catch (error) {
@@ -3986,11 +3996,11 @@
             }
         }
 
-        // Quick load a unit
-        async function quickLoadUnit(unitId) {
+        // Quick load a unit (mode: 'load' to replace, 'add' to merge)
+        async function quickLoadUnit(unitId, mode = 'load') {
             try {
                 closeQuickLoadDropdown();
-                showToast('⏳ Loading unit...', 1000);
+                showToast(mode === 'add' ? '⏳ Adding unit...' : '⏳ Loading unit...', 1000);
 
                 // Use cache for fast lookup (O(1) instead of O(n))
                 let unit = unitsCacheMap.get(unitId);
@@ -4042,12 +4052,22 @@
                     return;
                 }
 
-                // Load the cards
-                cards = jsonData.cards;
-                currentIndex = 0;
-                saveCards();
-                renderDisplay();
-                showToast(`✅ Loaded ${jsonData.cards.length} cards from ${unit.name}!`, 2000);
+                // Load or add the cards based on mode
+                if (mode === 'add') {
+                    // Merge with existing cards
+                    const existingCount = cards.length;
+                    cards = cards.concat(jsonData.cards);
+                    saveCards();
+                    renderDisplay();
+                    showToast(`✅ Added ${jsonData.cards.length} cards! Total: ${cards.length}`, 2000);
+                } else {
+                    // Replace all cards (default behavior)
+                    cards = jsonData.cards;
+                    currentIndex = 0;
+                    saveCards();
+                    renderDisplay();
+                    showToast(`✅ Loaded ${jsonData.cards.length} cards from ${unit.name}!`, 2000);
+                }
 
             } catch (error) {
                 console.error('Error quick loading unit:', error);
@@ -4282,8 +4302,9 @@
             const quickLoadItem = event.target.closest('.quick-load-item');
             if (quickLoadItem) {
                 const unitId = parseInt(quickLoadItem.dataset.unitId, 10);
+                const action = quickLoadItem.dataset.action || 'load'; // 'load' or 'add'
                 if (!isNaN(unitId)) {
-                    quickLoadUnit(unitId);
+                    quickLoadUnit(unitId, action);
                 }
                 event.stopPropagation();
             }
