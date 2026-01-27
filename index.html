@@ -2,27 +2,23 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-    <!-- Comprehensive Cache Prevention for All Browsers -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, proxy-revalidate, max-age=0">
+    <!-- Cache prevention -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="last-modified" content="2026-01-22T14:30:00Z">
-    <meta name="cache-control" content="no-cache">
-    <meta name="cache-control" content="no-store">
-    <meta name="cache-control" content="must-revalidate">
 
     <!-- JSZip library for creating ZIP files -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <title>FlashABC</title>
-    <!-- Handwritten/Brush Script Font -->
+    <!-- Custom Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Permanent+Marker&family=Shadows+Into+Light&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Dancing+Script:wght@700&family=Great+Vibes&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -34,12 +30,12 @@
         html {
             touch-action: pan-y;
             -ms-touch-action: pan-y;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #35654D 0%, #2d5542 100%);
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #35654D 0%, #2d5542 100%);
             min-height: 100vh;
             padding: 10px;
             overflow-x: hidden;
@@ -47,9 +43,35 @@
             -ms-touch-action: pan-y;
         }
 
+        @media (min-width: 768px) {
+            body {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 8px;
+            }
+        }
+
         .container {
-            max-width: 800px;
+            max-width: 100%;
+            width: 100%;
             margin: 0 auto;
+            padding: 0;
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                max-width: 90%;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .container {
+                max-width: 1200px;
+            }
         }
 
         .header {
@@ -82,7 +104,7 @@
             -moz-user-select: none;
             -ms-user-select: none;
         }
-        
+
         .top-bar {
             display: flex;
             align-items: center;
@@ -123,7 +145,7 @@
             border-radius: 8px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
             min-width: 160px;
-            z-index: 1000;
+            z-index: 1100;
         }
 
         .dropdown-content.show {
@@ -175,13 +197,45 @@
             -ms-user-select: none;
         }
 
+        /* Responsive button scaling */
+        @media (max-width: 768px) {
+            .btn {
+                padding: 6px 12px;
+                font-size: 0.9rem;
+                min-height: 40px;
+                min-width: 40px;
+            }
+
+            .btn svg {
+                width: 20px !important;
+                height: 20px !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .btn {
+                padding: 4px 8px;
+                font-size: 0.8rem;
+                min-height: 36px;
+                min-width: 36px;
+            }
+
+            .btn svg {
+                width: 18px !important;
+                height: 18px !important;
+            }
+
+            .controls {
+                gap: 4px;
+            }
+        }
         .btn:active {
             transform: scale(0.95);
         }
 
         .btn-primary {
             background: white;
-            color: #667eea;
+            color: #35654D;
         }
 
         .btn-secondary {
@@ -190,18 +244,23 @@
         }
 
         .btn-success {
-            background: #51cf66;
+            background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
             color: white;
         }
-        
+
         .btn-info {
             background: #17a2b8;
             color: white;
         }
-        
+
         .btn-warning {
             background: #ffc107;
             color: #333;
+        }
+
+        .more-btn {
+            background: white;
+            color: #35654D;
         }
 
         .btn:disabled {
@@ -263,12 +322,10 @@
             visibility: hidden;
         }
 
-        .card.swiping ~ .card-next {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .card-stack.swiping .card-next {
+        .card.swiping ~ .card-next,
+        .card-stack.swiping .card-next,
+        .card.swiping ~ .card-prev,
+        .card-stack.swiping .card-prev {
             opacity: 1;
             visibility: visible;
         }
@@ -309,7 +366,7 @@
         }
 
         .card-back {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #35654D 0%, #2d5542 100%);
             color: white;
             transform: rotateY(180deg);
             -webkit-transform: rotateY(180deg);
@@ -355,7 +412,7 @@
             white-space: nowrap;
             max-width: 100%;
         }
-        
+
         .vowel {
             color: #ff9500;
         }
@@ -373,51 +430,60 @@
         .navigation {
             position: absolute;
             top: 20px;
-            left: 0;
-            right: 0;
+            left: 20px;
+            right: 20px;
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            padding: 0 20px;
             pointer-events: none;
             z-index: 10;
         }
-        
+
         .navigation > * {
             pointer-events: auto;
         }
 
         .nav-btn {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
+            width: 50px;
+            height: 50px;
             border: none;
-            font-size: 2.5rem;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-            touch-action: manipulation;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #f5a623 0%, #f39c12 100%);
             color: white;
+            cursor: pointer;
+            touch-action: manipulation;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #51cf66;
             user-select: none;
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
+            padding: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            transition: all 0.3s;
         }
 
         .nav-btn.prev {
-            background: #51cf66;
+            background: linear-gradient(135deg, #f5a623 0%, #f39c12 100%);
         }
 
         .nav-btn.next {
-            background: #51cf66;
+            background: linear-gradient(135deg, #f5a623 0%, #f39c12 100%);
         }
 
         .nav-btn:active {
-            transform: scale(0.9);
+            transform: scale(0.95);
+        }
+
+        .nav-btn svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
 
         .counter {
@@ -443,7 +509,7 @@
             -moz-user-select: none;
             -ms-user-select: none;
         }
-        
+
         .counter > * {
             pointer-events: auto;
         }
@@ -458,11 +524,11 @@
             font-size: 0.8rem;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
-        
+
         .delete-btn:active {
             transform: scale(0.95);
         }
-        
+
         .audio-btn {
             width: 70px;
             height: 70px;
@@ -482,7 +548,7 @@
             -moz-user-select: none;
             -ms-user-select: none;
         }
-        
+
         .audio-btn:active {
             transform: scale(0.9);
             background: #5568d3;
@@ -629,7 +695,7 @@
         }
 
         .upload-area:hover {
-            border-color: #667eea;
+            border-color: #35654D;
             background: #f0f4ff;
         }
 
@@ -639,7 +705,7 @@
         }
 
         .upload-area.drag-over {
-            border-color: #667eea;
+            border-color: #35654D;
             background: #f0f4ff;
             transform: scale(1.02);
         }
@@ -678,7 +744,7 @@
 
         textarea:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #35654D;
         }
 
         input[type="file"] {
@@ -724,20 +790,15 @@
                 padding: 8px 12px;
                 font-size: 0.75rem;
             }
-            
+
             .nav-btn {
                 width: 60px;
                 height: 60px;
-                font-size: 1.6rem;
-                top: 15px;
             }
 
-            .nav-btn.prev {
-                left: 15px;
-            }
-
-            .nav-btn.next {
-                right: 15px;
+            .nav-btn svg {
+                width: 28px;
+                height: 28px;
             }
 
             .audio-btn {
@@ -776,7 +837,7 @@
                 gap: 10px !important;
             }
         }
-        
+
         @media (min-width: 769px) and (max-width: 1024px) {
             .card {
                 height: calc(100vh - 85px);
@@ -789,12 +850,11 @@
             .nav-btn {
                 width: 65px;
                 height: 65px;
-                font-size: 1.8rem;
-                top: 18px;
             }
 
-            .nav-btn.prev {
-                left: 18px;
+            .nav-btn svg {
+                width: 30px;
+                height: 30px;
             }
 
             .nav-btn.next {
@@ -811,7 +871,7 @@
                 bottom: 18px;
             }
         }
-        
+
         @media (min-width: 1025px) {
             .card {
                 height: calc(100vh - 90px);
@@ -932,11 +992,11 @@
         }
 
         @keyframes bounce {
-            0%, 100% { 
+            0%, 100% {
                 transform: translateY(0);
                 animation-timing-function: ease-in;
             }
-            50% { 
+            50% {
                 transform: translateY(-8px);
                 animation-timing-function: ease-out;
             }
@@ -1009,18 +1069,44 @@
     <div class="container">
         <div class="top-bar">
             <div class="header">
-                <h1>FlashABC</h1>
+                <h1 style="display: flex; align-items: center; gap: 8px; line-height: 1;">
+                    <!-- "Flash" text (left) -->
+                    <span style="font-family: 'Dancing Script', cursive; font-size: 2.8rem; font-weight: 700; font-style: italic; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Flash</span>
+                    <!-- FlashABC Logo - Three Fanned Cards (C, B, A) -->
+                    <svg width="85" height="50" viewBox="0 0 85 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Card C (back left) - rotated -30° -->
+                        <g transform="rotate(-30 25 25)">
+                            <rect x="13" y="5" width="24" height="40" rx="2.5" fill="white" stroke="#2d3748" stroke-width="2.5"/>
+                            <!-- Neon blue "C" in top left corner -->
+                            <text x="17" y="18" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#3b82f6" text-anchor="start">C</text>
+                        </g>
+
+                        <!-- Card B (middle) - rotated -15° -->
+                        <g transform="rotate(-15 40 25)">
+                            <rect x="28" y="5" width="24" height="40" rx="2.5" fill="white" stroke="#2d3748" stroke-width="2.5"/>
+                            <!-- Neon red "B" in top left corner -->
+                            <text x="32" y="18" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#ef4444" text-anchor="start">B</text>
+                        </g>
+
+                        <!-- Card A (front right) - rotated 0° -->
+                        <g>
+                            <rect x="43" y="5" width="24" height="40" rx="2.5" fill="white" stroke="#2d3748" stroke-width="2.5"/>
+                            <!-- Large neon green "A" centered -->
+                            <text x="55" y="32" font-family="Arial, sans-serif" font-size="26" font-weight="bold" fill="#10b981" text-anchor="middle">A</text>
+                        </g>
+                    </svg>
+                </h1>
             </div>
 
             <div class="controls">
-            <button class="btn" onclick="openCreateModal()" style="color: #667eea;">
+            <button class="btn" onclick="openCreateModal()" style="color: #35654D;">
                 <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"></circle>
                     <line x1="12" y1="8" x2="12" y2="16"></line>
                     <line x1="8" y1="12" x2="16" y2="12"></line>
                 </svg>
             </button>
-            <button class="btn" onclick="shuffleCards()" id="shuffleBtn" disabled style="display: none; color: #667eea;">
+            <button class="btn" onclick="shuffleCards()" id="shuffleBtn" disabled style="display: none; color: #35654D;">
                 <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="16 3 21 3 21 8"></polyline>
                     <line x1="4" y1="20" x2="21" y2="3"></line>
@@ -1061,7 +1147,7 @@
                     <rect x="2" y="6" width="20" height="12" rx="2"></rect>
                 </svg>
             </button>
-            <button class="btn" id="loadBtn" onclick="openLoadOptions()" style="color: #667eea;">
+            <button class="btn" id="loadBtn" onclick="openLoadOptions()" style="color: #35654D;">
                 <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                 </svg>
@@ -1070,18 +1156,18 @@
 
             <!-- Quick Load Dropdown -->
             <div class="dropdown" id="quickLoadDropdown" style="position: relative; display: inline-block; z-index: 100;">
-                <button class="btn" onclick="toggleQuickLoadDropdown()" style="color: #667eea; position: relative; z-index: 101; background: white; border: 1px solid #ddd; border-radius: 8px; padding: 8px;">
+                <button class="btn btn-primary" onclick="toggleQuickLoadDropdown()" style="position: relative; z-index: 101;">
                     <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
                         <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
                     </svg>
                 </button>
-                <div class="dropdown-content" id="quickLoadDropdownContent" style="display: none; position: fixed; background-color: white; min-width: 280px; width: max-content; max-width: 90vw; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 10000; border-radius: 8px; margin-top: 5px; pointer-events: auto;">
+                <div class="dropdown-content" id="quickLoadDropdownContent">
                     <div id="quickLoadList" style="max-height: 300px; overflow-y: auto;">
                         <!-- Quick load items will be populated here -->
                     </div>
                     <div style="border-top: 1px solid #ddd; padding: 8px;">
-                        <button onclick="openUnitConfigModal(); closeQuickLoadDropdown();" style="width: 100%; padding: 10px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px;">
+                        <button onclick="openUnitConfigModal(); closeQuickLoadDropdown();" class="btn btn-success" style="width: 100%; padding: 10px; font-size: 14px;">
                             ⚙️ Manage Units
                         </button>
                     </div>
@@ -1090,15 +1176,14 @@
 
             <!-- Dropdown Menu - Only shows after cards are loaded -->
             <div class="dropdown" id="moreDropdown" style="display: none; position: relative; z-index: 100;">
-                <button class="btn" onclick="toggleMoreDropdown()" ontouchend="handleDropdownTouch(event)" style="position: relative; z-index: 101; color: #667eea; background: white; border: 1px solid #ddd; border-radius: 8px; padding: 8px;">
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="1"></circle>
-                        <circle cx="12" cy="5" r="1"></circle>
-                        <circle cx="12" cy="19" r="1"></circle>
+                <button class="btn more-btn" onclick="toggleMoreDropdown()" ontouchend="handleDropdownTouch(event)" style="position: relative; z-index: 101;">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+                        <circle cx="5" cy="12" r="2" fill="currentColor"></circle>
+                        <circle cx="12" cy="12" r="2" fill="currentColor"></circle>
+                        <circle cx="19" cy="12" r="2" fill="currentColor"></circle>
                     </svg>
-                    <span style="font-size: 10px; font-weight: 500;">More</span>
                 </button>
-                <div class="dropdown-content" id="moreDropdownContent" style="z-index: 1100;">
+                <div class="dropdown-content" id="moreDropdownContent">
                     <button onclick="openLoadOptions(); closeMoreDropdown();" ontouchend="handleMenuItemTouch(event, openLoadOptions)">📁 Load</button>
                     <button onclick="openSaveOptions(); closeMoreDropdown();" ontouchend="handleMenuItemTouch(event, openSaveOptions)">💾 Save</button>
                     <button onclick="openRenameModal(); closeMoreDropdown();" ontouchend="handleMenuItemTouch(event, openRenameModal)">✏️ Rename</button>
@@ -1114,7 +1199,7 @@
     <div class="modal" id="createModal">
         <div class="modal-content" id="createModalContent">
             <h2 id="modalTitle">Create New Cards</h2>
-            
+
             <div class="form-group">
                 <label id="modalLabel">Front Image(s) (Up to 30 images Max)</label>
                 <div class="upload-area" id="frontUpload" onclick="handleUploadAreaClick(event)">
@@ -1141,7 +1226,7 @@
                 <button class="btn btn-secondary" onclick="closeCreateModal()" style="padding: 8px 12px;">Cancel</button>
             </div>
         </div>
-        
+
         <!-- Scroll indicator -->
         <div id="scrollIndicator" class="scroll-indicator" style="display: none;">
             <svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1169,20 +1254,20 @@
         <div class="modal-content">
             <h2>🎮 Game Menu</h2>
             <p style="margin-bottom: 20px; color: #666;">Select a game to play with your flashcards!</p>
-            
+
             <div style="display: flex; flex-direction: column; gap: 15px;">
                 <button id="guessGameBtn" class="btn btn-success" onclick="startGame('guess')" style="padding: 20px; font-size: 1.2rem; justify-content: center;">
                     🎯 Guess the Word
                 </button>
-                
+
                 <button class="btn btn-success" onclick="startGame('bomb')" style="padding: 20px; font-size: 1.2rem; justify-content: center;">
                     💣 Bomb Game
                 </button>
-                
+
                 <button class="btn btn-success" onclick="startGame('spelling')" style="padding: 20px; font-size: 1.2rem; justify-content: center;">
                     🔤 Spelling Game
                 </button>
-                
+
                 <button class="btn btn-secondary" onclick="closeGameMenu()" style="padding: 15px; justify-content: center;">
                     ← Back to Flashcards
                 </button>
@@ -1198,7 +1283,7 @@
 
     <!-- Help Modal for Guess Game -->
     <div class="modal" id="guessGameHelpModal">
-        <div class="modal-content" style="max-width: 500px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <div class="modal-content" style="max-width: 500px; background: linear-gradient(135deg, #35654D 0%, #2d5542 100%); color: white;">
             <h2 style="color: white;">📖 How to Play</h2>
             <div style="text-align: left; line-height: 1.8; font-size: 1.1rem;">
                 <p style="margin-bottom: 10px;"><strong>1.</strong> Player 1 guesses card #1 out loud</p>
@@ -1206,7 +1291,7 @@
                 <p style="margin-bottom: 10px;"><strong>3.</strong> <span style="color: #51cf66; font-weight: bold;">Correct?</span> Keep going! <span style="color: #ff6b6b; font-weight: bold;">Wrong?</span> Next player starts over</p>
                 <p style="margin-bottom: 20px;"><strong>4.</strong> Complete all 9 cards to win!</p>
             </div>
-            <button class="btn btn-primary" onclick="closeGuessGameHelp()" style="width: 100%; padding: 15px; justify-content: center; background: white; color: #667eea;">
+            <button class="btn btn-primary" onclick="closeGuessGameHelp()" style="width: 100%; padding: 15px; justify-content: center; background: white; color: #35654D;">
                 Got it!
             </button>
         </div>
@@ -1215,9 +1300,9 @@
     <div class="modal" id="bombGameModal">
         <div class="modal-content" style="max-width: 900px;">
             <h2>💣 Bomb Game</h2>
-            
+
             <div id="bombGameContent"></div>
-            
+
             <div style="margin-top: 20px;">
                 <button class="btn btn-secondary" onclick="closeBombGame()" style="width: 100%; padding: 15px; justify-content: center;">
                     ← Back to Game Menu
@@ -1229,7 +1314,7 @@
     <div class="modal" id="spellingGameModal">
         <div class="modal-content" style="max-width: 900px;">
             <div id="spellingGameContent"></div>
-            
+
             <div style="margin-top: 20px; display: flex; gap: 10px;">
                 <button class="btn btn-secondary" onclick="closeSpellingGame()" style="flex: 1; padding: 15px; justify-content: center;">
                     ← Back to Game Menu
@@ -1246,21 +1331,21 @@
         <div class="modal-content" style="max-width: 500px;">
             <h2>💾 Save Your Flashcards</h2>
             <p style="margin-bottom: 25px; color: #666;">Choose how you'd like to save your session:</p>
-            
+
             <div style="display: flex; flex-direction: column; gap: 15px;">
                 <button class="btn btn-primary" id="saveJSONBtn" style="padding: 20px; text-align: left; white-space: normal; line-height: 1.5;">
                     <strong style="font-size: 1.2rem; display: block; margin-bottom: 5px;">📄 Quick Save (JSON)</strong>
                     <span style="font-size: 0.85rem; display: block; opacity: 0.9;">Fast and simple • Human-readable • ~5-15MB</span>
                     <span style="font-size: 0.8rem; display: block; opacity: 0.7; margin-top: 5px;">Best for: Quick backups, small decks (1-30 cards)</span>
                 </button>
-                
+
                 <button class="btn btn-success" id="saveZIPBtn" style="padding: 20px; text-align: left; white-space: normal; line-height: 1.5;">
                     <strong style="font-size: 1.2rem; display: block; margin-bottom: 5px;">📦 Export Package (ZIP)</strong>
                     <span style="font-size: 0.85rem; display: block; opacity: 0.9;">Smaller file size • Organized • ~3-8MB</span>
                     <span style="font-size: 0.8rem; display: block; opacity: 0.7; margin-top: 5px;">Best for: Large decks, sharing with others</span>
                 </button>
             </div>
-            
+
             <button class="btn btn-secondary" id="closeSaveBtn" style="margin-top: 20px; width: 100%;">
                 Cancel
             </button>
@@ -1272,17 +1357,17 @@
         <div class="modal-content" style="max-width: 500px;">
             <h2>📂 Load Flashcard Session</h2>
             <p style="margin-bottom: 20px; color: #666;">Select a saved flashcard file (.json or .zip)</p>
-            
+
             <input type="file" id="loadFileInput" accept=".json,.zip" style="display: none;" onchange="handleFileLoad(event)">
-            
+
             <button class="btn btn-primary" onclick="document.getElementById('loadFileInput').click()" style="width: 100%; padding: 15px; margin-bottom: 15px;">
                 📁 Choose File
             </button>
-            
+
             <div id="loadFileInfo" style="display: none; background: #f0f4ff; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
                 <p style="margin-bottom: 10px;"><strong>Selected File:</strong> <span id="loadFileName"></span></p>
                 <p style="margin-bottom: 15px;"><strong>Cards Found:</strong> <span id="loadFileCards"></span></p>
-                
+
                 <p style="margin-bottom: 10px; font-weight: 600;">Load Options:</p>
                 <button class="btn btn-warning" id="replaceAllBtn" onclick="loadSession('replace')" style="width: 100%; margin-bottom: 10px;">
                     ⚠️ Replace All Cards
@@ -1291,7 +1376,7 @@
                     ➕ Add to Existing Cards
                 </button>
             </div>
-            
+
             <button class="btn btn-secondary" onclick="closeLoadOptions()" style="width: 100%;">
                 Cancel
             </button>
@@ -1487,11 +1572,11 @@
         document.addEventListener('wheel', function(e) {
             if (e.ctrlKey || e.metaKey) {
                 e.preventDefault();
-                
+
                 // Calculate new zoom level
                 const delta = e.deltaY > 0 ? -0.05 : 0.05;
                 const newZoom = currentZoom + delta;
-                
+
                 // Clamp zoom between min and max
                 if (newZoom >= minZoom && newZoom <= maxZoom) {
                     currentZoom = newZoom;
@@ -1510,7 +1595,7 @@
         document.addEventListener('gesturechange', function(e) {
             e.preventDefault();
             const newZoom = initialZoom * e.scale;
-            
+
             // Clamp zoom between min and max
             if (newZoom >= minZoom && newZoom <= maxZoom) {
                 currentZoom = newZoom;
@@ -1557,7 +1642,7 @@
             const imageFiles = [];
             for (let i = 0; i < items.length; i++) {
                 const item = items[i];
-                
+
                 // Check if item is an image
                 if (item.type.indexOf('image') !== -1) {
                     const blob = item.getAsFile();
@@ -1572,17 +1657,17 @@
             // If we found image files, process them
             if (imageFiles.length > 0) {
                 e.preventDefault();
-                
+
                 // Create a DataTransfer object to mimic file input
                 const dataTransfer = new DataTransfer();
                 imageFiles.forEach(file => dataTransfer.items.add(file));
-                
+
                 // Create fake input object
                 const fakeInput = {
                     files: dataTransfer.files,
                     value: ''
                 };
-                
+
                 handleImageUpload('front', fakeInput);
             }
         });
@@ -1673,6 +1758,13 @@
             }
         }
 
+        // Helper to check if target should be excluded from touch events
+        function shouldExcludeTouchTarget(target) {
+            return target.closest('.modal') || target.closest('.btn') ||
+                   target.closest('.nav-btn') || target.closest('.audio-btn') ||
+                   target.closest('.controls') || target.closest('.header');
+        }
+
         // Setup touch swipe gestures for card navigation
         function setupSwipeGestures() {
             let touchStartX = 0;
@@ -1686,20 +1778,10 @@
             const maxTapDistance = 20; // max distance moved for a tap - increased for better detection
 
             document.addEventListener('touchstart', function(e) {
-                // Only track touches on the actual card area, not anywhere on page
                 const target = e.target;
-                
-                // Exclude buttons, modals, controls, and header
-                if (target.closest('.modal') || 
-                    target.closest('.btn') || 
-                    target.closest('.nav-btn') || 
-                    target.closest('.audio-btn') ||
-                    target.closest('.controls') ||
-                    target.closest('.header')) {
-                    return;
-                }
-                
-                // ONLY allow touch if on card display area
+                if (shouldExcludeTouchTarget(target)) return;
+
+                // Only allow touch on card display area
                 if (!target.closest('#cardDisplay') && !target.closest('.card-container')) {
                     return;
                 }
@@ -1707,7 +1789,7 @@
                 touchStartX = e.changedTouches[0].screenX;
                 touchStartY = e.changedTouches[0].screenY;
                 touchStartTime = Date.now();
-                
+
                 // Add swiping class to disable transition and show preview
                 const cardElement = document.querySelector('.card');
                 const cardStack = document.querySelector('.card-stack');
@@ -1720,19 +1802,10 @@
             }, { passive: true });
 
             document.addEventListener('touchmove', function(e) {
-                // Only track swipes on the actual card area
                 const target = e.target;
-                
-                if (target.closest('.modal') || 
-                    target.closest('.btn') || 
-                    target.closest('.nav-btn') || 
-                    target.closest('.audio-btn') ||
-                    target.closest('.controls') ||
-                    target.closest('.header')) {
-                    return;
-                }
-                
-                // ONLY allow if on card display area
+                if (shouldExcludeTouchTarget(target)) return;
+
+                // Only allow on card display area
                 if (!target.closest('#cardDisplay') && !target.closest('.card-container')) {
                     return;
                 }
@@ -1747,28 +1820,18 @@
                 if (Math.abs(deltaX) > Math.abs(deltaY)) {
                     const cardElement = document.querySelector('.card');
                     if (cardElement) {
-                        const rotation = deltaX * 0.05; // Slight rotation effect
+                        const rotation = deltaX * 0.02; // Subtle rotation effect
                         cardElement.style.transform = `translateX(${deltaX}px) rotateZ(${rotation}deg)`;
                     }
                 }
             }, { passive: true });
 
             document.addEventListener('touchend', function(e) {
-                // Only process touches on the actual card area
                 const target = e.target;
-                
-                if (target.closest('.modal') || 
-                    target.closest('.btn') || 
-                    target.closest('.nav-btn') || 
-                    target.closest('.audio-btn') ||
-                    target.closest('.controls') ||
-                    target.closest('.header')) {
-                    return;
-                }
-                
-                // ONLY allow if on card display area
+                if (shouldExcludeTouchTarget(target)) return;
+
+                // Only allow on card display area
                 if (!target.closest('#cardDisplay') && !target.closest('.card-container')) {
-                    // Reset touch positions if touch was outside card area
                     touchStartX = 0;
                     touchStartY = 0;
                     return;
@@ -1776,7 +1839,7 @@
 
                 touchEndX = e.changedTouches[0].screenX;
                 touchEndY = e.changedTouches[0].screenY;
-                
+
                 const touchEndTime = Date.now();
                 const touchDuration = touchEndTime - touchStartTime;
                 const deltaX = touchEndX - touchStartX;
@@ -1785,7 +1848,7 @@
 
                 const cardElement = document.querySelector('.card');
                 const cardStack = document.querySelector('.card-stack');
-                
+
                 // Check if it's a tap (short duration and minimal movement)
                 if (touchDuration < maxTapTime && distance < maxTapDistance) {
                     // It's a tap, flip the card
@@ -1793,35 +1856,36 @@
                         cardElement.classList.remove('swiping');
                         cardElement.style.transform = '';
                     }
-                    if (cardStack) {
-                        cardStack.classList.remove('swiping');
-                    }
+                    if (cardStack) cardStack.classList.remove('swiping');
                     flipCard();
                 } else if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
-                    // It's a valid swipe, handle navigation
-                    if (cardElement) {
-                        cardElement.classList.remove('swiping');
-                        cardElement.style.transform = '';
+                    // It's a valid swipe
+                    const shouldNavigate = handleSwipe();
+
+                    if (shouldNavigate) {
+                        // Navigation will happen, reset immediately
+                        if (cardElement) {
+                            cardElement.classList.remove('swiping');
+                            cardElement.style.transform = '';
+                        }
+                        if (cardStack) cardStack.classList.remove('swiping');
+                    } else {
+                        // Swipe rejected (left swipe), smoothly return to center
+                        if (cardElement) {
+                            cardElement.classList.remove('swiping');
+                            setTimeout(() => cardElement.style.transform = '', 10);
+                        }
+                        if (cardStack) cardStack.classList.remove('swiping');
                     }
-                    if (cardStack) {
-                        cardStack.classList.remove('swiping');
-                    }
-                    handleSwipe();
                 } else {
                     // Not a tap or valid swipe, smoothly return to center
                     if (cardElement) {
-                        // Remove swiping class to re-enable transition
                         cardElement.classList.remove('swiping');
-                        // Small delay to ensure transition is active before resetting
-                        setTimeout(() => {
-                            cardElement.style.transform = '';
-                        }, 10);
+                        setTimeout(() => cardElement.style.transform = '', 10);
                     }
-                    if (cardStack) {
-                        cardStack.classList.remove('swiping');
-                    }
+                    if (cardStack) cardStack.classList.remove('swiping');
                 }
-                
+
                 // Reset touch positions
                 touchStartX = 0;
                 touchStartY = 0;
@@ -1831,39 +1895,32 @@
                 const deltaX = touchEndX - touchStartX;
                 const deltaY = touchEndY - touchStartY;
 
-                // Check if horizontal swipe is dominant (more horizontal than vertical)
+                // Both swipe directions go to next card (the preview card)
                 if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
-                    if (deltaX > 0) {
-                        // Swipe right - go to previous card
-                        if (cards.length > 0) {
-                            prevCard();
-                        }
-                    } else {
-                        // Swipe left - go to next card
-                        if (cards.length > 0) {
-                            nextCard();
-                        }
+                    if (cards.length > 0) {
+                        nextCard();
+                        return true;
                     }
                 }
+                return false;
             }
         }
 
         // Add click listener for desktop (mouse clicks)
         document.addEventListener('click', function(e) {
             const target = e.target;
-            // Only flip if clicking directly on card elements, not anywhere on page
-            // Check if click is on card face, card image, hint, or card text (but NOT buttons, modals, header, etc)
-            if ((target.classList.contains('card-face') || 
-                 target.classList.contains('card-image') || 
-                 target.classList.contains('hint') ||
-                 target.classList.contains('card-text') ||
-                 target.classList.contains('vowel')) &&
-                !target.closest('.modal') && 
-                !target.closest('.btn') && 
-                !target.closest('.nav-btn') && 
-                !target.closest('.audio-btn') &&
-                !target.closest('.controls') &&
-                !target.closest('.header')) {
+            // Flip card when clicking on card elements (not buttons/modals/controls)
+            const isCardElement = target.classList.contains('card-face') ||
+                                  target.classList.contains('card-image') ||
+                                  target.classList.contains('hint') ||
+                                  target.classList.contains('card-text') ||
+                                  target.classList.contains('vowel');
+
+            const isExcluded = target.closest('.modal') || target.closest('.btn') ||
+                              target.closest('.nav-btn') || target.closest('.audio-btn') ||
+                              target.closest('.controls') || target.closest('.header');
+
+            if (isCardElement && !isExcluded) {
                 flipCard();
             }
         });
@@ -1871,9 +1928,9 @@
         // Setup textarea protection to prevent accidental deletion of multiple lines
         function setupTextareaProtection() {
             const backText = document.getElementById('backText');
-            
+
             if (!backText) return;
-            
+
             // Replace multi-line selection text with blank but keep index numbers
             backText.addEventListener('keydown', function(e) {
                 // Check if Delete or Backspace key is pressed
@@ -1881,33 +1938,33 @@
                     const selectionStart = this.selectionStart;
                     const selectionEnd = this.selectionEnd;
                     const selectedText = this.value.substring(selectionStart, selectionEnd);
-                    
+
                     // Check if selection spans multiple lines (contains newline character)
                     if (selectedText.includes('\n')) {
                         e.preventDefault();
-                        
+
                         // Get all lines of the textarea
                         const allLines = this.value.split('\n');
-                        
+
                         // Find which lines are affected by the selection
                         let charCount = 0;
                         let startLineIndex = -1;
                         let endLineIndex = -1;
-                        
+
                         for (let i = 0; i < allLines.length; i++) {
                             const lineLength = allLines[i].length + 1; // +1 for newline
-                            
+
                             if (startLineIndex === -1 && charCount + lineLength > selectionStart) {
                                 startLineIndex = i;
                             }
-                            
+
                             if (charCount < selectionEnd) {
                                 endLineIndex = i;
                             }
-                            
+
                             charCount += lineLength;
                         }
-                        
+
                         // Replace only the text after the index number on affected lines
                         for (let i = startLineIndex; i <= endLineIndex; i++) {
                             const line = allLines[i];
@@ -1917,55 +1974,55 @@
                                 allLines[i] = match[1]; // Keep just "1. " part
                             }
                         }
-                        
+
                         // Reconstruct the textarea value
                         this.value = allLines.join('\n');
-                        
+
                         // Set cursor position
                         this.selectionStart = this.selectionEnd = selectionStart;
-                        
+
                         return false;
                     }
                 }
             });
-            
+
             // Also handle cut operation - keep index numbers
             backText.addEventListener('cut', function(e) {
                 const selectionStart = this.selectionStart;
                 const selectionEnd = this.selectionEnd;
                 const selectedText = this.value.substring(selectionStart, selectionEnd);
-                
+
                 // Check if selection spans multiple lines
                 if (selectedText.includes('\n')) {
                     e.preventDefault();
-                    
+
                     // Copy to clipboard
                     navigator.clipboard.writeText(selectedText).catch(err => {
                         console.log('Clipboard write failed:', err);
                     });
-                    
+
                     // Get all lines of the textarea
                     const allLines = this.value.split('\n');
-                    
+
                     // Find which lines are affected by the selection
                     let charCount = 0;
                     let startLineIndex = -1;
                     let endLineIndex = -1;
-                    
+
                     for (let i = 0; i < allLines.length; i++) {
                         const lineLength = allLines[i].length + 1; // +1 for newline
-                        
+
                         if (startLineIndex === -1 && charCount + lineLength > selectionStart) {
                             startLineIndex = i;
                         }
-                        
+
                         if (charCount < selectionEnd) {
                             endLineIndex = i;
                         }
-                        
+
                         charCount += lineLength;
                     }
-                    
+
                     // Replace only the text after the index number on affected lines
                     for (let i = startLineIndex; i <= endLineIndex; i++) {
                         const line = allLines[i];
@@ -1975,13 +2032,13 @@
                             allLines[i] = match[1]; // Keep just "1. " part
                         }
                     }
-                    
+
                     // Reconstruct the textarea value
                     this.value = allLines.join('\n');
-                    
+
                     // Set cursor position
                     this.selectionStart = this.selectionEnd = selectionStart;
-                    
+
                     return false;
                 }
             });
@@ -2234,12 +2291,12 @@
                 showToast('⚠️ Maximum 30 cards reached!<br>Delete some cards to add new ones', 3000);
                 return;
             }
-            
+
             window.speechSynthesis.cancel();
             document.body.style.overflow = 'hidden'; // Disable background scrolling
             document.getElementById('createModal').classList.add('active');
             resetForm();
-            
+
             // Setup scroll indicator
             setTimeout(setupScrollIndicator, 100);
         }
@@ -2249,15 +2306,15 @@
         function setupScrollIndicator() {
             const modalContent = document.getElementById('createModalContent');
             const indicator = document.getElementById('scrollIndicator');
-            
+
             if (!modalContent || !indicator) return;
-            
+
             // Remove any existing scroll listener
             modalContent.removeEventListener('scroll', handleModalScroll);
-            
+
             // Check if content is scrollable
             const isScrollable = modalContent.scrollHeight > modalContent.clientHeight;
-            
+
             if (isScrollable) {
                 // Show indicator if at top
                 if (modalContent.scrollTop < 50) {
@@ -2266,7 +2323,7 @@
                 } else {
                     indicator.style.display = 'none';
                 }
-                
+
                 // Add scroll listener
                 modalContent.addEventListener('scroll', handleModalScroll);
             } else {
@@ -2277,17 +2334,17 @@
         function handleModalScroll() {
             const modalContent = document.getElementById('createModalContent');
             const indicator = document.getElementById('scrollIndicator');
-            
+
             if (!modalContent || !indicator) return;
-            
+
             // Clear existing timeout
             if (scrollIndicatorTimeout) {
                 clearTimeout(scrollIndicatorTimeout);
             }
-            
+
             const scrollTop = modalContent.scrollTop;
             const isAtTop = scrollTop < 50;
-            
+
             if (isAtTop) {
                 // At top - show indicator
                 indicator.style.display = 'block';
@@ -2295,7 +2352,7 @@
             } else {
                 // Scrolled down - hide indicator
                 indicator.style.opacity = '0';
-                
+
                 // Fade out then hide
                 scrollIndicatorTimeout = setTimeout(() => {
                     if (modalContent.scrollTop >= 50) {
@@ -2307,59 +2364,59 @@
 
         function openRenameModal() {
             if (cards.length === 0) return;
-            
+
             window.speechSynthesis.cancel();
-            
+
             // Set rename mode flags
             isRenameMode = true;
             isMultiRenameMode = false;
-            
+
             // Update modal title and label
             document.getElementById('modalTitle').textContent = 'Rename Cards';
             document.getElementById('modalLabel').textContent = 'Front Images (Rename current or multiple)';
-            
+
             // Hide file input in rename mode
             document.getElementById('frontImage').style.display = 'none';
-            
+
             // Show Rename Multiple button
             const renameMultiButton = document.getElementById('renameMultipleButton');
             if (renameMultiButton) {
                 renameMultiButton.style.display = 'block';
                 renameMultiButton.textContent = '📝 Rename Multiple';
             }
-            
+
             // Get current card
             const currentCard = cards[currentIndex];
-            
+
             // Set up the form for editing
             newCard.frontImage = currentCard.frontImage;
             newCard.backText = currentCard.backText;
             newCard.backImage = currentCard.backImage;
             newCard.editingIndex = currentIndex; // Store which card we're editing
-            
+
             // Display the current image
-            document.getElementById('frontPreview').innerHTML = 
+            document.getElementById('frontPreview').innerHTML =
                 '<img src="' + currentCard.frontImage + '" class="preview-image"><p style="margin-top: 10px; font-size: 0.9rem;">Current card image</p>';
             document.getElementById('frontUpload').classList.add('has-image');
-            
+
             // Disable click on upload area in rename mode
             document.getElementById('frontUpload').onclick = null;
-            
+
             // Set the text
             const backTextElement = document.getElementById('backText');
             backTextElement.value = currentCard.backText;
             backTextElement.disabled = false;
             backTextElement.style.background = '';
-            
+
             // Change the button text to "Update"
             const addButton = document.querySelector('.form-actions .btn-success');
             if (addButton) {
                 addButton.textContent = '💾 Update';
             }
-            
+
             // Disable background scrolling
             document.body.style.overflow = 'hidden';
-            
+
             // Open modal
             document.getElementById('createModal').classList.add('active');
         }
@@ -2372,23 +2429,23 @@
 
         function resetForm() {
             newCard = { frontImage: null, backText: '', backImage: null, multipleFiles: null, editingIndex: null, editedNames: null };
-            
+
             // Reset rename mode flags
             isRenameMode = false;
             isMultiRenameMode = false;
-            
+
             // Reset modal title and label to default
             document.getElementById('modalTitle').textContent = 'Create New Cards';
             document.getElementById('modalLabel').textContent = 'Front Image(s) (Up to 30 images Max)';
-            
+
             // Keep file input hidden (it's triggered by clicking upload area)
             document.getElementById('frontImage').style.display = 'none';
-            
+
             // Restore upload area click handler
             document.getElementById('frontUpload').onclick = function(event) {
                 handleUploadAreaClick(event);
             };
-            
+
             document.getElementById('frontPreview').innerHTML = '<div class="upload-icon"><img src="data:image/webp;base64,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" alt="Add Image" style="width: 80px; height: 80px;"></div><p style="font-weight: bold; font-size: 1.1rem;">Tap, drag & drop, or paste image(s)</p><p style="font-size: 0.95rem; color: #666; margin-top: 15px;">Card names = Image filenames</p><p style="font-size: 0.95rem; color: #ff6b6b; margin-top: 10px; font-weight: 600;">⚠️ Maximum 30 images (15MB each)</p>';
 
             const backTextElement = document.getElementById('backText');
@@ -2450,27 +2507,27 @@
             if (!files || files.length === 0) return;
 
             let previewHTML = '<div style="text-align: center; padding: 10px 5px;">';
-            
+
             // Only show image count and button if NOT in rename mode
             if (!isRenameMode) {
                 const totalCards = cards.length + files.length;
                 const showAddButton = totalCards < 30;
-                
+
                 previewHTML += '<div style="display: flex; align-items: center; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 8px;">';
-                previewHTML += '<p style="font-size: 1.2rem; font-weight: bold; color: #667eea; margin: 0;">' + files.length + ' selected</p>';
-                
+                previewHTML += '<p style="font-size: 1.2rem; font-weight: bold; color: #35654D; margin: 0;">' + files.length + ' selected</p>';
+
                 if (showAddButton) {
                     previewHTML += '<button onclick="addMoreImages(); event.stopPropagation();" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem;">➕ Add More</button>';
                 }
-                
+
                 previewHTML += '</div>';
             }
-            
+
             previewHTML += '<div id="imagePreviewGrid" class="responsive-grid" style="display: grid; gap: 12px; max-height: 550px; overflow-y: auto; padding: 5px;"></div>';
             previewHTML += '</div>';
 
             document.getElementById('frontPreview').innerHTML = previewHTML;
-            
+
             // Check scroll indicator after content is loaded
             setTimeout(setupScrollIndicator, 100);
 
@@ -2499,7 +2556,7 @@
 
             // Show filenames in the Back (Text) textarea
             const backTextElement = document.getElementById('backText');
-            
+
             if (isRenameMode) {
                 // In rename mode, set value but keep it editable
                 backTextElement.value = '📝 Edit names:\n\n' + fileNames.map((name, i) => (i + 1) + '. ' + name).join('\n');
@@ -2513,7 +2570,7 @@
 
             // Create mini previews for ALL images (compressed)
             const grid = document.getElementById('imagePreviewGrid');
-            
+
             // Create placeholder containers in order first
             const containers = [];
             for (let i = 0; i < files.length; i++) {
@@ -2524,7 +2581,7 @@
                 containers.push(container);
                 grid.appendChild(container);
             }
-            
+
             // Then compress and fill them asynchronously
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
@@ -2564,10 +2621,10 @@
 
         function toggleImageSelection(index) {
             const containers = document.querySelectorAll('.preview-image-container');
-            
+
             // Remove selection from all
             containers.forEach(c => c.classList.remove('selected'));
-            
+
             // Toggle selection
             if (selectedImageIndex === index) {
                 selectedImageIndex = null;
@@ -2583,18 +2640,18 @@
             const modalContent = document.querySelector('.modal-content');
             const previewScrollTop = previewArea ? previewArea.scrollTop : 0;
             const modalScrollTop = modalContent ? modalContent.scrollTop : 0;
-            
+
             const files = Array.from(newCard.multipleFiles);
-            
+
             // Remove the file
             files.splice(index, 1);
-            
+
             if (files.length === 0) {
                 // No files left, reset
                 resetForm();
                 return;
             }
-            
+
             // Update the multipleFiles with remaining files
             try {
                 const dataTransfer = new DataTransfer();
@@ -2603,18 +2660,18 @@
             } catch (e) {
                 newCard.multipleFiles = files;
             }
-            
+
             // Reset selection
             selectedImageIndex = null;
-            
+
             // Re-render previews
             renderImagePreviews();
-            
+
             // Restore scroll positions after a short delay to allow rendering
             setTimeout(function() {
                 const newPreviewArea = document.getElementById('imagePreviewGrid');
                 const newModalContent = document.querySelector('.modal-content');
-                
+
                 if (newPreviewArea) {
                     newPreviewArea.scrollTop = previewScrollTop;
                 }
@@ -2622,7 +2679,7 @@
                     newModalContent.scrollTop = modalScrollTop;
                 }
             }, 50);
-            
+
             // Update button text
             const addButton = document.querySelector('.form-actions .btn-success');
             if (addButton) {
@@ -2642,14 +2699,14 @@
                 renameButton.textContent = '✓ Done Editing';
                 renameButton.classList.remove('btn-warning');
                 renameButton.classList.add('btn-success');
-                
+
                 // Add instruction
                 const lines = backTextElement.value.split('\n');
                 if (lines[0] && lines[0].includes('Card names preview:')) {
                     lines[0] = '📝 Edit names:';
                     backTextElement.value = lines.join('\n');
                 }
-                
+
                 // Add event listeners for protection
                 backTextElement.addEventListener('keydown', protectNumberedList);
                 backTextElement.addEventListener('dblclick', handleDoubleClick);
@@ -2661,14 +2718,14 @@
                 backTextElement.removeEventListener('dblclick', handleDoubleClick);
                 backTextElement.removeEventListener('click', handleTripleClick);
                 backTextElement.removeEventListener('mouseup', handleSelectionEnd);
-                
+
                 const lines = backTextElement.value.split('\n').filter(line => line.trim());
                 const editedNames = [];
-                
+
                 for (let line of lines) {
                     if (line.includes('Edit names') || line.includes('Card names preview')) continue;
                     if (!line.trim()) continue;
-                    
+
                     // Check if line has number format
                     const match = line.match(/^(\d+)\.\s*(.*)$/);
                     if (match) {
@@ -2676,19 +2733,19 @@
                         editedNames.push(name);
                     }
                 }
-                
+
                 // Store edited names temporarily
                 if (newCard.multipleFiles && editedNames.length > 0) {
                     // Create new files with edited names
                     const allFiles = Array.from(newCard.multipleFiles);
                     const newFiles = [];
-                    
+
                     for (let i = 0; i < Math.min(allFiles.length, editedNames.length); i++) {
                         if (editedNames[i]) { // Only include if name is not empty
                             newFiles.push(allFiles[i]);
                         }
                     }
-                    
+
                     // Update the file list
                     if (newFiles.length > 0) {
                         try {
@@ -2698,13 +2755,13 @@
                         } catch (e) {
                             newCard.multipleFiles = newFiles;
                         }
-                        
+
                         // Store the edited names to use when rendering
                         newCard.editedNames = editedNames.filter(name => name); // Remove empty names
-                        
+
                         // Re-render preview with edited names
                         renderImagePreviews();
-                        
+
                         // Update button count
                         const addButton = document.querySelector('.form-actions .btn-success');
                         if (addButton) {
@@ -2715,7 +2772,7 @@
                         resetForm();
                     }
                 }
-                
+
                 backTextElement.disabled = true;
                 backTextElement.style.background = '#f8f9fa';
                 backTextElement.style.border = '';
@@ -2730,43 +2787,43 @@
 
         function handleTripleClick(e) {
             clickCount++;
-            
+
             if (clickTimer) {
                 clearTimeout(clickTimer);
             }
-            
+
             if (clickCount === 3) {
                 // Triple click detected - select only the name part
                 const textarea = e.target;
                 const pos = textarea.selectionStart;
                 const text = textarea.value;
-                
+
                 // Find the current line
                 const beforeCursor = text.substring(0, pos);
                 const lineStart = beforeCursor.lastIndexOf('\n') + 1;
                 const afterCursor = text.substring(pos);
                 const lineEnd = afterCursor.indexOf('\n');
                 const lineEndPos = lineEnd === -1 ? text.length : pos + lineEnd;
-                
+
                 const currentLine = text.substring(lineStart, lineEndPos);
-                
+
                 // Check if line has number pattern
                 const match = currentLine.match(/^(\d+)\.\s*(.*)$/);
                 if (match) {
                     const numberPart = match[1] + '. ';
                     const namePart = match[2];
-                    
+
                     // Select only the name part, no trailing space or newline
                     const nameStart = lineStart + numberPart.length;
                     const nameEnd = lineStart + numberPart.length + namePart.length;
-                    
+
                     textarea.setSelectionRange(nameStart, nameEnd);
                     e.preventDefault();
                 }
-                
+
                 clickCount = 0;
             }
-            
+
             clickTimer = setTimeout(() => {
                 clickCount = 0;
             }, 500);
@@ -2774,12 +2831,12 @@
 
         function toggleMultiRenameMode() {
             const renameMultiButton = document.getElementById('renameMultipleButton');
-            
+
             if (!isMultiRenameMode) {
                 // Switch to multi-rename mode
                 isMultiRenameMode = true;
                 renameMultiButton.textContent = '← Rename Previous';
-                
+
                 // Create fake file list from all cards
                 const cardFiles = [];
                 cards.forEach((card, index) => {
@@ -2795,7 +2852,7 @@
                     const file = new File([blob], card.backText || `Card ${index + 1}`, {type: mimeString});
                     cardFiles.push(file);
                 });
-                
+
                 // Set multipleFiles
                 try {
                     const dataTransfer = new DataTransfer();
@@ -2804,53 +2861,53 @@
                 } catch (e) {
                     newCard.multipleFiles = cardFiles;
                 }
-                
+
                 // Render all cards as images
                 renderImagePreviews();
-                
+
                 // Auto-enable editing mode for the text area
                 const backTextElement = document.getElementById('backText');
                 backTextElement.disabled = false;
                 backTextElement.style.background = '#fff';
                 backTextElement.style.border = '2px solid #667eea';
-                
+
                 // Add event listeners for protection
                 backTextElement.addEventListener('keydown', protectNumberedList);
                 backTextElement.addEventListener('dblclick', handleDoubleClick);
                 backTextElement.addEventListener('click', handleTripleClick);
                 backTextElement.addEventListener('mouseup', handleSelectionEnd);
-                
+
                 // Change button text
                 const addButton = document.querySelector('.form-actions .btn-success');
                 if (addButton) {
                     addButton.textContent = '💾 Update All Cards';
                 }
-                
+
             } else {
                 // Go back to single rename mode
                 isMultiRenameMode = false;
                 renameMultiButton.textContent = '📝 Rename Multiple';
-                
+
                 // Clear multiple files
                 newCard.multipleFiles = null;
-                
+
                 // Show current card again
                 const currentCard = cards[currentIndex];
-                document.getElementById('frontPreview').innerHTML = 
+                document.getElementById('frontPreview').innerHTML =
                     '<img src="' + currentCard.frontImage + '" class="preview-image"><p style="margin-top: 10px; font-size: 0.9rem;">Current card image</p>';
-                
+
                 const backTextElement = document.getElementById('backText');
                 backTextElement.value = currentCard.backText;
                 backTextElement.disabled = false;
                 backTextElement.style.background = '';
                 backTextElement.style.border = '';
-                
+
                 // Remove event listeners
                 backTextElement.removeEventListener('keydown', protectNumberedList);
                 backTextElement.removeEventListener('dblclick', handleDoubleClick);
                 backTextElement.removeEventListener('click', handleTripleClick);
                 backTextElement.removeEventListener('mouseup', handleSelectionEnd);
-                
+
                 // Change button text back
                 const addButton = document.querySelector('.form-actions .btn-success');
                 if (addButton) {
@@ -2863,26 +2920,26 @@
             const textarea = e.target;
             const pos = textarea.selectionStart;
             const text = textarea.value;
-            
+
             // Find the current line
             const beforeCursor = text.substring(0, pos);
             const lineStart = beforeCursor.lastIndexOf('\n') + 1;
             const afterCursor = text.substring(pos);
             const lineEnd = afterCursor.indexOf('\n');
             const lineEndPos = lineEnd === -1 ? text.length : pos + lineEnd;
-            
+
             const currentLine = text.substring(lineStart, lineEndPos);
-            
+
             // Check if line has number pattern
             const match = currentLine.match(/^(\d+)\.\s*(.*)$/);
             if (match) {
                 const numberPart = match[1] + '. ';
                 const namePart = match[2];
-                
+
                 // Select only the name part, no trailing space or newline
                 const nameStart = lineStart + numberPart.length;
                 const nameEnd = lineStart + numberPart.length + namePart.length;
-                
+
                 textarea.setSelectionRange(nameStart, nameEnd);
                 e.preventDefault();
             }
@@ -2892,33 +2949,33 @@
             const textarea = e.target;
             let start = textarea.selectionStart;
             let end = textarea.selectionEnd;
-            
+
             if (start === end) return; // No selection
-            
+
             const text = textarea.value;
-            
+
             // Trim selection to exclude trailing newlines or spaces that would cause line merge
             while (end > start && (text.charAt(end - 1) === '\n' || text.charAt(end) === '\n')) {
                 end--;
             }
-            
+
             const selectedText = text.substring(start, end);
-            
+
             // Check if selection includes a number pattern at the beginning
             const numberPattern = /^(\d+)\.\s+/;
             const match = selectedText.match(numberPattern);
-            
+
             if (match) {
                 // Adjust selection to exclude the number pattern
                 start = start + match[0].length;
             }
-            
+
             // Also check if we're selecting from beginning of a line
             const beforeStart = text.substring(0, start);
             const lastNewline = beforeStart.lastIndexOf('\n');
             const lineStart = lastNewline + 1;
             const lineBeforeSelection = text.substring(lineStart, start);
-            
+
             if (lineBeforeSelection.match(numberPattern)) {
                 // We selected from within the number pattern
                 const afterNumber = lineStart + lineBeforeSelection.match(numberPattern)[0].length;
@@ -2926,7 +2983,7 @@
                     start = afterNumber;
                 }
             }
-            
+
             // Update selection if we made changes
             if (start !== textarea.selectionStart || end !== textarea.selectionEnd) {
                 textarea.setSelectionRange(start, end);
@@ -2938,40 +2995,40 @@
             const start = textarea.selectionStart;
             const end = textarea.selectionEnd;
             const text = textarea.value;
-            
+
             // If trying to delete/backspace
             if (e.key === 'Backspace' || e.key === 'Delete') {
                 const selection = text.substring(start, end);
-                
+
                 // Check if cursor is right after a "number." pattern (no selection)
                 if (start === end) {
                     const beforeCursor = text.substring(0, start);
                     const lines = beforeCursor.split('\n');
                     const currentLine = lines[lines.length - 1];
                     const numberPattern = /^(\d+)\.\s*$/;
-                    
+
                     if (numberPattern.test(currentLine)) {
                         e.preventDefault();
                         return false;
                     }
                 }
-                
+
                 // If there's a selection
                 if (selection.length > 0) {
                     // Count how many numbered lines are being deleted
                     // We need to check the actual lines in the textarea, not just the selection
                     const lines = text.split('\n');
                     let numberedLinesInSelection = 0;
-                    
+
                     // Find which lines are affected by the selection
                     let currentPos = 0;
                     for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
                         const line = lines[lineIndex];
                         const lineStart = currentPos;
                         const lineEnd = currentPos + line.length;
-                        
+
                         // Check if this line overlaps with the selection
-                        if ((lineStart >= start && lineStart < end) || 
+                        if ((lineStart >= start && lineStart < end) ||
                             (lineEnd > start && lineEnd <= end) ||
                             (lineStart < start && lineEnd > end)) {
                             // This line is affected - check if it's a numbered line
@@ -2979,38 +3036,38 @@
                                 numberedLinesInSelection++;
                             }
                         }
-                        
+
                         // Move to next line (+ 1 for the newline character)
                         currentPos = lineEnd + 1;
                     }
-                    
+
                     // If trying to delete numbered lines, show confirmation
                     if (numberedLinesInSelection > 0) {
                         e.preventDefault();
-                        
+
                         // Show confirmation dialog
                         const confirmDelete = confirm(`Delete ${numberedLinesInSelection} card${numberedLinesInSelection > 1 ? 's' : ''}?\n\nThis will permanently remove ${numberedLinesInSelection > 1 ? 'these cards' : 'this card'} from your list.`);
-                        
+
                         if (confirmDelete) {
                             // Allow deletion - manually delete just the selected text
                             const newText = text.substring(0, start) + text.substring(end);
                             textarea.value = newText;
                             textarea.setSelectionRange(start, start);
                         }
-                        
+
                         return false;
                     }
-                    
+
                     // Check if deletion would cause line merge (next char is newline)
                     const afterSelection = text.charAt(end);
                     if (afterSelection === '\n' || end >= text.length || text.substring(end, end + 1) === '\n') {
                         e.preventDefault();
-                        
+
                         // Manually delete just the selected text, preserve newline
                         const newText = text.substring(0, start) + text.substring(end);
                         textarea.value = newText;
                         textarea.setSelectionRange(start, start);
-                        
+
                         return false;
                     }
                 }
@@ -3022,7 +3079,7 @@
             const currentCount = newCard.multipleFiles ? newCard.multipleFiles.length : 0;
             const totalCards = cards.length + currentCount;
             const remainingSlots = 30 - totalCards;
-            
+
             if (remainingSlots <= 0) {
                 showToastWithButton('⚠️ Maximum 30 cards reached!<br>Delete cards to add more.');
                 return;
@@ -3034,10 +3091,10 @@
             tempInput.accept = 'image/*';
             tempInput.multiple = true;
             tempInput.title = 'Select up to ' + remainingSlots + ' more images';
-            
+
             tempInput.onchange = function(e) {
                 const newFiles = Array.from(e.target.files);
-                
+
                 // Sort new files
                 newFiles.sort((a, b) => {
                     return a.name.localeCompare(b.name, undefined, {
@@ -3045,17 +3102,17 @@
                         sensitivity: 'base'
                     });
                 });
-                
+
                 // Check if adding these would exceed the total limit
                 if (currentCount + newFiles.length + cards.length > 30) {
                     // Instead of blocking completely, take only the files that fit
                     const filesToAdd = newFiles.slice(0, remainingSlots);
                     showToastWithButton('⚠️ Maximum exceeded<br>Only ' + filesToAdd.length + ' added');
-                    
+
                     // Combine existing files with the limited new files
                     const existingFiles = Array.from(newCard.multipleFiles || []);
                     const combinedFiles = existingFiles.concat(filesToAdd);
-                    
+
                     // Sort combined files
                     combinedFiles.sort((a, b) => {
                         return a.name.localeCompare(b.name, undefined, {
@@ -3063,16 +3120,16 @@
                             sensitivity: 'base'
                         });
                     });
-                    
+
                     // Create a new FileList-like object
                     const dataTransfer = new DataTransfer();
                     combinedFiles.forEach(file => dataTransfer.items.add(file));
-                    
+
                     // Create a fake input with combined files
                     const fakeInput = {
                         files: dataTransfer.files
                     };
-                    
+
                     // Call handleImageUpload with the combined files
                     handleImageUpload('front', fakeInput);
                     return;
@@ -3081,7 +3138,7 @@
                 // Combine existing files with new files
                 const existingFiles = Array.from(newCard.multipleFiles || []);
                 const combinedFiles = existingFiles.concat(newFiles);
-                
+
                 // Sort combined files
                 combinedFiles.sort((a, b) => {
                     return a.name.localeCompare(b.name, undefined, {
@@ -3089,20 +3146,20 @@
                         sensitivity: 'base'
                     });
                 });
-                
+
                 // Create a new FileList-like object
                 const dataTransfer = new DataTransfer();
                 combinedFiles.forEach(file => dataTransfer.items.add(file));
-                
+
                 // Create a fake input with combined files
                 const fakeInput = {
                     files: dataTransfer.files
                 };
-                
+
                 // Call handleImageUpload with the combined files
                 handleImageUpload('front', fakeInput);
             };
-            
+
             tempInput.click();
         }
 
@@ -3242,7 +3299,7 @@
             // Check total limit considering existing cards
             const totalAfterUpload = cards.length + files.length;
             const remainingSlots = 30 - cards.length;
-            
+
             if (side === 'front' && totalAfterUpload > 30) {
                 if (remainingSlots <= 0) {
                     showToastWithButton('⚠️ Maximum 30 cards reached!<br>Delete cards to add more.');
@@ -3251,15 +3308,15 @@
                     }
                     return;
                 }
-                
+
                 // Show toast about limiting
                 setTimeout(function() {
                     showToastWithButton('⚠️ Maximum exceeded<br>Only ' + remainingSlots + ' added');
                 }, 100);
-                
+
                 // Create array of only the files that fit
                 const limitedFiles = Array.from(files).slice(0, remainingSlots);
-                
+
                 // Try to create FileList, fallback to array if not supported
                 try {
                     const dataTransfer = new DataTransfer();
@@ -3269,7 +3326,7 @@
                     // Fallback for browsers that don't support DataTransfer
                     files = limitedFiles;
                 }
-                
+
                 // Reset original input
                 if (input.value) {
                     input.value = '';
@@ -3279,10 +3336,10 @@
                 setTimeout(function() {
                     showToastWithButton('⚠️ Maximum exceeded<br>Only 30 added');
                 }, 100);
-                
+
                 // Create array of only first 30 files
                 const limitedFiles = Array.from(files).slice(0, 30);
-                
+
                 // Try to create FileList, fallback to array if not supported
                 try {
                     const dataTransfer = new DataTransfer();
@@ -3292,7 +3349,7 @@
                     // Fallback for browsers that don't support DataTransfer
                     files = limitedFiles;
                 }
-                
+
                 // Reset original input
                 if (input.value) {
                     input.value = '';
@@ -3423,31 +3480,31 @@
                 saveCards();
                 closeCreateModal();
                 renderDisplay();
-                
+
                 showToast('✅ All cards updated!', 2000);
                 return;
             }
-            
+
             // Check if we're editing an existing card (single rename)
             if (newCard.editingIndex !== undefined && newCard.editingIndex !== null) {
                 // Update existing card
                 const backText = document.getElementById('backText').value;
-                
+
                 cards[newCard.editingIndex].backText = backText;
-                
+
                 // If image was changed, update it
                 if (newCard.frontImage !== cards[newCard.editingIndex].frontImage) {
                     cards[newCard.editingIndex].frontImage = newCard.frontImage;
                 }
-                
+
                 saveCards();
                 closeCreateModal();
                 renderDisplay();
-                
+
                 showToast('✅ Card updated!', 2000);
                 return;
             }
-            
+
             // Handle multiple files (new import)
             if (newCard.multipleFiles && newCard.multipleFiles.length > 1) {
                 const files = Array.from(newCard.multipleFiles);
@@ -3475,7 +3532,7 @@
                 // Process ALL files with their corresponding names (including blank)
                 const filesToProcess = [];
                 const namesToProcess = [];
-                
+
                 for (let i = 0; i < files.length; i++) {
                     if (namesByIndex.hasOwnProperty(i)) {
                         filesToProcess.push(files[i]);
@@ -3669,10 +3726,10 @@
                 alert('Text-to-speech not supported in this browser');
                 return;
             }
-            
+
             // Cancel any ongoing speech
             window.speechSynthesis.cancel();
-            
+
             // Small delay to ensure cancellation completes
             setTimeout(() => {
                 const utterance = new SpeechSynthesisUtterance(text);
@@ -3680,32 +3737,32 @@
                 utterance.pitch = 1.0;
                 utterance.volume = 1.0;
                 utterance.lang = 'en-US';
-                
+
                 window.speechSynthesis.speak(utterance);
             }, 100);
         }
-        
+
         function clearAllCards() {
             if (cards.length === 0) {
                 alert('No cards to clear!');
                 return;
             }
-            
+
             // Double-tap system for iPad compatibility
             clearAllClickCount++;
-            
+
             const clearBtn = document.getElementById('clearBtn');
-            
+
             if (clearAllClickCount === 1) {
                 // First tap - change button text to confirm
                 clearBtn.textContent = '⚠️ Tap again to delete all ' + cards.length + ' cards';
                 // Keep the same warning color (don't change background)
-                
+
                 // Add click-outside listener to cancel
                 setTimeout(() => {
                     document.addEventListener('click', cancelClearAll);
                 }, 100); // Small delay to prevent immediate cancellation
-                
+
                 // Reset after 3 seconds if they don't tap again
                 clearAllTimeout = setTimeout(() => {
                     clearAllClickCount = 0;
@@ -3716,7 +3773,7 @@
                 // Second tap - actually delete
                 clearTimeout(clearAllTimeout);
                 document.removeEventListener('click', cancelClearAll);
-                
+
                 try {
                     window.speechSynthesis.cancel();
                     cards = [];
@@ -3726,16 +3783,16 @@
                     imageHashCache.clear();
                     sessionStorage.removeItem('flashcards');
                     renderDisplay();
-                    
+
                     // Reset button
                     clearAllClickCount = 0;
                     clearBtn.textContent = '⚠️ Clear All';
-                    
+
                     alert('All cards have been deleted!');
                 } catch (e) {
                     console.error('Failed to clear cards:', e);
                     alert('ERROR: Could not clear cards. This may happen in Private Browsing mode.');
-                    
+
                     // Reset button even on error
                     clearAllClickCount = 0;
                     clearBtn.textContent = '⚠️ Clear All';
@@ -3745,7 +3802,7 @@
 
         function cancelClearAll(event) {
             const clearBtn = document.getElementById('clearBtn');
-            
+
             // Only cancel if clicking outside the Clear All button
             if (!event.target.closest('#clearBtn')) {
                 clearTimeout(clearAllTimeout);
@@ -3783,7 +3840,7 @@
 
                 // Convert to JSON string with formatting
                 const jsonString = JSON.stringify(saveData, null, 2);
-                
+
                 // Create blob and download
                 const blob = new Blob([jsonString], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
@@ -3817,7 +3874,7 @@
             }
 
             const zip = new JSZip();
-            
+
             // Create data.json with metadata (no images)
             const metadata = {
                 version: '1.0',
@@ -3830,12 +3887,12 @@
                     backImage: card.backImage
                 }))
             };
-            
+
             zip.file('data.json', JSON.stringify(metadata, null, 2));
-            
+
             // Add images folder
             const imagesFolder = zip.folder('images');
-            
+
             // Add each image as a separate file
             cards.forEach((card, index) => {
                 if (card.frontImage) {
@@ -3843,11 +3900,11 @@
                     const base64Data = card.frontImage.split(',')[1];
                     const mimeType = card.frontImage.split(',')[0].split(':')[1].split(';')[0];
                     const extension = mimeType.split('/')[1];
-                    
+
                     imagesFolder.file(`card_${index + 1}.${extension}`, base64Data, { base64: true });
                 }
             });
-            
+
             // Generate ZIP and download
             zip.generateAsync({ type: 'blob' }).then(function(blob) {
                 const url = URL.createObjectURL(blob);
@@ -3858,7 +3915,7 @@
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
-                
+
                 closeSaveOptions();
                 showToast('✅ Saved as ZIP!', 2000);
             });
@@ -3894,7 +3951,7 @@
                 reader.onload = function(e) {
                     try {
                         const data = JSON.parse(e.target.result);
-                        
+
                         // Validate JSON structure
                         if (!data.cards || !Array.isArray(data.cards)) {
                             showToast('⚠️ Invalid flashcard file format', 3000);
@@ -3902,7 +3959,7 @@
                         }
 
                         loadedSessionData = data;
-                        
+
                         // Show file info
                         document.getElementById('loadFileName').textContent = fileName;
                         document.getElementById('loadFileCards').textContent = data.cards.length;
@@ -4040,25 +4097,19 @@
             closeMoreDropdown();
 
             const dropdown = document.getElementById('quickLoadDropdownContent');
-            const button = document.querySelector('#quickLoadDropdown .dropdown-btn');
             
-            if (dropdown.style.display === 'none' || dropdown.style.display === '') {
-                loadQuickLoadList();
-                dropdown.style.display = 'block';
-                
-                // Position dropdown below button
-                const buttonRect = button.getBoundingClientRect();
-                dropdown.style.top = (buttonRect.bottom + 5) + 'px';
-                dropdown.style.right = (window.innerWidth - buttonRect.right) + 'px';
-                dropdown.style.left = 'auto';
+            if (dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
             } else {
-                dropdown.style.display = 'none';
+                loadQuickLoadList();
+                dropdown.classList.add('show');
             }
         }
 
         // Close Quick Load dropdown
         function closeQuickLoadDropdown() {
-            document.getElementById('quickLoadDropdownContent').style.display = 'none';
+            const dropdown = document.getElementById('quickLoadDropdownContent');
+            dropdown.classList.remove('show');
         }
 
         // Invalidate units cache (call this after add/delete operations)
@@ -4090,7 +4141,7 @@
                     // Horizontal layout: Unit Name | Add Icon | Load Icon
                     listContainer.innerHTML = units.map(unit => {
                         const isCurrentlyLoaded = (currentLoadedUnitId === unit.id);
-                        
+
                         if (isCurrentlyLoaded) {
                             // This unit is currently loaded - show Remove button
                             return `
@@ -4127,7 +4178,7 @@
         async function quickLoadUnit(unitId, mode = 'load') {
             try {
                 closeQuickLoadDropdown();
-                
+
                 // Handle remove action
                 if (mode === 'remove') {
                     cards = [];
@@ -4138,7 +4189,7 @@
                     showToast('🗑️ Unit removed', 2000);
                     return;
                 }
-                
+
                 showToast(mode === 'add' ? '⏳ Adding unit...' : '⏳ Loading unit...', 1000);
 
                 // Use cache for fast lookup (O(1) instead of O(n))
@@ -4296,10 +4347,6 @@
         }
 
         // Stub function for compatibility (no longer used but keeps things working)
-        function toggleSourceInput() {
-            // No longer needed but kept for safety
-        }
-
         // Read file as text
         function readFileAsText(file) {
             return new Promise((resolve, reject) => {
@@ -4352,38 +4399,38 @@
                 console.error('Error loading units list:', error);
                 showToast('⚠️ Error loading units', 2000);
             }
-            
+
             // Setup event delegation for dynamically created buttons
             setupUnitsListEventHandlers();
         }
-        
+
         // Event delegation for units list buttons
         function setupUnitsListEventHandlers() {
             const listContainer = document.getElementById('unitsList');
             if (!listContainer) return;
-            
+
             // Remove old listener if exists to prevent duplicates
             const oldHandler = listContainer.unitsClickHandler;
             if (oldHandler) {
                 listContainer.removeEventListener('click', oldHandler);
             }
-            
+
             // Add new click handler with event delegation
             const clickHandler = function(e) {
                 const target = e.target;
-                
+
                 // Check if clicked on a button or its content (emoji/text)
                 const button = target.closest('button');
                 if (!button) return;
-                
+
                 // Get the onclick attribute
                 const onclickAttr = button.getAttribute('onclick');
                 if (!onclickAttr) return;
-                
+
                 // Prevent default
                 e.preventDefault();
                 e.stopPropagation();
-                
+
                 // Parse and execute the function call
                 try {
                     // Extract function name and parameters
@@ -4405,7 +4452,7 @@
                     console.error('Error executing button action:', error);
                 }
             };
-            
+
             listContainer.addEventListener('click', clickHandler);
             listContainer.unitsClickHandler = clickHandler;
         }
@@ -4438,13 +4485,13 @@
         function renameUnit(unitId, currentName) {
             renameUnitId = unitId;
             renameOriginalName = currentName;
-            
+
             const modal = document.getElementById('renameUnitModal');
             const input = document.getElementById('renameUnitInput');
-            
+
             input.value = currentName;
             modal.style.display = 'flex';
-            
+
             // Focus and select text after a short delay for mobile compatibility
             setTimeout(() => {
                 input.focus();
@@ -4464,7 +4511,7 @@
         async function confirmRenameUnit() {
             const input = document.getElementById('renameUnitInput');
             const newName = input.value.trim();
-            
+
             if (newName === '' || newName === renameOriginalName) {
                 closeRenameUnitModal();
                 return;
@@ -4560,13 +4607,13 @@
             if (quickLoadDropdown && !quickLoadDropdown.contains(event.target)) {
                 closeQuickLoadDropdown();
             }
-            
+
             // Close rename modal when clicking outside
             const renameModal = document.getElementById('renameUnitModal');
             const renameModalContent = renameModal ? renameModal.querySelector('.modal-content') : null;
-            if (renameModal && 
-                renameModal.style.display === 'flex' && 
-                renameModalContent && 
+            if (renameModal &&
+                renameModal.style.display === 'flex' &&
+                renameModalContent &&
                 !renameModalContent.contains(event.target)) {
                 closeRenameUnitModal();
             }
@@ -4576,7 +4623,7 @@
 
         function collapseOtherExpandableButtons(exceptButton) {
             const buttons = ['renameCardBtn', 'gameBtn'];
-            
+
             buttons.forEach(btnId => {
                 if (btnId !== exceptButton) {
                     const btn = document.getElementById(btnId);
@@ -4585,7 +4632,7 @@
                     }
                 }
             });
-            
+
             // Clear all timeouts and remove event listeners
             if (exceptButton !== 'renameCardBtn') {
                 if (renameTimeout) clearTimeout(renameTimeout);
@@ -4599,7 +4646,7 @@
 
         function toggleRenameButton() {
             const renameBtn = document.getElementById('renameCardBtn');
-            
+
             if (renameBtn.classList.contains('expanded')) {
                 // Second click - open rename modal and collapse
                 clearTimeout(renameTimeout);
@@ -4610,17 +4657,17 @@
                 // First click - collapse others and expand this one
                 collapseOtherExpandableButtons('renameCardBtn');
                 renameBtn.classList.add('expanded');
-                
+
                 // Clear any existing timeout
                 if (renameTimeout) {
                     clearTimeout(renameTimeout);
                 }
-                
+
                 // Add click-outside listener after a small delay
                 setTimeout(() => {
                     document.addEventListener('click', collapseRenameButton);
                 }, 100);
-                
+
                 // Auto-collapse after 3 seconds if not clicked again
                 renameTimeout = setTimeout(() => {
                     renameBtn.classList.remove('expanded');
@@ -4631,7 +4678,7 @@
 
         function collapseRenameButton(event) {
             const renameBtn = document.getElementById('renameCardBtn');
-            
+
             // If clicking outside, collapse without opening
             if (!event.target.closest('#renameCardBtn')) {
                 renameBtn.classList.remove('expanded');
@@ -4648,7 +4695,7 @@
 
         function toggleGameButton() {
             const gameBtn = document.getElementById('gameBtn');
-            
+
             if (gameBtn.classList.contains('expanded')) {
                 // Second click - open game menu and collapse
                 clearTimeout(gameTimeout);
@@ -4659,17 +4706,17 @@
                 // First click - collapse others and expand this one
                 collapseOtherExpandableButtons('gameBtn');
                 gameBtn.classList.add('expanded');
-                
+
                 // Clear any existing timeout
                 if (gameTimeout) {
                     clearTimeout(gameTimeout);
                 }
-                
+
                 // Add click-outside listener after a small delay
                 setTimeout(() => {
                     document.addEventListener('click', collapseGameButton);
                 }, 100);
-                
+
                 // Auto-collapse after 3 seconds if not clicked again
                 gameTimeout = setTimeout(() => {
                     gameBtn.classList.remove('expanded');
@@ -4680,7 +4727,7 @@
 
         function collapseGameButton(event) {
             const gameBtn = document.getElementById('gameBtn');
-            
+
             // If clicking outside, collapse without opening
             if (!event.target.closest('#gameBtn')) {
                 gameBtn.classList.remove('expanded');
@@ -4703,16 +4750,16 @@
             }
             document.body.style.overflow = 'hidden'; // Disable background scrolling
             document.getElementById('gameMenuModal').classList.add('active');
-            
+
             // Check if there's an active game session AND at least one card has been flipped
-            const hasActiveSession = guessGameState.gameCards && 
-                                    guessGameState.gameCards.length > 0 && 
+            const hasActiveSession = guessGameState.gameCards &&
+                                    guessGameState.gameCards.length > 0 &&
                                     guessGameState.currentCardIndex < guessGameState.gameCards.length &&
                                     guessGameState.currentCardOrder > 0; // Must have flipped at least one card
-            
+
             // Update button text
             const guessBtn = document.getElementById('guessGameBtn');
-            
+
             if (hasActiveSession) {
                 // Active session exists with progress
                 guessBtn.innerHTML = '🎯 Guess the Word (Continue)';
@@ -4735,21 +4782,21 @@
                 answered: [],
                 gameCards: []
             };
-            
+
             // Start a fresh game
             startGame('guess');
         }
 
         function startGame(gameType) {
             closeGameMenu();
-            
+
             if (gameType === 'guess') {
                 // Check if there's an existing session to continue AND at least one card flipped
-                const hasActiveSession = guessGameState.gameCards && 
-                                        guessGameState.gameCards.length > 0 && 
+                const hasActiveSession = guessGameState.gameCards &&
+                                        guessGameState.gameCards.length > 0 &&
                                         guessGameState.currentCardIndex < guessGameState.gameCards.length &&
                                         guessGameState.currentCardOrder > 0; // Must have flipped at least one card
-                
+
                 if (!hasActiveSession) {
                     // Start new game - reset game state
                     guessGameState = {
@@ -4757,13 +4804,13 @@
                         score: 0,
                         answered: []
                     };
-                    
+
                     // Shuffle cards for the game
                     const gameCards = fisherYatesShuffle(cards);
                     guessGameState.gameCards = gameCards;
                 }
                 // If hasActiveSession is true, we continue with existing state
-                
+
                 document.body.style.overflow = 'hidden'; // Disable background scrolling
                 document.getElementById('guessGameModal').classList.add('active');
                 renderGuessGame();
@@ -4774,7 +4821,7 @@
                     openGameMenu();
                     return;
                 }
-                
+
                 // Shuffle and take up to 7 normal cards
                 const shuffled = fisherYatesShuffle(cards);
                 const selectedCards = shuffled.slice(0, Math.min(7, cards.length));
@@ -4784,7 +4831,7 @@
                 bombGameState.eliminated = false;
                 bombGameState.cardsRemaining = selectedCards.length;
                 bombGameState.bombCount = 2;
-                
+
                 document.body.style.overflow = 'hidden';
                 document.getElementById('bombGameModal').classList.add('active');
                 renderBombGame();
@@ -4795,20 +4842,20 @@
                     openGameMenu();
                     return;
                 }
-                
+
                 // Filter cards that have backText
                 const cardsWithText = cards.filter(card => card.backText && card.backText.trim().length > 0);
-                
+
                 if (cardsWithText.length === 0) {
                     alert('You need cards with text to play Spelling Game!');
                     openGameMenu();
                     return;
                 }
-                
+
                 // Shuffle cards
                 spellingGameState.gameCards = fisherYatesShuffle(cardsWithText);
                 spellingGameState.currentCardIndex = 0;
-                
+
                 document.body.style.overflow = 'hidden';
                 document.getElementById('spellingGameModal').classList.add('active');
                 renderSpellingGame();
@@ -4825,7 +4872,7 @@
                     gameCards: []
                 };
             }
-            
+
             document.getElementById('guessGameModal').classList.remove('active');
             openGameMenu(); // This will handle scroll state
         }
@@ -4842,7 +4889,7 @@
 
         function renderGuessGame() {
             const content = document.getElementById('guessGameContent');
-            
+
             if (guessGameState.currentCardIndex >= guessGameState.gameCards.length) {
                 // Game over - play winning sound
                 console.log('🎉 Game completed! Attempting to play winning sound...');
@@ -4865,7 +4912,7 @@
             // Get all cards for the current round
             const allCards = [...cards];
             const optionsCount = Math.min(Math.max(3, Math.min(9, allCards.length)), allCards.length);
-            
+
             // Get random cards for this round
             if (!guessGameState.currentRoundCards) {
                 let roundCards = fisherYatesShuffle(allCards).slice(0, optionsCount);
@@ -4874,16 +4921,16 @@
                 guessGameState.selectedCard = null;
                 guessGameState.currentCardOrder = 0; // Track which card should be flipped next
             }
-            
+
             const roundCards = guessGameState.currentRoundCards;
-            
+
             // Check if all cards have been marked correct
             const allCorrect = roundCards.every((card, index) => guessGameState.correctCards[index]);
-            
+
             // Get the current card that should be flipped
             const currentCardIndex = guessGameState.currentCardOrder;
             const isCardFlipped = guessGameState.selectedCard !== null;
-            
+
             content.innerHTML = `
                 <div style="text-align: center;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
@@ -4900,7 +4947,7 @@
                             </button>
                         </div>
                     </div>
-                    
+
                     <div style="position: relative; max-width: 800px; margin: 0 auto;">
                         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px; transition: opacity 0.5s; ${allCorrect ? 'opacity: 0.3;' : 'opacity: 1;'}">
                             ${roundCards.map((card, index) => {
@@ -4910,16 +4957,16 @@
                                 const canFlip = index === currentCardIndex && !isCardFlipped;
                                 const isFlipped = isCorrect || isSelected;
                                 const cardNumber = index + 1; // Display 1-9 instead of 0-8
-                                
+
                                 return `
                                     <div style="position: relative;">
-                                        <div onclick="${canFlip ? 'flipOptionCard(' + index + ')' : ''}" 
-                                             style="cursor: ${canFlip ? 'pointer' : 'not-allowed'}; 
-                                                    aspect-ratio: 1; 
+                                        <div onclick="${canFlip ? 'flipOptionCard(' + index + ')' : ''}"
+                                             style="cursor: ${canFlip ? 'pointer' : 'not-allowed'};
+                                                    aspect-ratio: 1;
                                                     position: relative;
                                                     ${!canFlip && !isCorrect ? 'opacity: 0.6;' : ''}">
                                             <div style="width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s; ${isFlipped ? 'transform: rotateY(180deg);' : ''}">
-                                                <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); ${isCurrentCard && !isFlipped ? 'border: 3px solid #ffc107;' : ''}">
+                                                <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: linear-gradient(135deg, #35654D 0%, #2d5542 100%); border-radius: 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); ${isCurrentCard && !isFlipped ? 'border: 3px solid #ffc107;' : ''}">
                                                     <span style="font-size: 4rem; color: white; font-weight: bold;">${cardNumber}</span>
                                                 </div>
                                                 <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: white; border-radius: 15px; display: flex; align-items: center; justify-content: center; padding: 10px; transform: rotateY(180deg); box-shadow: 0 4px 15px rgba(0,0,0,0.3); ${isSelected ? 'border: 4px solid #51cf66;' : ''}">
@@ -4931,7 +4978,7 @@
                                 `;
                             }).join('')}
                         </div>
-                        
+
                         <div id="guessGameButtons" style="display: ${isCardFlipped ? 'flex' : 'none'};">
                             <button class="btn btn-success" onclick="markCorrect()" style="width: 80px; height: 80px; min-width: 80px; padding: 0; border-radius: 50%; font-size: 2.5rem; font-weight: bold; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.4); background: linear-gradient(135deg, #51cf66 0%, #40c057 100%); color: white; border: none; cursor: pointer; transition: all 0.3s; position: absolute; top: 50%; left: 33.33%; transform: translate(-50%, -50%); z-index: 10;" onmouseover="this.style.transform='translate(-50%, -50%) scale(1.1)'" onmouseout="this.style.transform='translate(-50%, -50%) scale(1)'">
                                 ✓
@@ -4940,7 +4987,7 @@
                                 ✗
                             </button>
                         </div>
-                        
+
                         ${allCorrect ? `
                             <div id="confettiContainer" class="confetti-container"></div>
                             <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; text-align: center;">
@@ -4952,7 +4999,7 @@
                     </div>
                 </div>
             `;
-            
+
             // Trigger confetti when all cards are correct
             if (allCorrect) {
                 setTimeout(() => createConfetti(), 100);
@@ -4962,12 +5009,12 @@
         function createConfetti() {
             const container = document.getElementById('confettiContainer');
             if (!container) return;
-            
+
             container.innerHTML = ''; // Clear existing confetti
-            
+
             const colors = ['#ff6b6b', '#51cf66', '#ffd93d', '#6bcfff', '#c996ff', '#ff9ff3'];
             const confettiCount = 50;
-            
+
             for (let i = 0; i < confettiCount; i++) {
                 const confetti = document.createElement('div');
                 confetti.className = 'confetti';
@@ -4977,7 +5024,7 @@
                 confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
                 container.appendChild(confetti);
             }
-            
+
             // Remove confetti after animation
             setTimeout(() => {
                 if (container) container.innerHTML = '';
@@ -5012,15 +5059,15 @@
                     <p style="font-size: clamp(1rem, 4vw, 1.3rem); margin-bottom: 10px;">Cards Remaining: <strong>${cardsRemaining}</strong></p>
                     <p style="font-size: clamp(0.9rem, 3.5vw, 1.1rem); color: #ff6b6b;">⚠️ ${bombGameState.bombCount === 2 ? 'Two cards are bombs!' : 'One card is a bomb!'} Choose carefully!</p>
                 </div>
-                
+
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; max-width: 700px; margin: 0 auto;">
                     ${gameCards.map((card, index) => `
                         <div onclick="selectBombCard(${index})" style="cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                                        border-radius: 15px; 
-                                        aspect-ratio: 1; 
-                                        display: flex; 
-                                        align-items: center; 
+                            <div style="background: linear-gradient(135deg, #35654D 0%, #2d5542 100%);
+                                        border-radius: 15px;
+                                        aspect-ratio: 1;
+                                        display: flex;
+                                        align-items: center;
                                         justify-content: center;
                                         box-shadow: 0 4px 15px rgba(0,0,0,0.3);
                                         position: relative;">
@@ -5034,7 +5081,7 @@
 
         function selectBombCard(cardIndex) {
             const card = bombGameState.gameCards[cardIndex];
-            
+
             if (card.isBomb) {
                 // Hit the bomb!
                 playSound('explosionSound');
@@ -5049,11 +5096,11 @@
         function showBombReveal(cardIndex, isBomb) {
             const content = document.getElementById('bombGameContent');
             const card = bombGameState.gameCards[cardIndex];
-            
+
             content.innerHTML = `
                 <div style="text-align: center; padding: 20px;" onclick="continueBombGame(${cardIndex}, ${isBomb})">
                     <h2 style="font-size: clamp(2rem, 8vw, 4rem); margin-bottom: 20px;">${isBomb ? '💥 BOOM!' : '✅ Safe!'}</h2>
-                    ${isBomb ? 
+                    ${isBomb ?
                         '<div style="margin: 20px 0;"><p style="font-size: clamp(4rem, 15vw, 8rem);">💥</p><p style="font-size: clamp(1.2rem, 4vw, 2rem); color: #ff6b6b; margin-top: 20px;">You hit the bomb!</p></div>' :
                         `<div style="margin: 20px 0; cursor: pointer;">
                             <img src="${card.frontImage}" style="max-width: 90%; max-height: 50vh; width: auto; height: auto; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
@@ -5068,7 +5115,7 @@
             if (isBomb) {
                 // Hit bomb - remove it and add new one
                 bombGameState.gameCards.splice(cardIndex, 1);
-                
+
                 // Check if we should reduce bomb count (when 6 or fewer cards total)
                 if (bombGameState.gameCards.length <= 6 && bombGameState.bombCount === 2) {
                     bombGameState.bombCount = 1;
@@ -5078,17 +5125,17 @@
                         bombGameState.gameCards.splice(bombIndexToRemove, 1);
                     }
                 }
-                
+
                 // Add new bomb back
                 bombGameState.gameCards.push({ isBomb: true });
                 bombGameState.gameCards = fisherYatesShuffle(bombGameState.gameCards);
-                
+
                 renderBombGame();
             } else {
                 // Safe card picked - remove it
                 bombGameState.gameCards.splice(cardIndex, 1);
                 bombGameState.cardsRemaining--;
-                
+
                 // Check if we should reduce bomb count to 1
                 if (bombGameState.gameCards.length === 6 && bombGameState.bombCount === 2) {
                     bombGameState.bombCount = 1;
@@ -5098,13 +5145,13 @@
                         bombGameState.gameCards.splice(bombIndexToRemove, 1);
                     }
                 }
-                
+
                 // Check if this was the last safe card (winner!)
                 if (bombGameState.cardsRemaining === 0) {
                     renderBombGame();
                     return;
                 }
-                
+
                 renderBombGame();
             }
         }
@@ -5122,7 +5169,7 @@
         function renderSpellingGame() {
             const content = document.getElementById('spellingGameContent');
             const { currentCardIndex, gameCards } = spellingGameState;
-            
+
             if (currentCardIndex >= gameCards.length) {
                 // Game over
                 content.innerHTML = `
@@ -5136,19 +5183,19 @@
                 `;
                 return;
             }
-            
+
             const currentCard = gameCards[currentCardIndex];
             const word = currentCard.backText.trim().toUpperCase();
             spellingGameState.correctWord = word;
-            
+
             // Check if it's multiple words (contains space)
             const words = word.split(' ');
             const isMultiWord = words.length > 1;
-            
+
             // Determine block size based on total character count (excluding spaces)
             const totalChars = word.replace(/\s/g, '').length;
             let blockSize, fontSize, gap;
-            
+
             if (totalChars <= 6) {
                 blockSize = 'clamp(50px, 12vw, 60px)';
                 fontSize = 'clamp(1.5rem, 4vw, 2rem)';
@@ -5166,22 +5213,22 @@
                 fontSize = 'clamp(1rem, 2.5vw, 1.3rem)';
                 gap = '6px';
             }
-            
+
             // Scramble all letters but keep track of spaces
             const letters = word.split('');
             const lettersWithoutSpaces = letters.filter(l => l !== ' ');
-            
+
             // Keep scrambling until it's different from original
             let scrambled;
             do {
                 scrambled = fisherYatesShuffle(lettersWithoutSpaces);
             } while (scrambled.join('') === lettersWithoutSpaces.join(''));
-            
+
             // Create answer slots with space gaps
             const answerSlotsArray = [];
             const scrambledArray = [];
             let scrambledIndex = 0;
-            
+
             letters.forEach((char, index) => {
                 if (char === ' ') {
                     answerSlotsArray.push('SPACE');
@@ -5191,11 +5238,11 @@
                     scrambledIndex++;
                 }
             });
-            
+
             spellingGameState.scrambledLetters = scrambledArray;
             spellingGameState.answerSlots = answerSlotsArray;
             spellingGameState.selectedLetter = null;
-            
+
             // Build answer rows for multi-word
             let answerRowsHTML = '';
             if (isMultiWord) {
@@ -5205,21 +5252,21 @@
                         const currentSlotIndex = slotIndex;
                         slotIndex++;
                         return `
-                            <div onclick="selectAnswerSlot(${currentSlotIndex})" 
-                                 class="answer-slot" 
+                            <div onclick="selectAnswerSlot(${currentSlotIndex})"
+                                 class="answer-slot"
                                  data-index="${currentSlotIndex}"
                                  style="width: ${blockSize}; height: ${blockSize}; border: 3px solid #667eea; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: ${fontSize}; font-weight: bold; background: white; cursor: pointer; user-select: none;">
                                 ${spellingGameState.answerSlots[currentSlotIndex] === 'SPACE' ? '' : (spellingGameState.answerSlots[currentSlotIndex] || '')}
                             </div>
                         `;
                     }).join('');
-                    
+
                     answerRowsHTML += `
                         <div style="display: flex; gap: ${gap}; justify-content: center; align-items: center; margin-bottom: ${wordIndex < words.length - 1 ? '15px' : '0'};">
                             ${wordSlots}
                         </div>
                     `;
-                    
+
                     // Skip over the SPACE entry in answerSlots array (if not the last word)
                     if (wordIndex < words.length - 1) {
                         slotIndex++;
@@ -5229,8 +5276,8 @@
                 answerRowsHTML = `
                     <div style="display: flex; gap: ${gap}; justify-content: center; flex-wrap: wrap;">
                         ${spellingGameState.answerSlots.map((letter, index) => `
-                            <div onclick="selectAnswerSlot(${index})" 
-                                 class="answer-slot" 
+                            <div onclick="selectAnswerSlot(${index})"
+                                 class="answer-slot"
                                  data-index="${index}"
                                  style="width: ${blockSize}; height: ${blockSize}; border: 3px solid #667eea; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: ${fontSize}; font-weight: bold; background: white; cursor: pointer; user-select: none;">
                                 ${letter === 'SPACE' ? '' : (letter || '')}
@@ -5239,38 +5286,38 @@
                     </div>
                 `;
             }
-            
+
             content.innerHTML = `
                 <div style="text-align: center; padding: 10px;">
                     <div style="margin-bottom: 20px;">
                         <img src="${currentCard.frontImage}" style="max-width: min(90vw, 300px); max-height: min(40vh, 300px); width: auto; height: auto; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
                     </div>
-                    
-                    <p style="font-size: clamp(1rem, 3vw, 1.2rem); margin-bottom: 20px; color: #667eea; font-weight: 600;">
+
+                    <p style="font-size: clamp(1rem, 3vw, 1.2rem); margin-bottom: 20px; color: #35654D; font-weight: 600;">
                         Card ${currentCardIndex + 1} / ${gameCards.length}
                     </p>
-                    
+
                     <!-- Answer slots -->
                     <div id="answerRow" style="margin-bottom: 30px;">
                         ${answerRowsHTML}
                     </div>
-                    
+
                     <!-- Letter tiles -->
                     <div id="letterRow" style="display: flex; gap: ${gap}; justify-content: center; flex-wrap: wrap; max-width: 90vw; margin: 0 auto;">
                         ${spellingGameState.scrambledLetters.map((letter, index) => {
                             const isVowel = ['A', 'E', 'I', 'O', 'U'].includes(letter);
                             const letterColor = isVowel ? '#ff9500' : 'white';
                             return `
-                                <div onclick="selectLetter(${index})" 
-                                     class="letter-tile" 
+                                <div onclick="selectLetter(${index})"
+                                     class="letter-tile"
                                      data-index="${index}"
-                                     style="width: ${blockSize}; height: ${blockSize}; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: ${fontSize}; font-weight: bold; color: ${letterColor}; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); user-select: none;">
+                                     style="width: ${blockSize}; height: ${blockSize}; background: linear-gradient(135deg, #35654D 0%, #2d5542 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: ${fontSize}; font-weight: bold; color: ${letterColor}; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); user-select: none;">
                                     ${letter}
                                 </div>
                             `;
                         }).join('')}
                     </div>
-                    
+
                     <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
                         <button class="btn btn-success" onclick="checkSpelling()" style="padding: 15px 40px; font-size: clamp(1rem, 3vw, 1.2rem);">
                             ✓ Check Answer
@@ -5286,14 +5333,14 @@
         function selectLetter(letterIndex) {
             // Find first empty slot (skip SPACE placeholders)
             const firstEmptySlot = spellingGameState.answerSlots.findIndex(slot => slot === null);
-            
+
             if (firstEmptySlot === -1) return; // All slots filled
-            
+
             // Move letter to first empty slot
             const letter = spellingGameState.scrambledLetters[letterIndex];
             spellingGameState.answerSlots[firstEmptySlot] = letter;
             spellingGameState.scrambledLetters[letterIndex] = null;
-            
+
             // Re-render
             renderSpellingGameState();
         }
@@ -5301,19 +5348,19 @@
         function selectAnswerSlot(slotIndex) {
             // Skip if it's a space placeholder
             if (spellingGameState.answerSlots[slotIndex] === 'SPACE') return;
-            
+
             // Return letter to scrambled row
             if (spellingGameState.answerSlots[slotIndex] !== null) {
                 const letter = spellingGameState.answerSlots[slotIndex];
-                
+
                 // Find empty spot in scrambled letters or original position
                 const emptyIndex = spellingGameState.scrambledLetters.findIndex(l => l === null);
                 if (emptyIndex !== -1) {
                     spellingGameState.scrambledLetters[emptyIndex] = letter;
                 }
-                
+
                 spellingGameState.answerSlots[slotIndex] = null;
-                
+
                 // Re-render
                 renderSpellingGameState();
             }
@@ -5327,7 +5374,7 @@
                 const value = spellingGameState.answerSlots[index];
                 slot.innerHTML = (value === 'SPACE' || value === null) ? '' : value;
             });
-            
+
             // Update letter tiles
             const letterTiles = document.querySelectorAll('.letter-tile');
             letterTiles.forEach((tile, index) => {
@@ -5343,11 +5390,11 @@
         function checkSpelling() {
             const answer = spellingGameState.answerSlots.map(slot => slot === 'SPACE' ? ' ' : slot).join('');
             const correct = spellingGameState.correctWord;
-            
+
             if (answer === correct) {
                 playSound('correctSound');
                 showToast('✅ Correct!', 1500);
-                
+
                 setTimeout(() => {
                     spellingGameState.currentCardIndex++;
                     renderSpellingGame();
@@ -5355,7 +5402,7 @@
             } else {
                 playSound('errorSound');
                 showToast('❌ Try again!', 1500);
-                
+
                 // Shake animation
                 const content = document.getElementById('spellingGameContent');
                 content.style.animation = 'shake 0.5s';
@@ -5375,7 +5422,7 @@
             if (cardIndex !== guessGameState.currentCardOrder) {
                 return;
             }
-            
+
             // Flip the card and select it
             guessGameState.selectedCard = cardIndex;
             renderGuessGame();
@@ -5494,17 +5541,25 @@
             if (loadBtn) {
                 loadBtn.style.display = 'none';
             }
-            
-            const card = cards[currentIndex];
-            const nextCard = cards[(currentIndex + 1) % cards.length]; // Always show next card in preview
 
-            // Determine if text should auto-scale (not a sentence)
-            const isSentence = card.backText && (card.backText.includes(' ') && card.backText.split(' ').length > 3);
+            const card = cards[currentIndex];
+            const nextCard = cards[(currentIndex + 1) % cards.length]; // Preview next card
+            const prevCard = cards[(currentIndex - 1 + cards.length) % cards.length]; // Preview previous card
+
+            // Auto-scale single words/short phrases, use normal size for sentences
+            const isSentence = card.backText && card.backText.includes(' ') && card.backText.split(' ').length > 3;
             const textClass = isSentence ? 'card-text' : 'card-text card-text-auto-scale';
 
             display.innerHTML = `
                 <div class="card-container">
                     <div class="card-stack">
+                        ${prevCard && cards.length > 1 ? `
+                        <div class="card-prev">
+                            <div class="card-face card-front">
+                                <img src="${prevCard.frontImage}" class="card-image">
+                            </div>
+                        </div>
+                        ` : ''}
                         <div class="card ${isFlipped ? 'flipped' : ''}">
                             <div class="card-face card-front">
                                 <img src="${card.frontImage}" class="card-image">
@@ -5515,18 +5570,28 @@
                                 ${card.backText ? '<p class="' + textClass + '">' + highlightVowels(card.backText) + '</p>' : ''}
                                 <p class="hint">Tap to flip back</p>
                             </div>
+                            <div class="navigation">
+                                <button class="nav-btn prev" onclick="event.stopPropagation(); prevCard()">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                        <rect x="4" y="5" width="2" height="14" fill="currentColor"/>
+                                        <path d="M8 12L18 6V18L8 12Z" fill="currentColor"/>
+                                    </svg>
+                                </button>
+                                <button class="nav-btn next" onclick="event.stopPropagation(); nextCard()">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                        <path d="M6 6V18L16 12L6 6Z" fill="currentColor"/>
+                                        <rect x="18" y="5" width="2" height="14" fill="currentColor"/>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
-                        ${nextCard ? `
+                        ${nextCard && cards.length > 1 ? `
                         <div class="card-next">
                             <div class="card-face card-front">
                                 <img src="${nextCard.frontImage}" class="card-image">
                             </div>
                         </div>
                         ` : ''}
-                    </div>
-                    <div class="navigation">
-                        <button class="nav-btn prev" onclick="event.stopPropagation(); prevCard()">◀</button>
-                        <button class="nav-btn next" onclick="event.stopPropagation(); nextCard()">▶</button>
                     </div>
                     <div class="counter">
                         <span>${currentIndex + 1} / ${cards.length}</span>
@@ -5576,7 +5641,7 @@
             textElement.style.fontSize = optimalSize + 'rem';
         }
 
-        // Add event listeners for save modal buttons
+        // Event listeners for save modal buttons
         document.addEventListener('DOMContentLoaded', function() {
             const saveJSONBtn = document.getElementById('saveJSONBtn');
             const saveZIPBtn = document.getElementById('saveZIPBtn');
@@ -5603,11 +5668,9 @@
                 });
             }
         });
-        // Dropdown functions
+        // Dropdown toggle functions
         function toggleMoreDropdown() {
-            // Close Quick Load dropdown if open
-            closeQuickLoadDropdown();
-
+            closeQuickLoadDropdown(); // Close other dropdown first
             const content = document.getElementById('moreDropdownContent');
             content.classList.toggle('show');
         }
@@ -5631,17 +5694,17 @@
             callback();
         }
 
-        // Add confirmation to Clear All
+        // Clear all cards with confirmation
         function confirmClearAllCards() {
             if (cards.length === 0) {
                 showToast('No cards to clear!', 2000);
                 return;
             }
-            
+
             // Show custom confirmation modal
             const confirmMessage = document.getElementById('confirmMessage');
             confirmMessage.textContent = `Are you sure you want to clear all ${cards.length} cards? This cannot be undone.`;
-            
+
             document.body.style.overflow = 'hidden';
             document.getElementById('confirmModal').classList.add('active');
         }
@@ -5654,18 +5717,18 @@
         function executeClearAll() {
             // Close modal first
             closeConfirmModal();
-            
+
             // Stop any ongoing speech
             window.speechSynthesis.cancel();
-            
+
             // Clear all cards and reset all state
             cards = [];
             currentIndex = 0;
             isFlipped = false;
-            
+
             // Clear the image hash cache to prevent false duplicate warnings
             imageHashCache.clear();
-            
+
             // Reset any game states
             if (typeof bombGameState !== 'undefined') {
                 bombGameState = { currentCardIndex: 0, gameCards: [], selectedLetters: [], correctWord: '' };
@@ -5676,10 +5739,10 @@
             if (typeof spellingGameState !== 'undefined') {
                 spellingGameState = { currentCardIndex: 0, gameCards: [], scrambledLetters: [], answerSlots: [], selectedLetter: null, correctWord: '' };
             }
-            
+
             // Save to sessionStorage using the correct function
             saveCards();
-            
+
             // Clear the display completely
             const display = document.getElementById('cardDisplay');
             display.innerHTML = `
@@ -5689,13 +5752,13 @@
                     <p>Tap "Add Card" to create your first flashcard</p>
                 </div>
             `;
-            
+
             // Hide all card-dependent buttons
             const shuffleBtn = document.getElementById('shuffleBtn');
             const deleteBtn = document.getElementById('deleteBtn');
             const gameBtn = document.getElementById('gameBtn');
             const moreDropdown = document.getElementById('moreDropdown');
-            
+
             if (shuffleBtn) {
                 shuffleBtn.disabled = true;
                 shuffleBtn.style.display = 'none';
@@ -5711,13 +5774,13 @@
             if (moreDropdown) {
                 moreDropdown.style.display = 'none';
             }
-            
+
             // Show Load button again on default page
             const loadBtn = document.getElementById('loadBtn');
             if (loadBtn) {
                 loadBtn.style.display = 'flex';
             }
-            
+
             showToast('All cards cleared!', 2000);
         }
 
@@ -5736,12 +5799,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
