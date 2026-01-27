@@ -18,7 +18,11 @@
     <!-- JSZip library for creating ZIP files -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
-    <title>Flashcard App</title>
+    <title>FlashABC</title>
+    <!-- Handwritten/Brush Script Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Permanent+Marker&family=Shadows+Into+Light&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -49,37 +53,43 @@
         }
 
         .header {
-            text-align: center;
-            margin-bottom: 10px;
+            display: inline-block;
             color: white;
             user-select: none;
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
+            margin-right: 15px;
         }
 
         .header h1 {
-            font-size: 1.2rem;
-            margin-bottom: 3px;
+            font-family: 'Caveat Brush', 'Permanent Marker', cursive;
+            font-size: 2.2rem;
+            margin: 0;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .header p {
-            font-size: 0.75rem;
-            opacity: 0.9;
+            font-weight: 400;
+            letter-spacing: 1px;
+            line-height: 1;
         }
 
         .controls {
-            display: flex;
+            display: inline-flex;
             gap: 8px;
-            margin-bottom: 15px;
             flex-wrap: wrap;
-            justify-content: center;
             align-items: center;
             user-select: none;
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
+        }
+        
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .dropdown {
@@ -997,43 +1007,76 @@
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>📚 Flashcard App</h1>
-            <p>Create, shuffle, and study your flashcards</p>
-        </div>
+        <div class="top-bar">
+            <div class="header">
+                <h1>FlashABC</h1>
+            </div>
 
-        <div class="controls">
-            <button class="btn btn-primary" onclick="openCreateModal()">
-                ➕ Add Cards
-            </button>
-            <button class="btn btn-primary" onclick="shuffleCards()" id="shuffleBtn" disabled style="display: none;">
-                🔀 Shuffle
-            </button>
-            <button class="btn btn-secondary" onclick="deleteCard()" id="deleteBtn" disabled style="display: none;">
-                🗑️ Delete This
-            </button>
-            <button class="btn btn-warning" onclick="clearAllCards()" id="clearBtn" disabled style="display: none;">
-                ⚠️ Clear All
-            </button>
-            <button class="btn btn-primary rename-btn" onclick="toggleRenameButton()" id="renameCardBtn" disabled style="display: none;">
-                ✏️
-            </button>
-            <button class="btn btn-success game-btn" onclick="openGameMenu()" id="gameBtn" disabled style="display: none;">
-                🎮 Game
-            </button>
-            <button class="btn btn-info" id="loadBtn" onclick="openLoadOptions()" style="background: white; width: 50px; padding: 8px 16px; display: flex; align-items: center; justify-content: center;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z" fill="#F5A623"/>
-                    <path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z" fill="#333"/>
+            <div class="controls">
+            <button class="btn" onclick="openCreateModal()" style="color: #667eea;">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="16"></line>
+                    <line x1="8" y1="12" x2="16" y2="12"></line>
                 </svg>
+            </button>
+            <button class="btn" onclick="shuffleCards()" id="shuffleBtn" disabled style="display: none; color: #667eea;">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="16 3 21 3 21 8"></polyline>
+                    <line x1="4" y1="20" x2="21" y2="3"></line>
+                    <polyline points="21 16 21 21 16 21"></polyline>
+                    <line x1="15" y1="15" x2="21" y2="21"></line>
+                    <line x1="4" y1="4" x2="9" y2="9"></line>
+                </svg>
+            </button>
+            <button class="btn" onclick="deleteCard()" id="deleteBtn" disabled style="display: none; color: #f44336;">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+            </button>
+            <button class="btn" onclick="clearAllCards()" id="clearBtn" disabled style="display: none; color: #ff6b6b;">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                </svg>
+                <span style="font-size: 10px; font-weight: 500;">Clear</span>
+            </button>
+            <button class="btn rename-btn" onclick="toggleRenameButton()" id="renameCardBtn" disabled style="display: none; color: #ffa726;">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                <span style="font-size: 10px; font-weight: 500;">Rename</span>
+            </button>
+            <button class="btn game-btn" onclick="openGameMenu()" id="gameBtn" disabled style="display: none; color: #4caf50;">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="6" y1="12" x2="10" y2="12"></line>
+                    <line x1="8" y1="10" x2="8" y2="14"></line>
+                    <line x1="15" y1="13" x2="15.01" y2="13"></line>
+                    <line x1="18" y1="11" x2="18.01" y2="11"></line>
+                    <rect x="2" y="6" width="20" height="12" rx="2"></rect>
+                </svg>
+            </button>
+            <button class="btn" id="loadBtn" onclick="openLoadOptions()" style="color: #667eea;">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span style="font-size: 10px; font-weight: 500;">Load</span>
             </button>
 
             <!-- Quick Load Dropdown -->
             <div class="dropdown" id="quickLoadDropdown" style="position: relative; display: inline-block; z-index: 100;">
-                <button class="dropdown-btn" onclick="toggleQuickLoadDropdown()" style="background: white; width: 50px; padding: 8px 16px; display: flex; align-items: center; justify-content: center; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; font-size: 20px; position: relative; z-index: 101;">
-                    ⚡
+                <button class="btn" onclick="toggleQuickLoadDropdown()" style="color: #667eea; position: relative; z-index: 101; background: white; border: 1px solid #ddd; border-radius: 8px; padding: 8px;">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                    </svg>
                 </button>
-                <div class="dropdown-content" id="quickLoadDropdownContent" style="display: none; position: absolute; background-color: white; min-width: 280px; width: max-content; max-width: 90vw; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 1100; border-radius: 8px; margin-top: 5px; right: 0;">
+                <div class="dropdown-content" id="quickLoadDropdownContent" style="display: none; position: fixed; background-color: white; min-width: 280px; width: max-content; max-width: 90vw; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 10000; border-radius: 8px; margin-top: 5px; pointer-events: auto;">
                     <div id="quickLoadList" style="max-height: 300px; overflow-y: auto;">
                         <!-- Quick load items will be populated here -->
                     </div>
@@ -1047,13 +1090,21 @@
 
             <!-- Dropdown Menu - Only shows after cards are loaded -->
             <div class="dropdown" id="moreDropdown" style="display: none; position: relative; z-index: 100;">
-                <button class="dropdown-btn" onclick="toggleMoreDropdown()" ontouchend="handleDropdownTouch(event)" style="position: relative; z-index: 101;">⋮ More</button>
+                <button class="btn" onclick="toggleMoreDropdown()" ontouchend="handleDropdownTouch(event)" style="position: relative; z-index: 101; color: #667eea; background: white; border: 1px solid #ddd; border-radius: 8px; padding: 8px;">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="1"></circle>
+                        <circle cx="12" cy="5" r="1"></circle>
+                        <circle cx="12" cy="19" r="1"></circle>
+                    </svg>
+                    <span style="font-size: 10px; font-weight: 500;">More</span>
+                </button>
                 <div class="dropdown-content" id="moreDropdownContent" style="z-index: 1100;">
                     <button onclick="openLoadOptions(); closeMoreDropdown();" ontouchend="handleMenuItemTouch(event, openLoadOptions)">📁 Load</button>
                     <button onclick="openSaveOptions(); closeMoreDropdown();" ontouchend="handleMenuItemTouch(event, openSaveOptions)">💾 Save</button>
                     <button onclick="openRenameModal(); closeMoreDropdown();" ontouchend="handleMenuItemTouch(event, openRenameModal)">✏️ Rename</button>
                     <button onclick="confirmClearAllCards(); closeMoreDropdown();" ontouchend="handleMenuItemTouch(event, confirmClearAllCards)">⚠️ Clear All</button>
                 </div>
+            </div>
             </div>
         </div>
 
@@ -1261,21 +1312,9 @@
                     <input type="text" id="newUnitName" placeholder="e.g., Unit 1, Chapter 2" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
                 </div>
                 <div style="margin-bottom: 10px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Source Type:</label>
-                    <select id="newUnitSourceType" onchange="toggleSourceInput()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
-                        <option value="file">📁 Upload File (Recommended - works offline)</option>
-                        <option value="url">☁️ Cloud URL (GitHub, etc. - OneDrive may not work)</option>
-                    </select>
-                </div>
-                <div id="fileInputContainer" style="margin-bottom: 10px;">
                     <label style="display: block; margin-bottom: 5px; font-weight: 600;">Select JSON File:</label>
                     <input type="file" id="newUnitFile" accept=".json" style="width: 100%; padding: 10px; border: 2px solid #4CAF50; border-radius: 5px; background: white; cursor: pointer; font-size: 14px; display: block;">
                     <p style="font-size: 12px; color: #666; margin-top: 5px;">📁 File will be cached in your browser for quick access</p>
-                </div>
-                <div id="urlInputContainer" style="margin-bottom: 10px; display: none;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">JSON File URL:</label>
-                    <input type="text" id="newUnitUrl" placeholder="https://raw.githubusercontent.com/..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
-                    <p style="font-size: 12px; color: #666; margin-top: 5px;">💡 Tip: GitHub raw URLs work best. OneDrive links often fail due to CORS restrictions.</p>
                 </div>
                 <button class="btn btn-success" onclick="addNewUnit()" style="width: 100%; padding: 12px;">
                     ➕ Add Unit
@@ -1293,6 +1332,25 @@
             <button class="btn btn-secondary" onclick="closeUnitConfigModal()" style="width: 100%; margin-top: 20px;">
                 Close
             </button>
+        </div>
+    </div>
+
+    <!-- Rename Unit Modal -->
+    <div class="modal" id="renameUnitModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <h2>✏️ Rename Unit</h2>
+            <div class="form-group" style="margin: 20px 0;">
+                <label style="display: block; margin-bottom: 10px; font-weight: 600; font-size: 16px;">New Unit Name:</label>
+                <input type="text" id="renameUnitInput" placeholder="Enter new name..." style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box;" autofocus>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="closeRenameUnitModal()" style="flex: 1; padding: 12px;">
+                    Cancel
+                </button>
+                <button class="btn btn-success" onclick="confirmRenameUnit()" style="flex: 1; padding: 12px;">
+                    ✅ Rename
+                </button>
+            </div>
         </div>
     </div>
 
@@ -1319,6 +1377,7 @@
 
     <script>
         let cards = [];
+        let currentLoadedUnitId = null; // Track which unit is currently loaded
         let currentIndex = 0;
         let isFlipped = false;
         let newCard = { frontImage: null, backText: '', backImage: null, editedNames: null };
@@ -1627,9 +1686,21 @@
             const maxTapDistance = 20; // max distance moved for a tap - increased for better detection
 
             document.addEventListener('touchstart', function(e) {
-                // Only track swipes on the card display area, not on buttons or modals
+                // Only track touches on the actual card area, not anywhere on page
                 const target = e.target;
-                if (target.closest('.modal') || target.closest('.btn') || target.closest('.nav-btn') || target.closest('.audio-btn')) {
+                
+                // Exclude buttons, modals, controls, and header
+                if (target.closest('.modal') || 
+                    target.closest('.btn') || 
+                    target.closest('.nav-btn') || 
+                    target.closest('.audio-btn') ||
+                    target.closest('.controls') ||
+                    target.closest('.header')) {
+                    return;
+                }
+                
+                // ONLY allow touch if on card display area
+                if (!target.closest('#cardDisplay') && !target.closest('.card-container')) {
                     return;
                 }
 
@@ -1649,9 +1720,20 @@
             }, { passive: true });
 
             document.addEventListener('touchmove', function(e) {
-                // Only track swipes on the card display area
+                // Only track swipes on the actual card area
                 const target = e.target;
-                if (target.closest('.modal') || target.closest('.btn') || target.closest('.nav-btn') || target.closest('.audio-btn')) {
+                
+                if (target.closest('.modal') || 
+                    target.closest('.btn') || 
+                    target.closest('.nav-btn') || 
+                    target.closest('.audio-btn') ||
+                    target.closest('.controls') ||
+                    target.closest('.header')) {
+                    return;
+                }
+                
+                // ONLY allow if on card display area
+                if (!target.closest('#cardDisplay') && !target.closest('.card-container')) {
                     return;
                 }
 
@@ -1672,9 +1754,23 @@
             }, { passive: true });
 
             document.addEventListener('touchend', function(e) {
-                // Only process swipes on the card display area
+                // Only process touches on the actual card area
                 const target = e.target;
-                if (target.closest('.modal') || target.closest('.btn') || target.closest('.nav-btn') || target.closest('.audio-btn')) {
+                
+                if (target.closest('.modal') || 
+                    target.closest('.btn') || 
+                    target.closest('.nav-btn') || 
+                    target.closest('.audio-btn') ||
+                    target.closest('.controls') ||
+                    target.closest('.header')) {
+                    return;
+                }
+                
+                // ONLY allow if on card display area
+                if (!target.closest('#cardDisplay') && !target.closest('.card-container')) {
+                    // Reset touch positions if touch was outside card area
+                    touchStartX = 0;
+                    touchStartY = 0;
                     return;
                 }
 
@@ -1755,8 +1851,19 @@
         // Add click listener for desktop (mouse clicks)
         document.addEventListener('click', function(e) {
             const target = e.target;
-            // Only flip if clicking on the card itself, not buttons or modals
-            if (target.closest('.card') && !target.closest('.modal') && !target.closest('.btn') && !target.closest('.nav-btn') && !target.closest('.audio-btn')) {
+            // Only flip if clicking directly on card elements, not anywhere on page
+            // Check if click is on card face, card image, hint, or card text (but NOT buttons, modals, header, etc)
+            if ((target.classList.contains('card-face') || 
+                 target.classList.contains('card-image') || 
+                 target.classList.contains('hint') ||
+                 target.classList.contains('card-text') ||
+                 target.classList.contains('vowel')) &&
+                !target.closest('.modal') && 
+                !target.closest('.btn') && 
+                !target.closest('.nav-btn') && 
+                !target.closest('.audio-btn') &&
+                !target.closest('.controls') &&
+                !target.closest('.header')) {
                 flipCard();
             }
         });
@@ -3933,9 +4040,17 @@
             closeMoreDropdown();
 
             const dropdown = document.getElementById('quickLoadDropdownContent');
+            const button = document.querySelector('#quickLoadDropdown .dropdown-btn');
+            
             if (dropdown.style.display === 'none' || dropdown.style.display === '') {
                 loadQuickLoadList();
                 dropdown.style.display = 'block';
+                
+                // Position dropdown below button
+                const buttonRect = button.getBoundingClientRect();
+                dropdown.style.top = (buttonRect.bottom + 5) + 'px';
+                dropdown.style.right = (window.innerWidth - buttonRect.right) + 'px';
+                dropdown.style.left = 'auto';
             } else {
                 dropdown.style.display = 'none';
             }
@@ -3972,23 +4087,35 @@
                 if (units.length === 0) {
                     listContainer.innerHTML = '<div style="padding: 15px; text-align: center; color: #666;">No units configured yet.<br>Click "Manage Units" to add.</div>';
                 } else {
-                    // Two-row layout for better mobile compatibility
-                    listContainer.innerHTML = units.map(unit => `
-                        <div style="padding: 12px; border-bottom: 1px solid #eee; background: white;">
-                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-                                <span style="font-size: 18px;">${unit.sourceType === 'url' ? '☁️' : '💾'}</span>
+                    // Horizontal layout: Unit Name | Add Icon | Load Icon
+                    listContainer.innerHTML = units.map(unit => {
+                        const isCurrentlyLoaded = (currentLoadedUnitId === unit.id);
+                        
+                        if (isCurrentlyLoaded) {
+                            // This unit is currently loaded - show Remove button
+                            return `
+                            <div style="padding: 12px; border-bottom: 1px solid #eee; background: white; display: flex; align-items: center; gap: 10px;">
                                 <div style="font-weight: 600; font-size: 15px; color: #333; flex: 1;">${unit.name}</div>
-                            </div>
-                            <div style="display: flex; gap: 8px;">
-                                <button class="quick-load-item" data-unit-id="${unit.id}" data-action="load" title="Load (Replace all cards)" style="flex: 1; padding: 10px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 5px;">
-                                    📂 Load
-                                </button>
-                                <button class="quick-load-item" data-unit-id="${unit.id}" data-action="add" title="Add (Merge with existing)" style="flex: 1; padding: 10px; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 5px;">
-                                    ➕ Add
+                                <button class="quick-load-item" data-unit-id="${unit.id}" data-action="remove" title="Remove" style="width: 40px; height: 40px; padding: 0; background: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center;">
+                                    ✖️
                                 </button>
                             </div>
-                        </div>
-                    `).join('');
+                            `;
+                        } else {
+                            // Not loaded - show Add and Load icon buttons
+                            return `
+                            <div style="padding: 12px; border-bottom: 1px solid #eee; background: white; display: flex; align-items: center; gap: 10px;">
+                                <div style="font-weight: 600; font-size: 15px; color: #333; flex: 1;">${unit.name}</div>
+                                <button class="quick-load-item" data-unit-id="${unit.id}" data-action="add" title="Add" style="width: 40px; height: 40px; padding: 0; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center;">
+                                    ➕
+                                </button>
+                                <button class="quick-load-item" data-unit-id="${unit.id}" data-action="load" title="Load" style="width: 40px; height: 40px; padding: 0; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center;">
+                                    📂
+                                </button>
+                            </div>
+                            `;
+                        }
+                    }).join('');
                 }
             } catch (error) {
                 console.error('Error loading quick load list:', error);
@@ -3996,10 +4123,22 @@
             }
         }
 
-        // Quick load a unit (mode: 'load' to replace, 'add' to merge)
+        // Quick load a unit (mode: 'load' to replace, 'add' to merge, 'remove' to clear)
         async function quickLoadUnit(unitId, mode = 'load') {
             try {
                 closeQuickLoadDropdown();
+                
+                // Handle remove action
+                if (mode === 'remove') {
+                    cards = [];
+                    currentIndex = 0;
+                    isFlipped = false;
+                    currentLoadedUnitId = null;
+                    updateDisplay();
+                    showToast('🗑️ Unit removed', 2000);
+                    return;
+                }
+                
                 showToast(mode === 'add' ? '⏳ Adding unit...' : '⏳ Loading unit...', 1000);
 
                 // Use cache for fast lookup (O(1) instead of O(n))
@@ -4105,125 +4244,60 @@
 
         // Add new unit
         async function addNewUnit() {
+            const name = document.getElementById('newUnitName').value.trim();
+            const fileInput = document.getElementById('newUnitFile');
+
+            if (!name) {
+                showToast('⚠️ Please enter a unit name', 2000);
+                return;
+            }
+
+            if (!fileInput.files || fileInput.files.length === 0) {
+                showToast('⚠️ Please select a JSON file', 2000);
+                return;
+            }
+
+            const file = fileInput.files[0];
+
+            // Validate JSON
             try {
-                const name = document.getElementById('newUnitName').value.trim();
-                const sourceType = document.getElementById('newUnitSourceType').value;
+                const text = await file.text();
+                const jsonData = JSON.parse(text);
 
-                console.log('Adding unit with sourceType:', sourceType); // Debug log
-
-                if (!name) {
-                    showToast('⚠️ Please enter a unit name', 2000);
+                // Validate it's an array of cards
+                if (!Array.isArray(jsonData)) {
+                    showToast('⚠️ JSON file must contain an array of cards', 3000);
                     return;
                 }
 
-                let unit = {
+                // Store in IndexedDB
+                const unit = {
                     name: name,
-                    sourceType: sourceType,
-                    createdAt: new Date().toISOString()
+                    sourceType: 'file',
+                    fileData: text,
+                    createdAt: Date.now()
                 };
 
-                if (sourceType === 'url') {
-                    const url = document.getElementById('newUnitUrl').value.trim();
-                    if (!url) {
-                        showToast('⚠️ Please enter a URL', 2000);
-                        return;
-                    }
-
-                    // Validate URL format
-                    try {
-                        new URL(url);
-                    } catch (e) {
-                        showToast('⚠️ Invalid URL format', 2000);
-                        return;
-                    }
-
-                    // Try to fetch and validate the JSON
-                    showToast('⏳ Validating URL...', 1000);
-                    let response, jsonData;
-
-                    try {
-                        response = await fetch(url, {
-                            mode: 'cors',
-                            cache: 'no-cache'
-                        });
-
-                        if (!response.ok) {
-                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                        }
-
-                        jsonData = await response.json();
-                    } catch (fetchError) {
-                        console.error('Fetch error:', fetchError);
-
-                        // Check if it's a CORS error
-                        if (fetchError.message.includes('Failed to fetch') ||
-                            fetchError.name === 'TypeError') {
-                            showToast('⚠️ CORS Error: OneDrive/cloud links often block direct access. Try: 1) Use file upload instead, or 2) Use GitHub raw URL, or 3) Use a CORS-enabled host', 8000);
-                        } else {
-                            showToast('⚠️ Error: ' + fetchError.message, 4000);
-                        }
-                        return;
-                    }
-
-                    if (!jsonData.cards || !Array.isArray(jsonData.cards)) {
-                        showToast('⚠️ Invalid flashcard file format - needs {cards: [...]}', 3000);
-                        return;
-                    }
-
-                    unit.url = url;
-                } else {
-                    const fileInput = document.getElementById('newUnitFile');
-                    const file = fileInput.files[0];
-
-                    console.log('File input element:', fileInput); // Debug log
-                    console.log('Selected file:', file); // Debug log
-
-                    if (!file) {
-                        showToast('⚠️ Please select a JSON file using the "Choose File" button', 3000);
-                        return;
-                    }
-
-                    // Read and validate the file
-                    showToast('⏳ Reading file...', 1000);
-                    const fileData = await readFileAsText(file);
-
-                    let jsonData;
-                    try {
-                        jsonData = JSON.parse(fileData);
-                    } catch (parseError) {
-                        console.error('JSON parse error:', parseError);
-                        showToast('⚠️ Invalid JSON file. Please check your file format.', 3000);
-                        return;
-                    }
-
-                    if (!jsonData.cards || !Array.isArray(jsonData.cards)) {
-                        showToast('⚠️ Invalid format. File must contain: {"cards": [{"question": "...", "answer": "..."}]}', 4000);
-                        return;
-                    }
-
-                    console.log(`File validated successfully: ${jsonData.cards.length} cards found`);
-                    unit.fileData = fileData;
-                }
-
-                // Save to IndexedDB
                 await saveUnitToDB(unit);
-                showToast('✅ Unit added successfully!', 2000);
-
-                // Invalidate cache so Quick Load dropdown refreshes
-                invalidateUnitsCache();
+                showToast('✅ Unit added successfully', 2000);
 
                 // Clear form
                 document.getElementById('newUnitName').value = '';
-                document.getElementById('newUnitUrl').value = '';
-                document.getElementById('newUnitFile').value = '';
+                fileInput.value = '';
 
-                // Reload units list
+                // Invalidate cache and reload list
+                invalidateUnitsCache();
                 loadUnitsList();
 
             } catch (error) {
-                console.error('Error adding unit:', error);
-                showToast('⚠️ Error adding unit: ' + error.message, 3000);
+                console.error('JSON parse error:', error);
+                showToast('⚠️ Invalid JSON file', 2000);
             }
+        }
+
+        // Stub function for compatibility (no longer used but keeps things working)
+        function toggleSourceInput() {
+            // No longer needed but kept for safety
         }
 
         // Read file as text
@@ -4245,7 +4319,9 @@
                 if (units.length === 0) {
                     listContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #666; background: #f5f5f5; border-radius: 8px;">No units configured yet. Add your first unit above!</div>';
                 } else {
-                    listContainer.innerHTML = units.map(unit => `
+                    listContainer.innerHTML = units.map(unit => {
+                        const escapedName = unit.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                        return `
                         <div style="background: white; border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 10px;">
                             <div style="display: flex; justify-content: space-between; align-items: start;">
                                 <div style="flex: 1;">
@@ -4259,17 +4335,79 @@
                                         Added: ${new Date(unit.createdAt).toLocaleDateString()}
                                     </div>
                                 </div>
-                                <button onclick="deleteUnit(${unit.id})" style="background: #f44336; color: white; border: none; border-radius: 5px; padding: 8px 12px; cursor: pointer; font-size: 14px;">
-                                    🗑️ Delete
-                                </button>
+                                <div style="display: flex; gap: 8px;">
+                                    <button onclick="renameUnit(${unit.id}, '${escapedName}')" style="background: #2196F3; color: white; border: none; border-radius: 5px; padding: 8px 12px; cursor: pointer; font-size: 14px;">
+                                        ✏️ Rename
+                                    </button>
+                                    <button onclick="deleteUnit(${unit.id})" style="background: #f44336; color: white; border: none; border-radius: 5px; padding: 8px 12px; cursor: pointer; font-size: 14px;">
+                                        🗑️ Delete
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    `).join('');
+                    `;
+                    }).join('');
                 }
             } catch (error) {
                 console.error('Error loading units list:', error);
                 showToast('⚠️ Error loading units', 2000);
             }
+            
+            // Setup event delegation for dynamically created buttons
+            setupUnitsListEventHandlers();
+        }
+        
+        // Event delegation for units list buttons
+        function setupUnitsListEventHandlers() {
+            const listContainer = document.getElementById('unitsList');
+            if (!listContainer) return;
+            
+            // Remove old listener if exists to prevent duplicates
+            const oldHandler = listContainer.unitsClickHandler;
+            if (oldHandler) {
+                listContainer.removeEventListener('click', oldHandler);
+            }
+            
+            // Add new click handler with event delegation
+            const clickHandler = function(e) {
+                const target = e.target;
+                
+                // Check if clicked on a button or its content (emoji/text)
+                const button = target.closest('button');
+                if (!button) return;
+                
+                // Get the onclick attribute
+                const onclickAttr = button.getAttribute('onclick');
+                if (!onclickAttr) return;
+                
+                // Prevent default
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Parse and execute the function call
+                try {
+                    // Extract function name and parameters
+                    if (onclickAttr.includes('renameUnit')) {
+                        const match = onclickAttr.match(/renameUnit\((\d+),\s*'([^']*)'\)/);
+                        if (match) {
+                            const unitId = parseInt(match[1]);
+                            const currentName = match[2].replace(/\'/g, "'");
+                            renameUnit(unitId, currentName);
+                        }
+                    } else if (onclickAttr.includes('deleteUnit')) {
+                        const match = onclickAttr.match(/deleteUnit\((\d+)\)/);
+                        if (match) {
+                            const unitId = parseInt(match[1]);
+                            deleteUnit(unitId);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error executing button action:', error);
+                }
+            };
+            
+            listContainer.addEventListener('click', clickHandler);
+            listContainer.unitsClickHandler = clickHandler;
         }
 
         // Delete unit
@@ -4290,6 +4428,110 @@
                 console.error('Error deleting unit:', error);
                 showToast('⚠️ Error deleting unit', 2000);
             }
+        }
+
+        // Variables for rename modal
+        let renameUnitId = null;
+        let renameOriginalName = '';
+
+        // Open rename unit modal
+        function renameUnit(unitId, currentName) {
+            renameUnitId = unitId;
+            renameOriginalName = currentName;
+            
+            const modal = document.getElementById('renameUnitModal');
+            const input = document.getElementById('renameUnitInput');
+            
+            input.value = currentName;
+            modal.style.display = 'flex';
+            
+            // Focus and select text after a short delay for mobile compatibility
+            setTimeout(() => {
+                input.focus();
+                input.select();
+            }, 100);
+        }
+
+        // Close rename unit modal
+        function closeRenameUnitModal() {
+            const modal = document.getElementById('renameUnitModal');
+            modal.style.display = 'none';
+            renameUnitId = null;
+            renameOriginalName = '';
+        }
+
+        // Confirm rename
+        async function confirmRenameUnit() {
+            const input = document.getElementById('renameUnitInput');
+            const newName = input.value.trim();
+            
+            if (newName === '' || newName === renameOriginalName) {
+                closeRenameUnitModal();
+                return;
+            }
+
+            try {
+                await updateUnitNameInDB(renameUnitId, newName);
+                showToast('✅ Unit renamed', 2000);
+                invalidateUnitsCache();
+                loadUnitsList();
+                closeRenameUnitModal();
+            } catch (error) {
+                console.error('Error renaming unit:', error);
+                showToast('⚠️ Error renaming unit', 2000);
+            }
+        }
+
+        // Handle Enter key in rename input
+        document.addEventListener('DOMContentLoaded', function() {
+            const renameInput = document.getElementById('renameUnitInput');
+            if (renameInput) {
+                renameInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        confirmRenameUnit();
+                    } else if (e.key === 'Escape') {
+                        closeRenameUnitModal();
+                    }
+                });
+            }
+        });
+
+        // Update unit name in database
+        function updateUnitNameInDB(id, newName) {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('FlashcardUnitsDB', 1);
+
+                request.onsuccess = function(event) {
+                    const db = event.target.result;
+                    const transaction = db.transaction(['units'], 'readwrite');
+                    const objectStore = transaction.objectStore('units');
+                    const getRequest = objectStore.get(id);
+
+                    getRequest.onsuccess = function(event) {
+                        const unit = event.target.result;
+                        if (unit) {
+                            unit.name = newName;
+                            const updateRequest = objectStore.put(unit);
+                            updateRequest.onsuccess = function() {
+                                resolve();
+                            };
+                            updateRequest.onerror = function() {
+                                reject(updateRequest.error);
+                            };
+                        } else {
+                            reject(new Error('Unit not found'));
+                        }
+                    };
+
+                    getRequest.onerror = function() {
+                        reject(getRequest.error);
+                    };
+                };
+
+                request.onerror = function() {
+                    reject(request.error);
+                };
+            });
         }
 
         // Initialize database when page loads
@@ -4317,6 +4559,16 @@
 
             if (quickLoadDropdown && !quickLoadDropdown.contains(event.target)) {
                 closeQuickLoadDropdown();
+            }
+            
+            // Close rename modal when clicking outside
+            const renameModal = document.getElementById('renameUnitModal');
+            const renameModalContent = renameModal ? renameModal.querySelector('.modal-content') : null;
+            if (renameModal && 
+                renameModal.style.display === 'flex' && 
+                renameModalContent && 
+                !renameModalContent.contains(event.target)) {
+                closeRenameUnitModal();
             }
         });
 
@@ -5484,6 +5736,7 @@
     </script>
 </body>
 </html>
+
 
 
 
