@@ -2066,7 +2066,8 @@
         document.addEventListener('click', function(e) {
             const target = e.target;
             // Flip card when clicking on card elements (not buttons/modals/controls)
-            const isCardElement = target.classList.contains('card-face') ||
+            const isCardElement = target.classList.contains('card') ||
+                                  target.classList.contains('card-face') ||
                                   target.classList.contains('card-image') ||
                                   target.classList.contains('hint') ||
                                   target.classList.contains('card-text') ||
@@ -5733,7 +5734,7 @@
                             </div>
                         </div>
                         ` : ''}
-                        <div class="card ${isFlipped ? 'flipped' : ''}" onclick="flipCard()" style="cursor: pointer;">
+                        <div class="card ${isFlipped ? 'flipped' : ''}" style="cursor: pointer;">
                             <div class="card-face card-front">
                                 <img src="${card.frontImage}" class="card-image">
                                 <p class="hint">Tap to flip</p>
