@@ -1313,7 +1313,7 @@
                         <!-- Quick load items will be populated here -->
                     </div>
                     <div style="border-top: 1px solid #ddd; padding: 8px;">
-                        <button onclick="openUnitConfigModal(); closeQuickLoadDropdown();" class="btn btn-success" style="width: 100%; padding: 10px; font-size: 14px;">
+                        <button onclick="event.stopPropagation(); openUnitConfigModal(); closeQuickLoadDropdown();" class="btn btn-success" style="width: 100%; padding: 10px; font-size: 14px; cursor: pointer; pointer-events: auto;">
                             ⚙️ Manage Units
                         </button>
                     </div>
@@ -4427,9 +4427,23 @@
 
         // Open Unit Configuration Modal
         function openUnitConfigModal() {
-            document.body.style.overflow = 'hidden';
-            document.getElementById('unitConfigModal').classList.add('active');
-            loadUnitsList();
+            console.log('Opening Unit Config Modal');
+            try {
+                document.body.style.overflow = 'hidden';
+                const modal = document.getElementById('unitConfigModal');
+                if (!modal) {
+                    console.error('unitConfigModal element not found!');
+                    alert('Error: Unit Config Modal not found. Please refresh the page.');
+                    return;
+                }
+                modal.classList.add('active');
+                console.log('Modal classes:', modal.classList);
+                console.log('Calling loadUnitsList...');
+                loadUnitsList();
+            } catch (error) {
+                console.error('Error in openUnitConfigModal:', error);
+                alert('Error opening Unit Config Modal: ' + error.message);
+            }
         }
 
         // Close Unit Configuration Modal
@@ -4534,9 +4548,17 @@
 
         // Load and display units list
         async function loadUnitsList() {
+            console.log('loadUnitsList called');
             try {
-                const units = await loadUnitsFromDB();
                 const listContainer = document.getElementById('unitsList');
+                if (!listContainer) {
+                    console.error('unitsList element not found!');
+                    return;
+                }
+                
+                console.log('Loading units from DB...');
+                const units = await loadUnitsFromDB();
+                console.log('Units loaded:', units.length);
 
                 if (units.length === 0) {
                     listContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #666; background: #f5f5f5; border-radius: 8px;">No units configured yet. Add your first unit above!</div>';
@@ -4570,8 +4592,14 @@
                     `;
                     }).join('');
                 }
+                
+                console.log('Units list rendered successfully');
             } catch (error) {
                 console.error('Error loading units list:', error);
+                const listContainer = document.getElementById('unitsList');
+                if (listContainer) {
+                    listContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #f44336; background: #fee; border-radius: 8px;">⚠️ Error loading units: ' + error.message + '</div>';
+                }
                 showToast('⚠️ Error loading units', 2000);
             }
 
@@ -6063,5 +6091,6 @@
 </script>
 </body>
 </html>
+
 
 
