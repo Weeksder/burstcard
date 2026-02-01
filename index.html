@@ -1193,6 +1193,42 @@
             }
         }
 
+        @keyframes bomb-pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.06);
+            }
+        }
+
+        @keyframes expand-flip {
+            0% {
+                transform: scale(1) rotateY(0deg);
+            }
+            40% {
+                transform: scale(2.8) rotateY(0deg);
+            }
+            60% {
+                transform: scale(2.8) rotateY(0deg);
+            }
+            100% {
+                transform: scale(2.8) rotateY(0deg);
+            }
+        }
+
+        @keyframes card-flip {
+            0% {
+                transform: rotateY(0deg);
+            }
+            60% {
+                transform: rotateY(0deg);
+            }
+            100% {
+                transform: rotateY(180deg);
+            }
+        }
+
         /* Mobile and tablet text optimization */
         @media (max-width: 768px) {
             .card-text {
@@ -1422,8 +1458,31 @@
     </div>
 
     <div class="modal" id="guessGameModal">
-        <div class="modal-content" style="max-width: 800px;">
-            <div id="guessGameContent"></div>
+        <div style="position: relative; width: 100%; max-width: 900px; margin: 0 auto; padding-top: clamp(10px, 2vh, 20px);">
+            <!-- Control Panel (stays with modal) -->
+            <div id="guessGameControls" style="width: auto; min-width: min(400px, 90vw); max-width: 600px; background: white; border-radius: 12px; padding: 10px 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); margin: 0 auto clamp(6px, 1vh, 10px);">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                    <h2 style="margin: 0; font-size: clamp(1rem, 2.5vw, 1.2rem); color: #35654D; white-space: nowrap;">🎯 Guess the Word</h2>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <button onclick="startNewGuessGame()" style="background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; font-size: clamp(1.2rem, 3vw, 1.4rem);" title="Shuffle Cards">
+                            🔄
+                        </button>
+                        <button onclick="openGuessGameHelp()" style="background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; font-size: clamp(1.2rem, 3vw, 1.4rem);" title="How to Play">
+                            ❓
+                        </button>
+                        <button onclick="closeGuessGame()" style="background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: transform 0.2s;" title="Back to Menu">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 12H5M12 19l-7-7 7-7"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Card Content -->
+            <div class="modal-content" style="max-width: 900px; padding: clamp(15px, 3vw, 20px); margin: 0;">
+                <div id="guessGameContent"></div>
+            </div>
         </div>
     </div>
 
@@ -1444,16 +1503,44 @@
     </div>
 
     <div class="modal" id="bombGameModal">
-        <div class="modal-content" style="max-width: 900px;">
-            <h2>💣 Bomb Game</h2>
-
-            <div id="bombGameContent"></div>
-
-            <div style="margin-top: 20px;">
-                <button class="btn btn-secondary" onclick="closeBombGame()" style="width: 100%; padding: 15px; justify-content: center;">
-                    ← Back to Game Menu
-                </button>
+        <div style="position: relative; width: 100%; max-width: 900px; margin: 0 auto; padding-top: clamp(10px, 2vh, 20px);">
+            <!-- Control Panel (floating window) -->
+            <div id="bombGameControls" style="width: auto; min-width: min(400px, 90vw); max-width: 600px; background: white; border-radius: 12px; padding: 10px 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); margin: 0 auto clamp(6px, 1vh, 10px);">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                    <h2 style="margin: 0; font-size: clamp(1rem, 2.5vw, 1.2rem); color: #35654D; white-space: nowrap;">💣 Bomb Game</h2>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <button onclick="openBombGameHelp()" style="background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; font-size: clamp(1.2rem, 3vw, 1.4rem);" title="How to Play">
+                            ❓
+                        </button>
+                        <button onclick="closeBombGame()" style="background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: transform 0.2s;" title="Back to Menu">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 12H5M12 19l-7-7 7-7"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
             </div>
+            
+            <!-- Card Content -->
+            <div class="modal-content" style="max-width: 900px; padding: 10px; margin: 0;">
+                <div id="bombGameContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal for Bomb Game -->
+    <div class="modal" id="bombGameHelpModal">
+        <div class="modal-content" style="max-width: 500px; background: linear-gradient(135deg, #35654D 0%, #2d5542 100%); color: white;">
+            <h2 style="color: white;">📖 How to Play</h2>
+            <div style="text-align: left; line-height: 1.8; font-size: 1.1rem;">
+                <p style="margin-bottom: 10px;"><strong>1.</strong> One or two cards are bombs! 💣</p>
+                <p style="margin-bottom: 10px;"><strong>2.</strong> Click a card to reveal it</p>
+                <p style="margin-bottom: 10px;"><strong>3.</strong> <span style="color: #51cf66; font-weight: bold;">Safe card?</span> Keep going! <span style="color: #ff6b6b; font-weight: bold;">Hit a bomb?</span> The bomb moves and you keep playing!</p>
+                <p style="margin-bottom: 20px;"><strong>4.</strong> Clear all safe cards to win!</p>
+            </div>
+            <button class="btn btn-primary" onclick="closeBombGameHelp()" style="width: 100%; padding: 15px; justify-content: center; background: white; color: #35654D;">
+                Got it!
+            </button>
         </div>
     </div>
 
@@ -5135,24 +5222,9 @@
             const isCardFlipped = guessGameState.selectedCard !== null;
 
             content.innerHTML = `
-                <div style="text-align: center;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-                        <button class="btn btn-secondary" onclick="closeGuessGame()" style="padding: 10px 16px; display: flex; align-items: center; gap: 6px; font-size: 0.9rem;">
-                            ← Menu
-                        </button>
-                        <h2 style="margin: 0;">🎯 Guess the Word</h2>
-                        <div style="display: flex; gap: 8px;">
-                            <button class="btn btn-primary" onclick="startNewGuessGame()" style="padding: 10px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border-radius: 8px;" title="Shuffle Cards">
-                                🔄
-                            </button>
-                            <button onclick="openGuessGameHelp()" style="background: #17a2b8; color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 1.2rem; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; transition: all 0.3s;" title="How to Play">
-                                ❓
-                            </button>
-                        </div>
-                    </div>
-
-                    <div style="position: relative; max-width: 800px; margin: 0 auto;">
-                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px; transition: opacity 0.5s; ${allCorrect ? 'opacity: 0.3;' : 'opacity: 1;'}">
+                <div style="width: 100%; display: flex; align-items: center; justify-content: center;">
+                    <div style="position: relative; width: 100%; max-width: 800px; aspect-ratio: 1 / 1;">
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(6px, 1vw, 10px); width: 100%; height: 100%; transition: opacity 0.5s; ${allCorrect ? 'opacity: 0.3;' : 'opacity: 1;'}">
                             ${roundCards.map((card, index) => {
                                 const isCorrect = guessGameState.correctCards[index];
                                 const isCurrentCard = index === currentCardIndex;
@@ -5162,10 +5234,11 @@
                                 const cardNumber = index + 1; // Display 1-9 instead of 0-8
 
                                 return `
-                                    <div style="position: relative;">
+                                    <div style="position: relative; width: 100%; height: 100%;">
                                         <div onclick="${canFlip ? 'flipOptionCard(' + index + ')' : ''}"
                                              style="cursor: ${canFlip ? 'pointer' : 'not-allowed'};
-                                                    aspect-ratio: 1;
+                                                    width: 100%;
+                                                    height: 100%;
                                                     position: relative;
                                                     ${!canFlip && !isCorrect ? 'opacity: 0.6;' : ''}">
                                             <div style="width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s; ${isFlipped ? 'transform: rotateY(180deg);' : ''}">
@@ -5239,6 +5312,16 @@
             openGameMenu();
         }
 
+        function openBombGameHelp() {
+            document.body.style.overflow = 'hidden';
+            document.getElementById('bombGameHelpModal').classList.add('active');
+        }
+
+        function closeBombGameHelp() {
+            document.body.style.overflow = 'hidden'; // Keep overflow hidden since we're still in bombGameModal
+            document.getElementById('bombGameHelpModal').classList.remove('active');
+        }
+
         function renderBombGame() {
             const content = document.getElementById('bombGameContent');
             const { gameCards, cardsRemaining } = bombGameState;
@@ -5258,14 +5341,9 @@
             }
 
             content.innerHTML = `
-                <div style="text-align: center; margin-bottom: 30px;">
-                    <p style="font-size: clamp(1rem, 4vw, 1.3rem); margin-bottom: 10px;">Cards Remaining: <strong>${cardsRemaining}</strong></p>
-                    <p style="font-size: clamp(0.9rem, 3.5vw, 1.1rem); color: #ff6b6b;">⚠️ ${bombGameState.bombCount === 2 ? 'Two cards are bombs!' : 'One card is a bomb!'} Choose carefully!</p>
-                </div>
-
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; max-width: 700px; margin: 0 auto;">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 700px; margin: 0 auto; padding: 10px;">
                     ${gameCards.map((card, index) => `
-                        <div onclick="selectBombCard(${index})" style="cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        <div onclick="selectBombCard(${index})" style="cursor: pointer; animation: bomb-pulse ${2 + (index * 0.2)}s ease-in-out infinite;">
                             <div style="background: linear-gradient(135deg, #35654D 0%, #2d5542 100%);
                                         border-radius: 15px;
                                         aspect-ratio: 1;
@@ -5274,7 +5352,7 @@
                                         justify-content: center;
                                         box-shadow: 0 4px 15px rgba(0,0,0,0.3);
                                         position: relative;">
-                                <span style="font-size: clamp(2.5rem, 10vw, 4rem); color: white;">💣</span>
+                                <span style="font-size: clamp(4rem, 15vw, 6rem); color: white;">💣</span>
                             </div>
                         </div>
                     `).join('')}
@@ -5299,17 +5377,74 @@
         function showBombReveal(cardIndex, isBomb) {
             const content = document.getElementById('bombGameContent');
             const card = bombGameState.gameCards[cardIndex];
-
+            
+            // Debug logging
+            console.log('showBombReveal called:');
+            console.log('- cardIndex:', cardIndex);
+            console.log('- isBomb:', isBomb);
+            console.log('- card object:', card);
+            console.log('- card.frontImage:', card ? card.frontImage : 'card is undefined');
+            
+            // Calculate card position in grid (0-8)
+            const row = Math.floor(cardIndex / 3);
+            const col = cardIndex % 3;
+            
             content.innerHTML = `
-                <div style="text-align: center; padding: 20px;" onclick="continueBombGame(${cardIndex}, ${isBomb})">
-                    <h2 style="font-size: clamp(2rem, 8vw, 4rem); margin-bottom: 20px;">${isBomb ? '💥 BOOM!' : '✅ Safe!'}</h2>
-                    ${isBomb ?
-                        '<div style="margin: 20px 0;"><p style="font-size: clamp(4rem, 15vw, 8rem);">💥</p><p style="font-size: clamp(1.2rem, 4vw, 2rem); color: #ff6b6b; margin-top: 20px;">You hit the bomb!</p></div>' :
-                        `<div style="margin: 20px 0; cursor: pointer;">
-                            <img src="${card.frontImage}" style="max-width: 90%; max-height: 50vh; width: auto; height: auto; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
-                        </div>`
-                    }
-                    <p style="font-size: clamp(1rem, 3vw, 1.3rem); margin-top: 20px; cursor: pointer;">Tap to continue...</p>
+                <div style="position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 700px; margin: 0 auto; padding: 10px;">
+                    ${bombGameState.gameCards.map((c, index) => `
+                        <div style="cursor: pointer; ${index === cardIndex ? 'visibility: hidden;' : ''}">
+                            <div style="background: linear-gradient(135deg, #35654D 0%, #2d5542 100%);
+                                        border-radius: 15px;
+                                        aspect-ratio: 1;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+                                        position: relative;">
+                                <span style="font-size: clamp(4rem, 15vw, 6rem); color: white;">💣</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                    
+                    <!-- Expanding and flipping card overlay -->
+                    <div onclick="continueBombGame(${cardIndex}, ${isBomb})" style="position: fixed; 
+                         top: 50%;
+                         left: 50%;
+                         width: 200px;
+                         height: 200px;
+                         margin-left: -100px;
+                         margin-top: -100px;
+                         z-index: 1000;
+                         cursor: pointer;
+                         animation: expand-flip 0.8s ease-out forwards;">
+                        <div style="width: 100%; height: 100%; position: relative; transform-style: preserve-3d; animation: card-flip 0.8s ease-out forwards;">
+                            <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; 
+                                        background: linear-gradient(135deg, #35654D 0%, #2d5542 100%); 
+                                        border-radius: 15px; 
+                                        display: flex; 
+                                        align-items: center; 
+                                        justify-content: center;
+                                        box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+                                <span style="font-size: clamp(4rem, 15vw, 6rem); color: white;">💣</span>
+                            </div>
+                            <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; 
+                                        background: white; 
+                                        border-radius: 15px; 
+                                        display: flex; 
+                                        flex-direction: column;
+                                        align-items: center; 
+                                        justify-content: center; 
+                                        padding: 10px;
+                                        transform: rotateY(180deg);
+                                        box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+                                ${isBomb ? 
+                                    `<p style="font-size: clamp(3rem, 12vw, 5rem); margin: 0;">💥</p>
+                                     <p style="font-size: clamp(1.2rem, 4vw, 1.8rem); color: #ff6b6b; margin: 10px 0 0 0; font-weight: bold;">BOOM!</p>` :
+                                    `<img src="${card.frontImage}" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 10px;" onerror="console.error('Image failed to load:', this.src)">`
+                                }
+                            </div>
+                        </div>
+                    </div>
                 </div>
             `;
         }
