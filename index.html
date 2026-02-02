@@ -1244,6 +1244,17 @@
             }
         }
 
+        @keyframes shrink-back {
+            0% {
+                transform: scale(2.8) rotateY(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0.5) rotateY(0deg);
+                opacity: 0;
+            }
+        }
+
         /* Use larger expansion on tablets and larger screens */
         @media (min-width: 768px) {
             #revealCard {
@@ -4407,15 +4418,27 @@
                 if (units.length === 0) {
                     listContainer.innerHTML = '<div style="padding: 15px; text-align: center; color: #666;">No units configured yet.<br>Click "Manage Units" to add.</div>';
                 } else {
-                    // Horizontal layout: Unit Name | Add Icon | Load Icon
+                    // Horizontal layout: Unit Name | Card Count | Add Icon | Load Icon
                     listContainer.innerHTML = units.map(unit => {
                         const isCurrentlyLoaded = (currentLoadedUnitId === unit.id);
+                        
+                        // Parse fileData to get card count
+                        let cardCount = 0;
+                        try {
+                            const fileData = JSON.parse(unit.fileData);
+                            cardCount = fileData.cards ? fileData.cards.length : 0;
+                        } catch (e) {
+                            console.error('Error parsing unit fileData:', e);
+                        }
 
                         if (isCurrentlyLoaded) {
                             // This unit is currently loaded - show Remove button
                             return `
                             <div style="padding: 12px; border-bottom: 1px solid #eee; background: white; display: flex; align-items: center; gap: 10px;">
-                                <div style="font-weight: 600; font-size: 15px; color: #333; flex: 1;">${unit.name}</div>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600; font-size: 15px; color: #333;">${unit.name}</div>
+                                    <div style="font-size: 12px; color: #999; margin-top: 2px; white-space: nowrap;">${cardCount} card${cardCount !== 1 ? 's' : ''}</div>
+                                </div>
                                 <button class="quick-load-item" data-unit-id="${unit.id}" data-action="remove" title="Remove" style="width: 40px; height: 40px; padding: 0; background: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center;">
                                     ✖️
                                 </button>
@@ -4425,7 +4448,10 @@
                             // Not loaded - show Add and Load icon buttons
                             return `
                             <div style="padding: 12px; border-bottom: 1px solid #eee; background: white; display: flex; align-items: center; gap: 10px;">
-                                <div style="font-weight: 600; font-size: 15px; color: #333; flex: 1;">${unit.name}</div>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600; font-size: 15px; color: #333;">${unit.name}</div>
+                                    <div style="font-size: 12px; color: #999; margin-top: 2px; white-space: nowrap;">${cardCount} card${cardCount !== 1 ? 's' : ''}</div>
+                                </div>
                                 <button class="quick-load-item" data-unit-id="${unit.id}" data-action="add" title="Add" style="width: 40px; height: 40px; padding: 0; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center;">
                                     ➕
                                 </button>
@@ -5277,15 +5303,6 @@
                             }).join('')}
                         </div>
 
-                        <div id="guessGameButtons" style="display: ${isCardFlipped ? 'flex' : 'none'};">
-                            <button class="btn btn-success" onclick="markCorrect()" style="width: 80px; height: 80px; min-width: 80px; padding: 0; border-radius: 50%; font-size: 2.5rem; font-weight: bold; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.4); background: linear-gradient(135deg, #51cf66 0%, #40c057 100%); color: white; border: none; cursor: pointer; transition: all 0.3s; position: absolute; top: 50%; left: 33.33%; transform: translate(-50%, -50%); z-index: 10;" onmouseover="this.style.transform='translate(-50%, -50%) scale(1.1)'" onmouseout="this.style.transform='translate(-50%, -50%) scale(1)'">
-                                ✓
-                            </button>
-                            <button class="btn btn-secondary" onclick="markWrong()" style="width: 80px; height: 80px; min-width: 80px; padding: 0; border-radius: 50%; font-size: 2.5rem; font-weight: bold; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.4); background: linear-gradient(135deg, #ff6b6b 0%, #fa5252 100%); color: white; border: none; cursor: pointer; transition: all 0.3s; position: absolute; top: 50%; left: 66.66%; transform: translate(-50%, -50%); z-index: 10;" onmouseover="this.style.transform='translate(-50%, -50%) scale(1.1)'" onmouseout="this.style.transform='translate(-50%, -50%) scale(1)'">
-                                ✗
-                            </button>
-                        </div>
-
                         ${allCorrect ? `
                             <div id="confettiContainer" class="confetti-container"></div>
                             <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; text-align: center;">
@@ -5793,9 +5810,99 @@
                 return;
             }
 
-            // Flip the card and select it
+            // Mark as selected and show expanding overlay
             guessGameState.selectedCard = cardIndex;
-            renderGuessGame();
+            showGuessCardReveal(cardIndex);
+        }
+
+        function showGuessCardReveal(cardIndex) {
+            const content = document.getElementById('guessGameContent');
+            const roundCards = guessGameState.currentRoundCards;
+            const card = roundCards[cardIndex];
+            const currentCardIndex = guessGameState.currentCardOrder;
+            const cardNumber = cardIndex + 1;
+
+            content.innerHTML = `
+                <div style="width: 100%; display: flex; align-items: center; justify-content: center;">
+                    <div style="position: relative; width: 100%; max-width: 800px; aspect-ratio: 1 / 1;">
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(6px, 1vw, 10px); width: 100%; height: 100%;">
+                            ${roundCards.map((c, index) => {
+                                const isCorrect = guessGameState.correctCards[index];
+                                const isCurrentCard = index === currentCardIndex;
+                                const isSelected = index === cardIndex;
+                                const isFlipped = isCorrect || isSelected;
+
+                                return `
+                                    <div style="position: relative; width: 100%; aspect-ratio: 1; ${isSelected ? 'visibility: hidden;' : ''}">
+                                        <div style="width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s; ${isFlipped ? 'transform: rotateY(180deg);' : ''}">
+                                            <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: linear-gradient(135deg, #35654D 0%, #2d5542 100%); border-radius: 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); ${isCurrentCard && !isFlipped ? 'border: 3px solid #ffc107;' : ''}">
+                                                <span style="font-size: 4rem; color: white; font-weight: bold;">${index + 1}</span>
+                                            </div>
+                                            <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: white; border-radius: 15px; display: flex; align-items: center; justify-content: center; padding: 10px; transform: rotateY(180deg); box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 4px solid #51cf66;">
+                                                <img src="${c.frontImage}" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 10px;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+
+                        <!-- Expanding and flipping card overlay -->
+                        <div id="guessRevealCard" style="position: fixed; 
+                             top: 50%;
+                             left: 50%;
+                             width: 200px;
+                             height: 200px;
+                             margin-left: -100px;
+                             margin-top: -100px;
+                             z-index: 1000;
+                             pointer-events: none;
+                             animation: expand-flip 0.8s ease-out forwards;">
+                            <div style="width: 100%; height: 100%; position: relative; transform-style: preserve-3d; animation: card-flip 0.8s ease-out forwards;">
+                                <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; 
+                                            background: linear-gradient(135deg, #35654D 0%, #2d5542 100%); 
+                                            border-radius: 15px; 
+                                            display: flex; 
+                                            align-items: center; 
+                                            justify-content: center;
+                                            box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+                                    <span style="font-size: 4rem; color: white; font-weight: bold;">${cardNumber}</span>
+                                </div>
+                                <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; 
+                                            background: white; 
+                                            border-radius: 15px; 
+                                            display: flex; 
+                                            flex-direction: column;
+                                            align-items: center; 
+                                            justify-content: center; 
+                                            padding: 10px;
+                                            transform: rotateY(180deg);
+                                            box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+                                    <img src="${card.frontImage}" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 10px;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Correct/Wrong buttons overlay -->
+                        <div id="guessGameButtons" style="display: flex; position: fixed; bottom: 10vh; left: 50%; transform: translateX(-50%); z-index: 1001; gap: 80px; pointer-events: none;">
+                            <button class="btn btn-success" onclick="markCorrect()" style="width: 80px; height: 80px; min-width: 80px; padding: 0; border-radius: 50%; font-size: 2.5rem; font-weight: bold; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.4); background: linear-gradient(135deg, #51cf66 0%, #40c057 100%); color: white; border: none; cursor: pointer; transition: all 0.3s; pointer-events: auto;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                                ✓
+                            </button>
+                            <button class="btn btn-secondary" onclick="markWrong()" style="width: 80px; height: 80px; min-width: 80px; padding: 0; border-radius: 50%; font-size: 2.5rem; font-weight: bold; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.4); background: linear-gradient(135deg, #ff6b6b 0%, #fa5252 100%); color: white; border: none; cursor: pointer; transition: all 0.3s; pointer-events: auto;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                                ✗
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Enable clicking after animation completes (0.8s)
+            setTimeout(() => {
+                const buttons = document.getElementById('guessGameButtons');
+                if (buttons) {
+                    buttons.style.pointerEvents = 'auto';
+                }
+            }, 800);
         }
 
         function markCorrect() {
@@ -5804,11 +5911,20 @@
 
             playSound('correctSound');
 
-            // Mark as correct - card stays flipped
-            guessGameState.correctCards[selectedCardIndex] = true;
-            guessGameState.selectedCard = null;
-            guessGameState.currentCardOrder++; // Move to next card
-            renderGuessGame();
+            // Animate card shrinking back
+            const revealCard = document.getElementById('guessRevealCard');
+            if (revealCard) {
+                // Add shrink-back animation
+                revealCard.style.animation = 'shrink-back 0.5s ease-in forwards';
+            }
+
+            // Wait for shrink animation, then mark as correct and re-render
+            setTimeout(() => {
+                guessGameState.correctCards[selectedCardIndex] = true;
+                guessGameState.selectedCard = null;
+                guessGameState.currentCardOrder++; // Move to next card
+                renderGuessGame();
+            }, 500);
         }
 
         function markWrong() {
@@ -6250,8 +6366,36 @@
 
         // Prevent keyboard zoom shortcuts
         document.addEventListener('keydown', function(e) {
+            // Prevent zoom shortcuts
             if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '-' || e.key === '0' || e.key === '=')) {
                 e.preventDefault();
+            }
+
+            // Keyboard navigation for main flashcard view only
+            // Check if we're in main view (not in a modal/game)
+            const inModal = document.querySelector('.modal.active');
+            const inDropdown = document.getElementById('quickLoadDropdown')?.style.display === 'block' ||
+                              document.getElementById('moreDropdown')?.querySelector('.dropdown-content.show');
+            
+            // Only enable keyboard shortcuts if we're in main flashcard view
+            if (!inModal && !inDropdown && cards.length > 0) {
+                // Right Arrow - Next card
+                if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    nextCard();
+                }
+                
+                // Left Arrow - Previous card
+                if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    prevCard();
+                }
+                
+                // Space - Flip card
+                if (e.key === ' ' || e.key === 'Spacebar') {
+                    e.preventDefault();
+                    flipCard();
+                }
             }
         }, { passive: false });
 
