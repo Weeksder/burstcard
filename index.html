@@ -1217,6 +1217,21 @@
             }
         }
 
+        @keyframes expand-flip-tablet {
+            0% {
+                transform: scale(1) rotateY(0deg);
+            }
+            40% {
+                transform: scale(3.2) rotateY(0deg);
+            }
+            60% {
+                transform: scale(3.2) rotateY(0deg);
+            }
+            100% {
+                transform: scale(3.2) rotateY(0deg);
+            }
+        }
+
         @keyframes card-flip {
             0% {
                 transform: rotateY(0deg);
@@ -1226,6 +1241,13 @@
             }
             100% {
                 transform: rotateY(180deg);
+            }
+        }
+
+        /* Use larger expansion on tablets and larger screens */
+        @media (min-width: 768px) {
+            #revealCard {
+                animation: expand-flip-tablet 0.8s ease-out forwards !important;
             }
         }
 
@@ -1522,7 +1544,7 @@
             </div>
             
             <!-- Card Content -->
-            <div class="modal-content" style="max-width: 900px; padding: 10px; margin: 0;">
+            <div class="modal-content" style="max-width: 100%; padding: 5px; margin: 0;">
                 <div id="bombGameContent"></div>
             </div>
         </div>
@@ -5341,7 +5363,7 @@
             }
 
             content.innerHTML = `
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 700px; margin: 0 auto; padding: 10px;">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: min(95vw, 900px); margin: 0 auto; padding: 5px;">
                     ${gameCards.map((card, index) => `
                         <div onclick="selectBombCard(${index})" style="cursor: pointer; animation: bomb-pulse ${2 + (index * 0.2)}s ease-in-out infinite;">
                             <div style="background: linear-gradient(135deg, #35654D 0%, #2d5542 100%);
@@ -5352,7 +5374,7 @@
                                         justify-content: center;
                                         box-shadow: 0 4px 15px rgba(0,0,0,0.3);
                                         position: relative;">
-                                <span style="font-size: clamp(4rem, 15vw, 6rem); color: white;">💣</span>
+                                <span style="font-size: clamp(4rem, 15vw, 8rem); color: white;">💣</span>
                             </div>
                         </div>
                     `).join('')}
@@ -5390,7 +5412,7 @@
             const col = cardIndex % 3;
             
             content.innerHTML = `
-                <div style="position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 700px; margin: 0 auto; padding: 10px;">
+                <div style="position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: min(95vw, 900px); margin: 0 auto; padding: 5px;">
                     ${bombGameState.gameCards.map((c, index) => `
                         <div style="cursor: pointer; ${index === cardIndex ? 'visibility: hidden;' : ''}">
                             <div style="background: linear-gradient(135deg, #35654D 0%, #2d5542 100%);
@@ -5401,7 +5423,7 @@
                                         justify-content: center;
                                         box-shadow: 0 4px 15px rgba(0,0,0,0.3);
                                         position: relative;">
-                                <span style="font-size: clamp(4rem, 15vw, 6rem); color: white;">💣</span>
+                                <span style="font-size: clamp(4rem, 15vw, 8rem); color: white;">💣</span>
                             </div>
                         </div>
                     `).join('')}
