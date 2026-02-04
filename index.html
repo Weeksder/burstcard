@@ -56,6 +56,11 @@
             user-select: text;
         }
 
+        /* Allow touch interaction on card elements */
+        .card, .card-face, .card-image, .hint, .card-text, .vowel {
+            -webkit-touch-callout: default;
+        }
+
         /* Prevent zoom functionality in normal mode */
         body {
             touch-action: pan-x pan-y;
@@ -513,6 +518,10 @@
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
+            pointer-events: auto;
+            touch-action: manipulation;
+            -ms-touch-action: manipulation;
+            -webkit-touch-action: manipulation;
         }
 
         .card-front {
@@ -548,6 +557,8 @@
             height: 95%;
             object-fit: contain;
             border-radius: 10px;
+            pointer-events: auto;
+            cursor: pointer;
         }
 
         .card-text {
@@ -581,6 +592,7 @@
 
         .vowel {
             color: #ff9500;
+            pointer-events: auto;
         }
 
         .hint {
@@ -591,6 +603,8 @@
             font-size: 0.7rem;
             opacity: 0.7;
             z-index: 5;
+            pointer-events: auto;
+            cursor: pointer;
         }
 
         .navigation {
@@ -2262,6 +2276,7 @@
         function shouldExcludeTouchTarget(target) {
             return target.closest('.modal') || target.closest('.btn') ||
                    target.closest('.nav-btn') || target.closest('.audio-btn') ||
+                   target.closest('.fullscreen-btn') || target.closest('.counter') ||
                    target.closest('.controls') || target.closest('.header');
         }
 
@@ -2356,18 +2371,13 @@
                     // It's a tap, flip the card
                     if (cardElement) {
                         cardElement.classList.remove('swiping');
-                        // Force clear any transform immediately
-                        cardElement.style.transform = 'none';
+                        // Clear any inline transform from swiping
+                        cardElement.style.transform = '';
                         cardElement.style.transition = '';
-                        // Use requestAnimationFrame to ensure transform is cleared before flip
-                        requestAnimationFrame(() => {
-                            cardElement.style.transform = '';
-                            flipCard();
-                        });
-                    } else {
-                        flipCard();
                     }
                     if (cardStack) cardStack.classList.remove('swiping');
+                    // Flip the card
+                    flipCard();
                 } else if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
                     // It's a valid swipe
                     const shouldNavigate = handleSwipe();
@@ -2425,39 +2435,18 @@
                                   target.classList.contains('card-image') ||
                                   target.classList.contains('hint') ||
                                   target.classList.contains('card-text') ||
+                                  target.classList.contains('card-text-auto-scale') ||
                                   target.classList.contains('vowel');
 
             const isExcluded = target.closest('.modal') || target.closest('.btn') ||
                               target.closest('.nav-btn') || target.closest('.audio-btn') ||
-                              target.closest('.fullscreen-btn') ||
+                              target.closest('.fullscreen-btn') || target.closest('.counter') ||
                               target.closest('.controls') || target.closest('.header');
 
             if (isCardElement && !isExcluded) {
                 flipCard();
             }
         });
-
-        // Add touch listener for mobile/tablet (touch events)
-        document.addEventListener('touchend', function(e) {
-            const target = e.target;
-            // Flip card when touching card elements (not buttons/modals/controls)
-            const isCardElement = target.classList.contains('card') ||
-                                  target.classList.contains('card-face') ||
-                                  target.classList.contains('card-image') ||
-                                  target.classList.contains('hint') ||
-                                  target.classList.contains('card-text') ||
-                                  target.classList.contains('vowel');
-
-            const isExcluded = target.closest('.modal') || target.closest('.btn') ||
-                              target.closest('.nav-btn') || target.closest('.audio-btn') ||
-                              target.closest('.fullscreen-btn') ||
-                              target.closest('.controls') || target.closest('.header');
-
-            if (isCardElement && !isExcluded) {
-                e.preventDefault(); // Prevent double-firing with click event
-                flipCard();
-            }
-        }, { passive: false });
 
         // Setup textarea protection to prevent accidental deletion of multiple lines
         function setupTextareaProtection() {
