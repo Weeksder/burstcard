@@ -2280,6 +2280,9 @@
                    target.closest('.controls') || target.closest('.header');
         }
 
+        // Flag to prevent click event from firing after touch event (prevents double flip)
+        let lastTouchTime = 0;
+
         // Setup touch swipe gestures for card navigation
         function setupSwipeGestures() {
             let touchStartX = 0;
@@ -2376,6 +2379,8 @@
                         cardElement.style.transition = '';
                     }
                     if (cardStack) cardStack.classList.remove('swiping');
+                    // Set flag to prevent click event from also firing
+                    lastTouchTime = Date.now();
                     // Flip the card
                     flipCard();
                 } else if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
@@ -2426,8 +2431,14 @@
             }
         }
 
-        // Add click listener for desktop (mouse clicks)
+        // Add click listener for desktop (mouse clicks only - not touch-synthesized clicks)
         document.addEventListener('click', function(e) {
+            // Ignore click events that are synthesized from touch events
+            // Touch devices fire touchend then a click event ~300ms later
+            if (Date.now() - lastTouchTime < 500) {
+                return;
+            }
+            
             const target = e.target;
             // Flip card when clicking on card elements (not buttons/modals/controls)
             const isCardElement = target.classList.contains('card') ||
