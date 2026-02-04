@@ -3,8 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    
+    <!-- iOS Safari -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FlashABC">
+    
+    <!-- Android Chrome -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#35654D">
+    
+    <!-- Windows Phone -->
+    <meta name="msapplication-navbutton-color" content="#35654D">
+    <meta name="msapplication-TileColor" content="#35654D">
+    
+    <!-- Edge -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
     <!-- Cache prevention -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -24,17 +38,35 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
 
-        /* Prevent all zoom functionality */
+        /* Allow text selection in input fields */
+        input, textarea {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+
+        /* Prevent zoom functionality in normal mode */
         body {
             touch-action: pan-x pan-y;
             -ms-touch-action: pan-x pan-y;
+            -webkit-touch-action: pan-x pan-y;
         }
 
         * {
             touch-action: pan-x pan-y;
+            -ms-touch-action: pan-x pan-y;
+            -webkit-touch-action: pan-x pan-y;
         }
 
 
@@ -42,7 +74,10 @@
         html {
             touch-action: pan-y;
             -ms-touch-action: pan-y;
+            -webkit-touch-action: pan-y;
             background: linear-gradient(135deg, #35654D 0%, #2d5542 100%);
+            background: -webkit-linear-gradient(135deg, #35654D 0%, #2d5542 100%);
+            background: -moz-linear-gradient(135deg, #35654D 0%, #2d5542 100%);
             overflow: hidden;
             scrollbar-width: none; /* Firefox */
             -ms-overflow-style: none; /* IE and Edge */
@@ -53,8 +88,11 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', Arial, sans-serif;
             background: linear-gradient(135deg, #35654D 0%, #2d5542 100%);
+            background: -webkit-linear-gradient(135deg, #35654D 0%, #2d5542 100%);
+            background: -moz-linear-gradient(135deg, #35654D 0%, #2d5542 100%);
+            background: -ms-linear-gradient(135deg, #35654D 0%, #2d5542 100%);
             min-height: 100vh;
             height: 100vh;
             padding: 10px;
@@ -369,11 +407,19 @@
             left: 0;
             transform-style: preserve-3d;
             -webkit-transform-style: preserve-3d;
+            -moz-transform-style: preserve-3d;
+            -ms-transform-style: preserve-3d;
             transition: transform 0.6s;
+            -webkit-transition: -webkit-transform 0.6s;
+            -moz-transition: -moz-transform 0.6s;
+            -ms-transition: -ms-transform 0.6s;
+            -o-transition: -o-transform 0.6s;
             cursor: pointer;
             z-index: 10;
             pointer-events: auto;
             touch-action: manipulation;
+            -ms-touch-action: manipulation;
+            -webkit-touch-action: manipulation;
         }
 
         .card-next {
@@ -419,6 +465,9 @@
         .card.flipped {
             transform: rotateY(180deg);
             -webkit-transform: rotateY(180deg);
+            -moz-transform: rotateY(180deg);
+            -ms-transform: rotateY(180deg);
+            -o-transform: rotateY(180deg);
         }
 
         .card-face {
@@ -427,17 +476,39 @@
             height: 100%;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
+            -moz-backface-visibility: hidden;
+            -ms-backface-visibility: hidden;
             border-radius: 20px;
+            -webkit-border-radius: 20px;
+            -moz-border-radius: 20px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            -webkit-box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            -moz-box-shadow: 0 10px 40px rgba(0,0,0,0.3);
             display: flex;
+            display: -webkit-flex;
+            display: -moz-flex;
+            display: -ms-flexbox;
             flex-direction: column;
+            -webkit-flex-direction: column;
+            -moz-flex-direction: column;
+            -ms-flex-direction: column;
             align-items: center;
+            -webkit-align-items: center;
+            -moz-align-items: center;
+            -ms-flex-align: center;
             justify-content: center;
+            -webkit-justify-content: center;
+            -moz-justify-content: center;
+            -ms-flex-pack: center;
             box-sizing: border-box;
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
             padding: 10px;
             overflow: hidden;
             transform: translateZ(0);
             -webkit-transform: translateZ(0);
+            -moz-transform: translateZ(0);
+            -ms-transform: translateZ(0);
             user-select: none;
             -webkit-user-select: none;
             -moz-user-select: none;
@@ -647,6 +718,152 @@
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
+        }
+
+        .fullscreen-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            -webkit-border-radius: 50%;
+            -moz-border-radius: 50%;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            -webkit-box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            -moz-box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            touch-action: manipulation;
+            -ms-touch-action: manipulation;
+            -webkit-touch-action: manipulation;
+            display: flex;
+            display: -webkit-flex;
+            display: -moz-flex;
+            display: -ms-flexbox;
+            align-items: center;
+            -webkit-align-items: center;
+            -moz-align-items: center;
+            -ms-flex-align: center;
+            justify-content: center;
+            -webkit-justify-content: center;
+            -moz-justify-content: center;
+            -ms-flex-pack: center;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            -webkit-transition: all 0.3s ease;
+            -moz-transition: all 0.3s ease;
+            -ms-transition: all 0.3s ease;
+            -o-transition: all 0.3s ease;
+            pointer-events: auto;
+        }
+
+        .fullscreen-btn:hover {
+            background: rgba(0,0,0,0.8);
+            transform: scale(1.05);
+            -webkit-transform: scale(1.05);
+            -moz-transform: scale(1.05);
+            -ms-transform: scale(1.05);
+            -o-transform: scale(1.05);
+        }
+
+        .fullscreen-btn:active {
+            transform: scale(0.95);
+            -webkit-transform: scale(0.95);
+            -moz-transform: scale(0.95);
+            -ms-transform: scale(0.95);
+            -o-transform: scale(0.95);
+        }
+
+        #cardDisplay.fullscreen-mode {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #35654D 0%, #2d5542 100%);
+            background: -webkit-linear-gradient(135deg, #35654D 0%, #2d5542 100%);
+            background: -moz-linear-gradient(135deg, #35654D 0%, #2d5542 100%);
+            background: -ms-linear-gradient(135deg, #35654D 0%, #2d5542 100%);
+            z-index: 9999;
+            display: flex;
+            display: -webkit-flex;
+            display: -moz-flex;
+            display: -ms-flexbox;
+            align-items: center;
+            -webkit-align-items: center;
+            -moz-align-items: center;
+            -ms-flex-align: center;
+            justify-content: center;
+            -webkit-justify-content: center;
+            -moz-justify-content: center;
+            -ms-flex-pack: center;
+            padding: 0;
+            touch-action: manipulation;
+            -ms-touch-action: manipulation;
+            -webkit-touch-action: manipulation;
+            overflow: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #cardDisplay.fullscreen-mode .card-container {
+            width: 100%;
+            height: 100%;
+            max-width: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            touch-action: manipulation;
+        }
+
+        #cardDisplay.fullscreen-mode .card-stack {
+            width: 95vw;
+            height: 95vh;
+            max-width: 95vw;
+            max-height: 95vh;
+            touch-action: manipulation;
+        }
+
+        #cardDisplay.fullscreen-mode .card {
+            width: 100%;
+            height: 100%;
+            max-width: 95vw;
+            max-height: 85vh;
+            touch-action: manipulation;
+        }
+
+        #cardDisplay.fullscreen-mode .card-face {
+            width: 100%;
+            height: 100%;
+            touch-action: manipulation;
+        }
+
+        #cardDisplay.fullscreen-mode .card-image {
+            touch-action: manipulation;
+        }
+
+        #cardDisplay.fullscreen-mode .counter {
+            bottom: 30px;
+            z-index: 10000;
+        }
+
+        #cardDisplay.fullscreen-mode .fullscreen-btn {
+            bottom: 30px;
+            left: 30px;
+            z-index: 10000;
+        }
+
+        #cardDisplay.fullscreen-mode .navigation {
+            z-index: 10000;
+        }
+
+        #cardDisplay.fullscreen-mode .card-prev,
+        #cardDisplay.fullscreen-mode .card-next {
+            display: none;
         }
 
         .audio-btn:active {
@@ -1255,10 +1472,27 @@
             }
         }
 
-        /* Use larger expansion on tablets and larger screens */
-        @media (min-width: 768px) {
-            #revealCard {
+        /* Use larger expansion on tablets only (not desktop) */
+        @media (min-width: 768px) and (max-width: 1024px) {
+            #revealCard, #guessRevealCard {
                 animation: expand-flip-tablet 0.8s ease-out forwards !important;
+            }
+        }
+
+        /* Desktop: use moderate scale */
+        @media (min-width: 1025px) {
+            #revealCard, #guessRevealCard {
+                animation: expand-flip 0.8s ease-out forwards !important;
+            }
+        }
+
+        /* Mobile: slightly larger base size for better visibility */
+        @media (max-width: 767px) {
+            #revealCard, #guessRevealCard {
+                width: 220px !important;
+                height: 220px !important;
+                margin-left: -110px !important;
+                margin-top: -110px !important;
             }
         }
 
@@ -2195,12 +2429,35 @@
 
             const isExcluded = target.closest('.modal') || target.closest('.btn') ||
                               target.closest('.nav-btn') || target.closest('.audio-btn') ||
+                              target.closest('.fullscreen-btn') ||
                               target.closest('.controls') || target.closest('.header');
 
             if (isCardElement && !isExcluded) {
                 flipCard();
             }
         });
+
+        // Add touch listener for mobile/tablet (touch events)
+        document.addEventListener('touchend', function(e) {
+            const target = e.target;
+            // Flip card when touching card elements (not buttons/modals/controls)
+            const isCardElement = target.classList.contains('card') ||
+                                  target.classList.contains('card-face') ||
+                                  target.classList.contains('card-image') ||
+                                  target.classList.contains('hint') ||
+                                  target.classList.contains('card-text') ||
+                                  target.classList.contains('vowel');
+
+            const isExcluded = target.closest('.modal') || target.closest('.btn') ||
+                              target.closest('.nav-btn') || target.closest('.audio-btn') ||
+                              target.closest('.fullscreen-btn') ||
+                              target.closest('.controls') || target.closest('.header');
+
+            if (isCardElement && !isExcluded) {
+                e.preventDefault(); // Prevent double-firing with click event
+                flipCard();
+            }
+        }, { passive: false });
 
         // Setup textarea protection to prevent accidental deletion of multiple lines
         function setupTextareaProtection() {
@@ -4022,6 +4279,67 @@
             }, 100);
         }
 
+        let isFullscreen = false;
+
+        function toggleFullscreen() {
+            const header = document.querySelector('.header');
+            const cardDisplay = document.getElementById('cardDisplay');
+            const viewportMeta = document.querySelector('meta[name="viewport"]');
+            
+            if (!isFullscreen) {
+                // Enter fullscreen mode - hide header, expand card, ENABLE ZOOM
+                if (header) header.style.display = 'none';
+                cardDisplay.classList.add('fullscreen-mode');
+                
+                // Enable zoom in fullscreen - optimized for all browsers
+                if (viewportMeta) {
+                    // Works on: iOS Safari, Android Chrome, Firefox, Edge, Samsung Internet
+                    viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes');
+                }
+                
+                // iOS Safari specific: Enable zoom gestures
+                document.body.style.touchAction = 'manipulation';
+                cardDisplay.style.touchAction = 'manipulation';
+                
+                // Prevent iOS Safari from auto-scaling on orientation change
+                if (navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
+                    document.addEventListener('gesturestart', preventZoomGesture);
+                }
+                
+                isFullscreen = true;
+            } else {
+                // Exit fullscreen mode - show header, normal card, DISABLE ZOOM
+                if (header) header.style.display = 'flex';
+                cardDisplay.classList.remove('fullscreen-mode');
+                
+                // Disable zoom in normal mode
+                if (viewportMeta) {
+                    viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no');
+                }
+                
+                // Reset touch action
+                document.body.style.touchAction = 'pan-x pan-y';
+                cardDisplay.style.touchAction = 'pan-x pan-y';
+                
+                // Remove iOS gesture listener
+                if (navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
+                    document.removeEventListener('gesturestart', preventZoomGesture);
+                }
+                
+                isFullscreen = false;
+            }
+            
+            // Re-render to update button icon
+            renderDisplay();
+        }
+
+        // Prevent default gesture zoom behavior on iOS (only in normal mode, not fullscreen)
+        function preventZoomGesture(e) {
+            if (!isFullscreen) {
+                e.preventDefault();
+            }
+        }
+
         function clearAllCards() {
             if (cards.length === 0) {
                 alert('No cards to clear!');
@@ -5271,7 +5589,7 @@
 
             content.innerHTML = `
                 <div style="width: 100%; display: flex; align-items: center; justify-content: center;">
-                    <div style="position: relative; width: 100%; max-width: 800px; aspect-ratio: 1 / 1;">
+                    <div style="position: relative; width: 100%; max-width: 700px; aspect-ratio: 1 / 1;">
                         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(6px, 1vw, 10px); width: 100%; height: 100%; transition: opacity 0.5s; ${allCorrect ? 'opacity: 0.3;' : 'opacity: 1;'}">
                             ${roundCards.map((card, index) => {
                                 const isCorrect = guessGameState.correctCards[index];
@@ -5380,7 +5698,7 @@
             }
 
             content.innerHTML = `
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: min(95vw, 900px); margin: 0 auto; padding: 5px;">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: min(95vw, 700px); margin: 0 auto; padding: 5px;">
                     ${gameCards.map((card, index) => `
                         <div onclick="selectBombCard(${index})" style="cursor: pointer; animation: bomb-pulse ${2 + (index * 0.2)}s ease-in-out infinite;">
                             <div style="background: linear-gradient(135deg, #35654D 0%, #2d5542 100%);
@@ -5391,7 +5709,7 @@
                                         justify-content: center;
                                         box-shadow: 0 4px 15px rgba(0,0,0,0.3);
                                         position: relative;">
-                                <span style="font-size: clamp(4rem, 15vw, 8rem); color: white;">💣</span>
+                                <span style="font-size: clamp(4rem, 15vw, 7rem); color: white;">💣</span>
                             </div>
                         </div>
                     `).join('')}
@@ -5429,7 +5747,7 @@
             const col = cardIndex % 3;
             
             content.innerHTML = `
-                <div style="position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: min(95vw, 900px); margin: 0 auto; padding: 5px;">
+                <div style="position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: min(95vw, 700px); margin: 0 auto; padding: 5px;">
                     ${bombGameState.gameCards.map((c, index) => `
                         <div style="cursor: pointer; ${index === cardIndex ? 'visibility: hidden;' : ''}">
                             <div style="background: linear-gradient(135deg, #35654D 0%, #2d5542 100%);
@@ -5440,7 +5758,7 @@
                                         justify-content: center;
                                         box-shadow: 0 4px 15px rgba(0,0,0,0.3);
                                         position: relative;">
-                                <span style="font-size: clamp(4rem, 15vw, 8rem); color: white;">💣</span>
+                                <span style="font-size: clamp(4rem, 15vw, 7rem); color: white;">💣</span>
                             </div>
                         </div>
                     `).join('')}
@@ -5824,7 +6142,7 @@
 
             content.innerHTML = `
                 <div style="width: 100%; display: flex; align-items: center; justify-content: center;">
-                    <div style="position: relative; width: 100%; max-width: 800px; aspect-ratio: 1 / 1;">
+                    <div style="position: relative; width: 100%; max-width: 700px; aspect-ratio: 1 / 1;">
                         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(6px, 1vw, 10px); width: 100%; height: 100%;">
                             ${roundCards.map((c, index) => {
                                 const isCorrect = guessGameState.correctCards[index];
@@ -5922,7 +6240,22 @@
             setTimeout(() => {
                 guessGameState.correctCards[selectedCardIndex] = true;
                 guessGameState.selectedCard = null;
-                guessGameState.currentCardOrder++; // Move to next card
+                
+                // Find the next unflipped card instead of just incrementing
+                const roundCards = guessGameState.currentRoundCards;
+                let nextCardIndex = -1;
+                for (let i = 0; i < roundCards.length; i++) {
+                    if (!guessGameState.correctCards[i]) {
+                        nextCardIndex = i;
+                        break;
+                    }
+                }
+                
+                // Set currentCardOrder to the next unflipped card (or keep current if all done)
+                if (nextCardIndex !== -1) {
+                    guessGameState.currentCardOrder = nextCardIndex;
+                }
+                
                 renderGuessGame();
             }, 500);
         }
@@ -6078,6 +6411,20 @@
                         </div>
                         ` : ''}
                     </div>
+                    <button class="fullscreen-btn" 
+                            onclick="event.stopPropagation(); toggleFullscreen()" 
+                            ontouchend="event.stopPropagation(); event.preventDefault(); toggleFullscreen()"
+                            title="${isFullscreen ? 'Exit fullscreen' : 'Expand to fullscreen'}">
+                        ${isFullscreen ? `
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
+                            </svg>
+                        ` : `
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                            </svg>
+                        `}
+                    </button>
                     <div class="counter">
                         <span>${currentIndex + 1} / ${cards.length}</span>
                         ${card.backText ? '<button class="audio-btn" onclick="event.stopPropagation(); speakText(\'' + card.backText.replace(/'/g, "\\'") + '\')">🔊</button>' : ''}
