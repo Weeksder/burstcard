@@ -1508,13 +1508,28 @@
                 transform: scale(1) rotateY(0deg);
             }
             40% {
-                transform: scale(2.8) rotateY(0deg);
+                transform: scale(2.2) rotateY(0deg);
             }
             60% {
-                transform: scale(2.8) rotateY(0deg);
+                transform: scale(2.2) rotateY(0deg);
             }
             100% {
-                transform: scale(2.8) rotateY(0deg);
+                transform: scale(2.2) rotateY(0deg);
+            }
+        }
+
+        @keyframes expand-flip-mobile {
+            0% {
+                transform: scale(1) rotateY(0deg);
+            }
+            40% {
+                transform: scale(1.4) rotateY(0deg);
+            }
+            60% {
+                transform: scale(1.4) rotateY(0deg);
+            }
+            100% {
+                transform: scale(1.4) rotateY(0deg);
             }
         }
 
@@ -1523,13 +1538,13 @@
                 transform: scale(1) rotateY(0deg);
             }
             40% {
-                transform: scale(3.2) rotateY(0deg);
+                transform: scale(2.5) rotateY(0deg);
             }
             60% {
-                transform: scale(3.2) rotateY(0deg);
+                transform: scale(2.5) rotateY(0deg);
             }
             100% {
-                transform: scale(3.2) rotateY(0deg);
+                transform: scale(2.5) rotateY(0deg);
             }
         }
 
@@ -1547,12 +1562,34 @@
 
         @keyframes shrink-back {
             0% {
-                transform: scale(2.8) rotateY(0deg);
+                transform: scale(2.2) rotateY(0deg);
                 opacity: 1;
             }
             100% {
                 transform: scale(0.5) rotateY(0deg);
                 opacity: 0;
+            }
+        }
+
+        @keyframes shrink-back-mobile {
+            0% {
+                transform: scale(1.4) rotateY(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0.5) rotateY(0deg);
+                opacity: 0;
+            }
+        }
+
+        /* Mobile (iPhone): smaller scale to fit screen */
+        @media (max-width: 767px) {
+            #revealCard, #guessRevealCard {
+                width: 150px !important;
+                height: 150px !important;
+                margin-left: -75px !important;
+                margin-top: -75px !important;
+                animation: expand-flip-mobile 0.8s ease-out forwards !important;
             }
         }
 
@@ -1567,16 +1604,6 @@
         @media (min-width: 1025px) {
             #revealCard, #guessRevealCard {
                 animation: expand-flip 0.8s ease-out forwards !important;
-            }
-        }
-
-        /* Mobile: slightly larger base size for better visibility */
-        @media (max-width: 767px) {
-            #revealCard, #guessRevealCard {
-                width: 220px !important;
-                height: 220px !important;
-                margin-left: -110px !important;
-                margin-top: -110px !important;
             }
         }
 
@@ -1809,29 +1836,25 @@
     </div>
 
     <div class="modal" id="guessGameModal">
-        <div style="position: relative; width: 100%; max-width: 900px; margin: 0 auto; padding-top: clamp(10px, 2vh, 20px);">
+        <div style="position: relative; width: 100%; max-width: 900px; margin: 0 auto; padding-top: clamp(10px, 2vh, 20px); display: flex; flex-direction: column; align-items: center;">
             <!-- Control Panel (stays with modal) -->
-            <div id="guessGameControls" style="width: auto; min-width: min(400px, 90vw); max-width: 600px; background: white; border-radius: 12px; padding: 10px 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); margin: 0 auto clamp(6px, 1vh, 10px);">
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-                    <h2 style="margin: 0; font-size: clamp(1rem, 2.5vw, 1.2rem); color: #35654D; white-space: nowrap;">🎯 Guess the Word</h2>
-                    <div style="display: flex; gap: 12px; align-items: center;">
-                        <button onclick="startNewGuessGame()" style="background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; font-size: clamp(1.2rem, 3vw, 1.4rem);" title="Shuffle Cards">
-                            🔄
-                        </button>
-                        <button onclick="openGuessGameHelp()" style="background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; font-size: clamp(1.2rem, 3vw, 1.4rem);" title="How to Play">
-                            ❓
-                        </button>
-                        <button onclick="closeGuessGame()" style="background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: transform 0.2s;" title="Back to Menu">
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M19 12H5M12 19l-7-7 7-7"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
+            <div id="guessGameControls" style="display: inline-flex; align-items: center; gap: 12px; background: white; border-radius: 12px; padding: 8px 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); margin-bottom: clamp(6px, 1vh, 10px);">
+                <h2 style="margin: 0; font-size: clamp(1rem, 2.5vw, 1.2rem); color: #35654D; white-space: nowrap;">🎯 Guess the Word</h2>
+                <button onclick="startNewGuessGame()" style="background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; font-size: clamp(1.2rem, 3vw, 1.4rem);" title="Shuffle Cards">
+                    🔄
+                </button>
+                <button onclick="openGuessGameHelp()" style="background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; font-size: clamp(1.2rem, 3vw, 1.4rem);" title="How to Play">
+                    ❓
+                </button>
+                <button onclick="closeGuessGame()" style="background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: transform 0.2s;" title="Back to Menu">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                </button>
             </div>
             
-            <!-- Card Content -->
-            <div class="modal-content" style="max-width: 900px; padding: clamp(15px, 3vw, 20px); margin: 0;">
+            <!-- Card Content (no background) -->
+            <div class="modal-content" style="max-width: 900px; padding: clamp(15px, 3vw, 20px); margin: 0; background: none; box-shadow: none;">
                 <div id="guessGameContent"></div>
             </div>
         </div>
@@ -1854,26 +1877,22 @@
     </div>
 
     <div class="modal" id="bombGameModal">
-        <div style="position: relative; width: 100%; max-width: 900px; margin: 0 auto; padding-top: clamp(10px, 2vh, 20px);">
+        <div style="position: relative; width: 100%; max-width: 900px; margin: 0 auto; padding-top: clamp(10px, 2vh, 20px); display: flex; flex-direction: column; align-items: center;">
             <!-- Control Panel (floating window) -->
-            <div id="bombGameControls" style="width: auto; min-width: min(400px, 90vw); max-width: 600px; background: white; border-radius: 12px; padding: 10px 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); margin: 0 auto clamp(6px, 1vh, 10px);">
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-                    <h2 style="margin: 0; font-size: clamp(1rem, 2.5vw, 1.2rem); color: #35654D; white-space: nowrap;">💣 Bomb Game</h2>
-                    <div style="display: flex; gap: 12px; align-items: center;">
-                        <button onclick="openBombGameHelp()" style="background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; font-size: clamp(1.2rem, 3vw, 1.4rem);" title="How to Play">
-                            ❓
-                        </button>
-                        <button onclick="closeBombGame()" style="background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: transform 0.2s;" title="Back to Menu">
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M19 12H5M12 19l-7-7 7-7"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
+            <div id="bombGameControls" style="display: inline-flex; align-items: center; gap: 12px; background: white; border-radius: 12px; padding: 8px 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); margin-bottom: clamp(6px, 1vh, 10px);">
+                <h2 style="margin: 0; font-size: clamp(1rem, 2.5vw, 1.2rem); color: #35654D; white-space: nowrap;">💣 Bomb Game</h2>
+                <button onclick="openBombGameHelp()" style="background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; font-size: clamp(1.2rem, 3vw, 1.4rem);" title="How to Play">
+                    ❓
+                </button>
+                <button onclick="closeBombGame()" style="background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: transform 0.2s;" title="Back to Menu">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                </button>
             </div>
             
-            <!-- Card Content -->
-            <div class="modal-content" style="max-width: 100%; padding: 5px; margin: 0;">
+            <!-- Card Content (no background) -->
+            <div class="modal-content" style="max-width: 100%; padding: 5px; margin: 0; background: none; box-shadow: none;">
                 <div id="bombGameContent"></div>
             </div>
         </div>
@@ -4229,6 +4248,14 @@
                             if (added > 0) {
                                 currentIndex = cards.length - added;
                                 isFlipped = false;
+                                
+                                // Reset guess game state to prevent continuing with old cards
+                                guessGameState.gameCards = [];
+                                guessGameState.currentRoundCards = null;
+                                guessGameState.correctCards = {};
+                                guessGameState.selectedCard = null;
+                                guessGameState.currentCardOrder = 0;
+                                
                                 renderDisplay();
                             }
 
@@ -4272,6 +4299,13 @@
             // Update hash cache
             imageHashCache.set(fastHash(newCard.frontImage), newCard.frontImage);
 
+            // Reset guess game state to prevent continuing with old cards
+            guessGameState.gameCards = [];
+            guessGameState.currentRoundCards = null;
+            guessGameState.correctCards = {};
+            guessGameState.selectedCard = null;
+            guessGameState.currentCardOrder = 0;
+
             saveCards();
             closeCreateModal();
 
@@ -4301,6 +4335,14 @@
             } else if (cards.length === 0) {
                 currentIndex = 0;
             }
+            
+            // Reset game states to prevent continuing with deleted cards
+            guessGameState.gameCards = [];
+            guessGameState.currentRoundCards = null;
+            guessGameState.correctCards = {};
+            guessGameState.selectedCard = null;
+            guessGameState.currentCardOrder = 0;
+            
             saveCards();
             renderDisplay();
         }
@@ -4701,6 +4743,13 @@
                     cards = cards.concat(newCards);
                 }
 
+                // Reset guess game state to prevent continuing with old cards
+                guessGameState.gameCards = [];
+                guessGameState.currentRoundCards = null;
+                guessGameState.correctCards = {};
+                guessGameState.selectedCard = null;
+                guessGameState.currentCardOrder = 0;
+
                 saveCards();
                 closeLoadOptions(); // This sets loadedSessionData to null
                 renderDisplay();
@@ -4950,6 +4999,14 @@
                     // Merge with existing cards
                     const existingCount = cards.length;
                     cards = cards.concat(jsonData.cards);
+                    
+                    // Reset guess game state to prevent continuing with old cards
+                    guessGameState.gameCards = [];
+                    guessGameState.currentRoundCards = null;
+                    guessGameState.correctCards = {};
+                    guessGameState.selectedCard = null;
+                    guessGameState.currentCardOrder = 0;
+                    
                     saveCards();
                     renderDisplay();
                     showToast(`✅ Added ${jsonData.cards.length} cards! Total: ${cards.length}`, 2000);
@@ -4957,6 +5014,14 @@
                     // Replace all cards (default behavior)
                     cards = jsonData.cards;
                     currentIndex = 0;
+                    
+                    // Reset guess game state to prevent continuing with old cards
+                    guessGameState.gameCards = [];
+                    guessGameState.currentRoundCards = null;
+                    guessGameState.correctCards = {};
+                    guessGameState.selectedCard = null;
+                    guessGameState.currentCardOrder = 0;
+                    
                     saveCards();
                     renderDisplay();
                     showToast(`✅ Loaded ${jsonData.cards.length} cards from ${unit.name}!`, 2000);
@@ -5738,55 +5803,64 @@
             const currentCardIndex = guessGameState.currentCardOrder;
             const isCardFlipped = guessGameState.selectedCard !== null;
 
+            // Always create 9 grid cells for consistent sizing
+            const gridCells = [];
+            for (let i = 0; i < 9; i++) {
+                if (i < roundCards.length) {
+                    const card = roundCards[i];
+                    const index = i;
+                    const isCorrect = guessGameState.correctCards[index];
+                    const isCurrentCard = index === currentCardIndex;
+                    const isSelected = guessGameState.selectedCard === index;
+                    const canFlip = index === currentCardIndex && !isCardFlipped;
+                    const isFlipped = isCorrect || isSelected;
+                    const cardNumber = index + 1;
+
+                    gridCells.push(`
+                        <div style="position: relative; width: 100%; aspect-ratio: 1;">
+                            <div onclick="${canFlip ? 'flipOptionCard(' + index + ')' : ''}"
+                                 style="cursor: ${canFlip ? 'pointer' : 'not-allowed'};
+                                        width: 100%;
+                                        height: 100%;
+                                        position: relative;">
+                                <div style="width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s; ${isFlipped ? 'transform: rotateY(180deg);' : ''}">
+                                    <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: linear-gradient(135deg, #35654D 0%, #2d5542 100%); border-radius: 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); ${isCurrentCard && !isFlipped ? 'border: 3px solid #ffc107;' : ''}">
+                                        <span style="font-size: 4rem; color: white; font-weight: bold;">${cardNumber}</span>
+                                    </div>
+                                    <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: white; border-radius: 15px; display: flex; align-items: center; justify-content: center; padding: 10px; transform: rotateY(180deg); box-shadow: 0 4px 15px rgba(0,0,0,0.3); ${isSelected ? 'border: 4px solid #51cf66;' : ''}">
+                                        <img src="${card.frontImage}" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 10px;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                } else {
+                    // Empty placeholder cell to maintain grid structure
+                    gridCells.push(`<div style="position: relative; width: 100%; aspect-ratio: 1; visibility: hidden;"></div>`);
+                }
+            }
+
             content.innerHTML = `
                 <div style="width: 100%; display: flex; align-items: center; justify-content: center;">
                     <div style="position: relative; width: 100%; max-width: 700px; aspect-ratio: 1 / 1;">
-                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(6px, 1vw, 10px); width: 100%; height: 100%; transition: opacity 0.5s; ${allCorrect ? 'opacity: 0.3;' : 'opacity: 1;'}">
-                            ${roundCards.map((card, index) => {
-                                const isCorrect = guessGameState.correctCards[index];
-                                const isCurrentCard = index === currentCardIndex;
-                                const isSelected = guessGameState.selectedCard === index;
-                                const canFlip = index === currentCardIndex && !isCardFlipped;
-                                const isFlipped = isCorrect || isSelected;
-                                const cardNumber = index + 1; // Display 1-9 instead of 0-8
-
-                                return `
-                                    <div style="position: relative; width: 100%; aspect-ratio: 1;">
-                                        <div onclick="${canFlip ? 'flipOptionCard(' + index + ')' : ''}"
-                                             style="cursor: ${canFlip ? 'pointer' : 'not-allowed'};
-                                                    width: 100%;
-                                                    height: 100%;
-                                                    position: relative;
-                                                    ${!canFlip && !isCorrect ? 'opacity: 0.6;' : ''}">
-                                            <div style="width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s; ${isFlipped ? 'transform: rotateY(180deg);' : ''}">
-                                                <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: linear-gradient(135deg, #35654D 0%, #2d5542 100%); border-radius: 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); ${isCurrentCard && !isFlipped ? 'border: 3px solid #ffc107;' : ''}">
-                                                    <span style="font-size: 4rem; color: white; font-weight: bold;">${cardNumber}</span>
-                                                </div>
-                                                <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: white; border-radius: 15px; display: flex; align-items: center; justify-content: center; padding: 10px; transform: rotateY(180deg); box-shadow: 0 4px 15px rgba(0,0,0,0.3); ${isSelected ? 'border: 4px solid #51cf66;' : ''}">
-                                                    <img src="${card.frontImage}" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 10px;">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-
                         ${allCorrect ? `
-                            <div id="confettiContainer" class="confetti-container"></div>
                             <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; text-align: center;">
-                                <button class="btn btn-success" onclick="nextRound()" style="padding: 15px 30px; font-size: 1.2rem; min-width: 180px; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.3); animation: pulse 1.5s ease-in-out infinite;">
+                                <button class="btn btn-success" onclick="nextRound()" style="padding: 15px 30px; font-size: 1.2rem; min-width: 180px; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.3);">
                                     ➡️ New Round
                                 </button>
                             </div>
-                        ` : ''}
+                        ` : `
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(6px, 1vw, 10px); width: 100%; height: 100%;">
+                            ${gridCells.join('')}
+                        </div>
+                        `}
                     </div>
                 </div>
             `;
 
             // Trigger confetti when all cards are correct
             if (allCorrect) {
-                setTimeout(() => createConfetti(), 100);
+                // No confetti needed since cards are hidden
             }
         }
 
@@ -5832,21 +5906,43 @@
 
         function renderBombGame() {
             const content = document.getElementById('bombGameContent');
+            const controls = document.getElementById('bombGameControls');
             const { gameCards, cardsRemaining } = bombGameState;
 
             // Check if game is over (won by picking last safe card)
             if (cardsRemaining === 0) {
-                content.innerHTML = `
-                    <div style="text-align: center; padding: 40px;">
-                        <h2 style="font-size: clamp(2rem, 8vw, 3rem); margin-bottom: 20px;">🎉 You survived!</h2>
-                        <p style="font-size: clamp(1rem, 4vw, 1.5rem); margin-bottom: 20px;">Great job avoiding the bomb!</p>
-                        <button class="btn btn-success" onclick="startGame('bomb')" style="padding: 15px 30px; font-size: 1.2rem;">
+                // Update controls to show Play Again button below title
+                controls.innerHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 12px; width: 100%; justify-content: center;">
+                            <h2 style="margin: 0; font-size: clamp(1rem, 2.5vw, 1.2rem); color: #35654D; white-space: nowrap;">💣 Bomb Game</h2>
+                            <button onclick="closeBombGame()" style="background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: transform 0.2s;" title="Back to Menu">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <button class="btn btn-success" onclick="startGame('bomb')" style="padding: 10px 20px; font-size: 1rem;">
                             🔄 Play Again
                         </button>
                     </div>
                 `;
+                content.innerHTML = '';
                 return;
             }
+
+            // Reset controls to normal state
+            controls.innerHTML = `
+                <h2 style="margin: 0; font-size: clamp(1rem, 2.5vw, 1.2rem); color: #35654D; white-space: nowrap;">💣 Bomb Game</h2>
+                <button onclick="openBombGameHelp()" style="background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; font-size: clamp(1.2rem, 3vw, 1.4rem);" title="How to Play">
+                    ❓
+                </button>
+                <button onclick="closeBombGame()" style="background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: transform 0.2s;" title="Back to Menu">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                </button>
+            `;
 
             content.innerHTML = `
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: min(95vw, 700px); margin: 0 auto; padding: 5px;">
@@ -6288,35 +6384,42 @@
             const content = document.getElementById('guessGameContent');
             const roundCards = guessGameState.currentRoundCards;
             const card = roundCards[cardIndex];
-            const currentCardIndex = guessGameState.currentCardOrder;
             const cardNumber = cardIndex + 1;
+
+            // Always create 9 grid cells for consistent sizing
+            const gridCells = [];
+            for (let i = 0; i < 9; i++) {
+                if (i < roundCards.length) {
+                    const c = roundCards[i];
+                    const index = i;
+                    const isCorrect = guessGameState.correctCards[index];
+                    const isSelected = index === cardIndex;
+
+                    gridCells.push(`
+                        <div style="position: relative; width: 100%; aspect-ratio: 1; ${isSelected ? 'visibility: hidden;' : ''}">
+                            <div style="width: 100%; height: 100%; position: relative;">
+                                <div style="position: absolute; width: 100%; height: 100%; background: ${isCorrect ? 'white' : 'linear-gradient(135deg, #35654D 0%, #2d5542 100%)'}; border-radius: 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); ${isCorrect ? 'border: 4px solid #51cf66;' : ''}">
+                                    ${isCorrect ? 
+                                        `<img src="${c.frontImage}" style="max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 10px;">` :
+                                        `<span style="font-size: clamp(2rem, 8vw, 4rem); color: white; font-weight: bold;">${index + 1}</span>`
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                } else {
+                    gridCells.push(`<div style="position: relative; width: 100%; aspect-ratio: 1; visibility: hidden;"></div>`);
+                }
+            }
 
             content.innerHTML = `
                 <div style="width: 100%; display: flex; align-items: center; justify-content: center;">
                     <div style="position: relative; width: 100%; max-width: 700px; aspect-ratio: 1 / 1;">
                         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(6px, 1vw, 10px); width: 100%; height: 100%;">
-                            ${roundCards.map((c, index) => {
-                                const isCorrect = guessGameState.correctCards[index];
-                                const isCurrentCard = index === currentCardIndex;
-                                const isSelected = index === cardIndex;
-                                const isFlipped = isCorrect || isSelected;
-
-                                return `
-                                    <div style="position: relative; width: 100%; aspect-ratio: 1; ${isSelected ? 'visibility: hidden;' : ''}">
-                                        <div style="width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s; ${isFlipped ? 'transform: rotateY(180deg);' : ''}">
-                                            <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: linear-gradient(135deg, #35654D 0%, #2d5542 100%); border-radius: 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); ${isCurrentCard && !isFlipped ? 'border: 3px solid #ffc107;' : ''}">
-                                                <span style="font-size: 4rem; color: white; font-weight: bold;">${index + 1}</span>
-                                            </div>
-                                            <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: white; border-radius: 15px; display: flex; align-items: center; justify-content: center; padding: 10px; transform: rotateY(180deg); box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 4px solid #51cf66;">
-                                                <img src="${c.frontImage}" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 10px;">
-                                            </div>
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('')}
+                            ${gridCells.join('')}
                         </div>
 
-                        <!-- Expanding and flipping card overlay -->
+                        <!-- Flipping card overlay (like bomb game) -->
                         <div id="guessRevealCard" style="position: fixed; 
                              top: 50%;
                              left: 50%;
@@ -6325,9 +6428,8 @@
                              margin-left: -100px;
                              margin-top: -100px;
                              z-index: 1000;
-                             pointer-events: none;
-                             animation: expand-flip 0.8s ease-out forwards;">
-                            <div style="width: 100%; height: 100%; position: relative; transform-style: preserve-3d; animation: card-flip 0.8s ease-out forwards;">
+                             pointer-events: none;">
+                            <div style="width: 100%; height: 100%; position: relative; transform-style: preserve-3d; animation: card-flip 0.6s ease-out forwards;">
                                 <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; 
                                             background: linear-gradient(135deg, #35654D 0%, #2d5542 100%); 
                                             border-radius: 15px; 
@@ -6335,7 +6437,7 @@
                                             align-items: center; 
                                             justify-content: center;
                                             box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
-                                    <span style="font-size: 4rem; color: white; font-weight: bold;">${cardNumber}</span>
+                                    <span style="font-size: clamp(3rem, 10vw, 5rem); color: white; font-weight: bold;">${cardNumber}</span>
                                 </div>
                                 <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; 
                                             background: white; 
@@ -6353,11 +6455,11 @@
                         </div>
 
                         <!-- Correct/Wrong buttons overlay -->
-                        <div id="guessGameButtons" style="display: flex; position: fixed; bottom: 10vh; left: 50%; transform: translateX(-50%); z-index: 1001; gap: 80px; pointer-events: none;">
-                            <button class="btn btn-success" onclick="markCorrect()" style="width: 80px; height: 80px; min-width: 80px; padding: 0; border-radius: 50%; font-size: 2.5rem; font-weight: bold; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.4); background: linear-gradient(135deg, #51cf66 0%, #40c057 100%); color: white; border: none; cursor: pointer; transition: all 0.3s; pointer-events: auto;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                        <div id="guessGameButtons" style="display: flex; position: fixed; bottom: 15vh; left: 50%; transform: translateX(-50%); z-index: 1001; gap: 60px; pointer-events: none;">
+                            <button class="btn btn-success" onclick="markCorrect()" style="width: 70px; height: 70px; min-width: 70px; padding: 0; border-radius: 50%; font-size: 2rem; font-weight: bold; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.4); background: linear-gradient(135deg, #51cf66 0%, #40c057 100%); color: white; border: none; cursor: pointer; pointer-events: auto;">
                                 ✓
                             </button>
-                            <button class="btn btn-secondary" onclick="markWrong()" style="width: 80px; height: 80px; min-width: 80px; padding: 0; border-radius: 50%; font-size: 2.5rem; font-weight: bold; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.4); background: linear-gradient(135deg, #ff6b6b 0%, #fa5252 100%); color: white; border: none; cursor: pointer; transition: all 0.3s; pointer-events: auto;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                            <button class="btn btn-secondary" onclick="markWrong()" style="width: 70px; height: 70px; min-width: 70px; padding: 0; border-radius: 50%; font-size: 2rem; font-weight: bold; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.4); background: linear-gradient(135deg, #ff6b6b 0%, #fa5252 100%); color: white; border: none; cursor: pointer; pointer-events: auto;">
                                 ✗
                             </button>
                         </div>
@@ -6365,13 +6467,13 @@
                 </div>
             `;
 
-            // Enable clicking after animation completes (0.8s)
+            // Enable clicking after animation completes
             setTimeout(() => {
                 const buttons = document.getElementById('guessGameButtons');
                 if (buttons) {
                     buttons.style.pointerEvents = 'auto';
                 }
-            }, 800);
+            }, 600);
         }
 
         function markCorrect() {
@@ -6380,35 +6482,26 @@
 
             playSound('correctSound');
 
-            // Animate card shrinking back
-            const revealCard = document.getElementById('guessRevealCard');
-            if (revealCard) {
-                // Add shrink-back animation
-                revealCard.style.animation = 'shrink-back 0.5s ease-in forwards';
+            // Mark as correct and re-render immediately
+            guessGameState.correctCards[selectedCardIndex] = true;
+            guessGameState.selectedCard = null;
+            
+            // Find the next unflipped card instead of just incrementing
+            const roundCards = guessGameState.currentRoundCards;
+            let nextCardIndex = -1;
+            for (let i = 0; i < roundCards.length; i++) {
+                if (!guessGameState.correctCards[i]) {
+                    nextCardIndex = i;
+                    break;
+                }
             }
-
-            // Wait for shrink animation, then mark as correct and re-render
-            setTimeout(() => {
-                guessGameState.correctCards[selectedCardIndex] = true;
-                guessGameState.selectedCard = null;
-                
-                // Find the next unflipped card instead of just incrementing
-                const roundCards = guessGameState.currentRoundCards;
-                let nextCardIndex = -1;
-                for (let i = 0; i < roundCards.length; i++) {
-                    if (!guessGameState.correctCards[i]) {
-                        nextCardIndex = i;
-                        break;
-                    }
-                }
-                
-                // Set currentCardOrder to the next unflipped card (or keep current if all done)
-                if (nextCardIndex !== -1) {
-                    guessGameState.currentCardOrder = nextCardIndex;
-                }
-                
-                renderGuessGame();
-            }, 500);
+            
+            // Set currentCardOrder to the next unflipped card (or keep current if all done)
+            if (nextCardIndex !== -1) {
+                guessGameState.currentCardOrder = nextCardIndex;
+            }
+            
+            renderGuessGame();
         }
 
         function markWrong() {
@@ -6894,6 +6987,7 @@
 </script>
 </body>
 </html>
+
 
 
 
