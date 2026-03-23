@@ -32,7 +32,7 @@
     <!-- Custom Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Dancing+Script:wght@700&family=Great+Vibes&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Dancing+Script:wght@700&family=Great+Vibes&family=Nunito:wght@400;500&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -565,6 +565,44 @@
             background: white;
         }
 
+        /* When show-text is active, card-front becomes a column layout */
+        .card-front.show-text-active {
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 10px 8px;
+        }
+
+        .card-front.show-text-active .card-image {
+            width: 100%;
+            flex: 1 1 0;
+            min-height: 0;
+            object-fit: contain;
+        }
+
+        .card-front-text {
+            width: 100%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 10px 4px;
+            font-family: 'Nunito', Arial, sans-serif !important;
+            font-size: 6rem;
+            font-weight: 400;
+            color: #1a1a1a;
+            text-align: center;
+            line-height: 1.1;
+            white-space: normal;
+            word-break: keep-all;
+            overflow-wrap: break-word;
+            overflow: hidden;
+        }
+
+        .card-front-text .vowel {
+            font-family: 'Nunito', Arial, sans-serif !important;
+        }
+
         .card-back {
             background: linear-gradient(135deg, #35654D 0%, #2d5542 100%);
             color: white;
@@ -576,14 +614,14 @@
             overflow: hidden;
         }
 
-        /* Ensure hints are completely hidden when card face is not visible - critical for mobile */
-        .card:not(.flipped) .card-back .hint {
+        /* Ensure hint row is completely hidden when card face is not visible */
+        .card:not(.flipped) .card-back .hint-row {
             visibility: hidden !important;
             opacity: 0 !important;
             display: none !important;
         }
 
-        .card.flipped .card-front .hint {
+        .card.flipped .card-front .hint-row {
             visibility: hidden !important;
             opacity: 0 !important;
             display: none !important;
@@ -602,8 +640,8 @@
             font-size: 7.5rem;
             text-align: center;
             margin: 0;
-            font-weight: 500;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            font-weight: 400;
+            font-family: 'Nunito', Arial, sans-serif;
             line-height: 1.3;
             max-width: 100%;
             width: 100%;
@@ -632,23 +670,44 @@
             pointer-events: auto;
         }
 
-        .hint {
+        .hint-row {
             position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 0.7rem;
-            opacity: 0.7;
+            top: 14px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: none;
             z-index: 5;
+        }
+
+        .hint, .hint-index {
+            font-size: 0.7rem;
+            opacity: 0.55;
             pointer-events: auto;
             cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Tablet: nav buttons are 65px, push text further in */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            #navRowText { left: 110px !important; right: 110px !important; }
+        }
+
+        /* Desktop */
+        @media (min-width: 1025px) {
+            #navRowText { left: 110px !important; right: 110px !important; }
         }
 
         /* Hide UI mode - only settings button and card visible */
         body.hide-ui .top-bar,
         body.hide-ui .navigation,
         body.hide-ui .counter,
-        body.hide-ui #cardOverlayCounter {
+        body.hide-ui #cardOverlayCounter,
+        body.hide-ui #cardOverlayTTS,
+        body.hide-ui #cardOverlayNav {
             display: none !important;
         }
 
@@ -729,19 +788,15 @@
         }
 
         .counter {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: white;
+            font-size: 0.7rem;
+            font-weight: 400;
+            color: rgba(0,0,0,0.45);
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             align-items: center;
-            gap: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            background: rgba(0,0,0,0.3);
-            padding: 10px 20px;
-            border-radius: 15px;
+            gap: 6px;
             position: fixed;
-            bottom: 20px;
+            top: 28px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 1000;
@@ -750,6 +805,7 @@
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
+            white-space: nowrap;
         }
 
         .counter > * {
@@ -772,15 +828,15 @@
         }
 
         .audio-btn {
-            width: 70px;
-            height: 70px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            background: #667eea;
+            -webkit-border-radius: 50%;
+            background: rgba(0,0,0,0.6);
             color: white;
-            border: none;
-            font-size: 2rem;
+            border: 2px solid rgba(255,255,255,0.3);
             cursor: pointer;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
             touch-action: manipulation;
             display: flex;
             align-items: center;
@@ -789,6 +845,17 @@
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
+            transition: all 0.3s ease;
+            pointer-events: auto;
+        }
+
+        .audio-btn:hover {
+            background: rgba(0,0,0,0.8);
+            transform: scale(1.05);
+        }
+
+        .audio-btn:active {
+            transform: scale(0.95);
         }
 
         .fullscreen-btn {
@@ -1329,7 +1396,6 @@
             .audio-btn {
                 width: 60px;
                 height: 60px;
-                font-size: 1.6rem;
             }
 
             .counter {
@@ -1395,7 +1461,6 @@
             .audio-btn {
                 width: 65px;
                 height: 65px;
-                font-size: 1.8rem;
             }
 
             .counter {
@@ -1777,7 +1842,7 @@
             .empty-state p { font-size: 0.8rem; }
             .fullscreen-btn { width: 42px; height: 42px; }
             .counter { font-size: 0.9rem; padding: 7px 14px; }
-            .audio-btn { width: 52px; height: 52px; font-size: 1.5rem; }
+            .audio-btn { width: 44px; height: 44px; }
         }
 
         /* Small phones (376-480px) */
@@ -1814,7 +1879,7 @@
             .empty-action-btn { max-width: 110px; }
             .empty-action-btn svg { width: 50px; height: 50px; }
             .fullscreen-btn { width: 56px; height: 56px; }
-            .audio-btn { width: 72px; height: 72px; font-size: 2rem; }
+            .audio-btn { width: 56px; height: 56px; }
             .counter { font-size: 1.1rem; }
         }
 
@@ -1834,7 +1899,7 @@
             }
             .fullscreen-btn { width: 54px; height: 54px; }
             .counter { font-size: 1.15rem; padding: 12px 24px; }
-            .audio-btn { width: 72px; height: 72px; }
+            .audio-btn { width: 54px; height: 54px; }
         }
 
         /* Landscape phones — compact everything */
@@ -1844,7 +1909,7 @@
             #cardOverlaySettings { bottom: 10px; left: 10px; }
             #cardOverlayCounter { bottom: 10px; }
             .counter { padding: 5px 12px; font-size: 0.85rem; border-radius: 10px; }
-            .audio-btn { width: 44px; height: 44px; font-size: 1.3rem; }
+            .audio-btn { width: 38px; height: 38px; }
             .nav-btn { width: 40px; height: 40px; }
             .nav-btn svg { width: 32px; height: 32px; }
         }
@@ -2005,7 +2070,7 @@
         <div id="cardDisplay"></div>
 
         <!-- Fixed card overlays: always in DOM, unaffected by card-container size or overflow -->
-        <div id="cardOverlaySettings" style="display:none; position:fixed; bottom:20px; left:20px; z-index:1000;">
+        <div id="cardOverlaySettings" style="display:none; position:fixed; bottom:20px; left:20px; z-index:10000;">
             <button class="fullscreen-btn" style="position:relative; bottom:auto; left:auto;"
                     onclick="event.stopPropagation(); toggleSettingsMenu()"
                     ontouchend="event.stopPropagation(); event.preventDefault(); toggleSettingsMenu()"
@@ -2045,17 +2110,48 @@
                     Preview Cards
                 </button>
                 <button id="hideUIBtn" onclick="event.stopPropagation(); toggleHideUI()" ontouchend="event.stopPropagation(); event.preventDefault(); toggleHideUI()"
-                    style="width:100%; padding:13px 16px; border:none; background:white; text-align:left; font-size:15px; font-weight:600; color:#333; cursor:pointer; display:flex; align-items:center; gap:10px;">
+                    style="width:100%; padding:13px 16px; border:none; background:white; text-align:left; font-size:15px; font-weight:600; color:#333; cursor:pointer; display:flex; align-items:center; gap:10px; border-bottom:1px solid #f0f0f0;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#35654D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
                         <line x1="1" y1="1" x2="23" y2="23"/>
                     </svg>
                     Hide Buttons
                 </button>
+                <button id="showTextBtn" onclick="event.stopPropagation(); toggleTextOnFront()" ontouchend="event.stopPropagation(); event.preventDefault(); toggleTextOnFront()"
+                    style="width:100%; padding:13px 16px; border:none; background:white; text-align:left; font-size:15px; font-weight:600; color:#333; cursor:pointer; display:flex; align-items:center; gap:10px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#35654D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="15" x2="21" y2="15"/><path d="M8 18h.01M12 18h.01M16 18h.01"/>
+                    </svg>
+                    Show Text
+                </button>
             </div>
         </div>
-        <div id="cardOverlayCounter" style="display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:1000;">
-            <div class="counter" style="position:relative; bottom:auto; left:auto; transform:none;"></div>
+        <!-- TTS button: bottom right, mirroring settings button -->
+        <div id="cardOverlayTTS" style="display:none; position:fixed; bottom:20px; right:20px; z-index:10000;">
+        </div>
+        <!-- Card number: top center between nav buttons -->
+        <div id="cardOverlayCounter" style="display:none; position:fixed; top:28px; left:50%; transform:translateX(-50%); z-index:10000;">
+            <div class="counter" style="position:relative; top:auto; left:auto; transform:none;"></div>
+        </div>
+        <!-- Permanent fixed nav buttons — positioned to match card container -->
+        <div id="cardOverlayNav" style="display:none; position:fixed; z-index:10000; pointer-events:none;">
+            <button class="nav-btn prev" style="position:absolute; pointer-events:auto; top:20px; left:20px;" onclick="event.stopPropagation(); prevCard()" ontouchend="event.stopPropagation(); event.preventDefault(); prevCard()">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10.5" stroke="#f5a623" stroke-width="2" fill="none"/>
+                    <path d="M14 8L10 12L14 16" stroke="#f5a623" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+            <!-- Index and hint sit between the nav buttons -->
+            <div id="navRowText" style="position:absolute; top:20px; left:100px; right:100px; height:50px; display:flex; align-items:center; justify-content:space-between; pointer-events:none; gap:8px;">
+                <span id="navIndexLabel" style="font-size:0.7rem; opacity:0.55; color:#333; pointer-events:none;"></span>
+                <span id="navHintLabel" style="font-size:0.7rem; opacity:0.55; color:#333; pointer-events:none;"></span>
+            </div>
+            <button class="nav-btn next" style="position:absolute; pointer-events:auto; top:20px; right:20px;" onclick="event.stopPropagation(); nextCard()" ontouchend="event.stopPropagation(); event.preventDefault(); nextCard()">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10.5" stroke="#f5a623" stroke-width="2" fill="none"/>
+                    <path d="M10 8L14 12L10 16" stroke="#f5a623" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
         </div>
     </div>
 
@@ -2431,6 +2527,19 @@
         let currentLoadedUnitId = null; // Track which unit is currently loaded
         let currentIndex = 0;
         let isFlipped = false;
+        let showTextOnFront = false; // overlay back text on card front
+        let cachedFrontTextSize = null; // cached font size so all cards scale consistently
+
+        function positionNavOverlay() {
+            const container = document.querySelector('.card-container');
+            const nav = document.getElementById('cardOverlayNav');
+            if (!container || !nav) return;
+            const rect = container.getBoundingClientRect();
+            nav.style.top = rect.top + 'px';
+            nav.style.left = rect.left + 'px';
+            nav.style.width = rect.width + 'px';
+            nav.style.height = rect.height + 'px';
+        }
         // Remember which side each card was last on
         const cardFlipStates = {};
         let newCard = { frontImage: null, backText: '', backImage: null, editedNames: null };
@@ -2732,7 +2841,7 @@
                    target.closest('.nav-btn') || target.closest('.audio-btn') ||
                    target.closest('.fullscreen-btn') || target.closest('.counter') ||
                    target.closest('.controls') || target.closest('.header') ||
-                   target.closest('#settingsMenu');
+                   target.closest('#settingsMenu') || target.closest('#cardOverlayNav');
         }
 
         // Flag to prevent click event from firing after touch event (prevents double flip)
@@ -2761,6 +2870,10 @@
                 if (shouldExcludeTouchTarget(target)) return;
                 if (!target.closest('#cardDisplay') && !target.closest('.card-container')) return;
                 if (cards.length === 0) return;
+
+                // Only start gesture if touch is on the actual card, not the green area around it
+                const isOnCard = target.closest('.card') !== null;
+                if (!isOnCard) return;
 
                 const pos = getPos(e);
                 startX = pos.x; startY = pos.y;
@@ -4869,14 +4982,14 @@
         }
 
         function flipCard() {
-            closeQuickLoadDropdown(); // Close Quick Load menu when flipping card
+            closeQuickLoadDropdown();
             window.speechSynthesis.cancel();
             playSound('flipSound');
             isFlipped = !isFlipped;
-            const card = document.querySelector('.card');
-            if (card) {
-                card.classList.toggle('flipped');
-            }
+            const cardEl = document.querySelector('.card');
+            if (cardEl) cardEl.classList.toggle('flipped');
+            const navHint = document.getElementById('navHintLabel');
+            if (navHint) navHint.textContent = isFlipped ? 'Tap to flip back' : 'Tap to flip';
         }
 
         function highlightVowels(text) {
@@ -7437,8 +7550,8 @@
                     <div class="empty-state">
                         <div class="empty-state-card">
                             <div class="empty-state-icon">📋</div>
-                            <h3>No cards yet</h3>
-                            <p>Tap "add, load, or manage"<br>or try a sample set</p>
+                            <h3>No Flashcards Yet</h3>
+                            <p>Create a deck by tapping "add, load, or manage"<br>or try a sample deck</p>
                             <div class="empty-action-btn-row" style="display:flex;flex-direction:row;justify-content:center;gap:12px;width:100%;margin-top:28px;">
                                 <button class="empty-action-btn" onclick="openCreateModal()">
                                     <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -7494,6 +7607,7 @@
                 if (moreDropdown) moreDropdown.style.display = 'none';
                 document.getElementById('cardOverlaySettings').style.display = 'none';
                 document.getElementById('cardOverlayCounter').style.display = 'none';
+                document.getElementById('cardOverlayNav').style.display = 'none';
 
                 return;
             }
@@ -7552,28 +7666,15 @@
                         </div>
                         ` : ''}
                         <div class="card ${isFlipped ? 'flipped' : ''}" style="cursor: pointer;">
-                            <div class="card-face card-front">
+                            <div class="card-face card-front${showTextOnFront && card.backText ? ' show-text-active' : ''}">
                                 <img src="${card.frontImage}" class="card-image">
-                                <p class="hint">Tap to flip</p>
+                                ${showTextOnFront && card.backText ? `
+                                <div class="card-front-text">${highlightVowels(card.backText)}</div>
+                                ` : ''}
                             </div>
                             <div class="card-face card-back">
                                 ${card.backImage ? '<img src="' + card.backImage + '" class="card-image">' : ''}
                                 ${card.backText ? '<p class="' + textClass + '">' + highlightVowels(card.backText) + '</p>' : ''}
-                                <p class="hint">Tap to flip back</p>
-                            </div>
-                            <div class="navigation">
-                                <button class="nav-btn prev" onclick="event.stopPropagation(); prevCard()">
-                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
-                                        <circle cx="12" cy="12" r="10.5" stroke="#f5a623" stroke-width="2" fill="none"/>
-                                        <path d="M14 8L10 12L14 16" stroke="#f5a623" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                </button>
-                                <button class="nav-btn next" onclick="event.stopPropagation(); nextCard()">
-                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
-                                        <circle cx="12" cy="12" r="10.5" stroke="#f5a623" stroke-width="2" fill="none"/>
-                                        <path d="M10 8L14 12L10 16" stroke="#f5a623" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                </button>
                             </div>
                         </div>
                         ${nextCard && cards.length > 1 ? `
@@ -7587,17 +7688,37 @@
                 </div>
             `;
 
-            // Show fixed overlays and update counter
+            // Show fixed overlays
             document.getElementById('cardOverlaySettings').style.display = 'block';
-            const counterEl = document.querySelector('#cardOverlayCounter .counter');
-            counterEl.innerHTML = `
-                <span>${currentIndex + 1} / ${cards.length}</span>
-                ${card.backText ? '<button class="audio-btn" onclick="event.stopPropagation(); speakText(\'' + card.backText.replace(/'/g, "\\'") + '\')">🔊</button>' : ''}
-            `;
-            document.getElementById('cardOverlayCounter').style.display = 'block';
+            document.getElementById('cardOverlayNav').style.display = 'block';
+            document.getElementById('cardOverlayCounter').style.display = 'none';
+
+            // Update index and hint text in nav row
+            const navIndex = document.getElementById('navIndexLabel');
+            const navHint = document.getElementById('navHintLabel');
+            if (navIndex) navIndex.textContent = `${currentIndex + 1} / ${cards.length}`;
+            if (navHint) navHint.textContent = isFlipped ? 'Tap to flip back' : 'Tap to flip';
+
+            // Position nav overlay to match card container bounds
+            requestAnimationFrame(() => positionNavOverlay());
+
+            // TTS button — bottom right, same style as settings button
+            const ttsEl = document.getElementById('cardOverlayTTS');
+            if (card.backText) {
+                ttsEl.innerHTML = `<button class="audio-btn" onclick="event.stopPropagation(); speakText('${card.backText.replace(/'/g, "\\'")}')">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                    </svg>
+                </button>`;
+                ttsEl.style.display = 'block';
+            } else {
+                ttsEl.style.display = 'none';
+            }
 
             // Auto-scale text to fit on one line if needed - use requestAnimationFrame for proper timing
-            requestAnimationFrame(() => { scaleTextToFit(); applyCardTextScale(); });
+            requestAnimationFrame(() => { scaleTextToFit(); applyCardTextScale(); scaleFrontText(); });
         }
 
         function scaleTextToFit() {
@@ -7691,9 +7812,16 @@
             const closeSaveBtn = document.getElementById('closeSaveBtn');
 
             if (saveJSONBtn) {
-                saveJSONBtn.addEventListener('click', function() {
-                    console.log('JSON button clicked');
+                saveJSONBtn.addEventListener('touchend', function(e) {
+                    e.preventDefault();
                     saveAsJSON();
+                });
+                saveJSONBtn.addEventListener('click', function(e) {
+                    if (e.sourceCapabilities && !e.sourceCapabilities.firesTouchEvents) {
+                        saveAsJSON();
+                    } else if (!('ontouchstart' in window)) {
+                        saveAsJSON();
+                    }
                 });
             }
 
@@ -7712,8 +7840,45 @@
             }
         });
         // Dropdown toggle functions
-        const TEXT_SCALES = [0.7, 1.0, 1.3, 1.6]; // -30%, default, +30%, +60%
-        let cardTextScaleIndex = 1; // start at default
+        const TEXT_SCALES = [1.0, 1.4, 1.8]; // default, +40%, +80%
+        let cardTextScaleIndex = 0; // start at default
+
+        function scaleFrontText() {
+            const textEl = document.querySelector('.card-front-text');
+            if (!textEl) return;
+            const cardFront = textEl.closest('.card-front');
+            const imgEl = cardFront ? cardFront.querySelector('.card-image') : null;
+            if (!cardFront || !imgEl) return;
+
+            const cardHeight = cardFront.offsetHeight;
+            const cardWidth = cardFront.offsetWidth - 20;
+
+            let fontSize;
+            if (cachedFrontTextSize !== null) {
+                // Reuse cached size — consistent across all cards
+                fontSize = cachedFrontTextSize;
+                textEl.style.fontSize = fontSize + 'px';
+            } else {
+                // First time: compute and cache
+                fontSize = 96;
+                const minFontSize = 20;
+                textEl.style.fontSize = fontSize + 'px';
+                while (fontSize > minFontSize && textEl.scrollWidth > cardWidth) {
+                    fontSize -= 2;
+                    textEl.style.fontSize = fontSize + 'px';
+                }
+                cachedFrontTextSize = fontSize;
+            }
+
+            // Adjust image height based on text block height
+            requestAnimationFrame(() => {
+                const textHeight = textEl.offsetHeight + 12;
+                const imgHeight = cardHeight - textHeight - 20;
+                const imgPercent = Math.max(30, Math.min(80, (imgHeight / cardHeight) * 100));
+                imgEl.style.height = imgPercent + '%';
+                imgEl.style.flex = 'none';
+            });
+        }
 
         function applyCardTextScale() {
             // Retrigger scaleTextToFit which now incorporates the user scale preference
@@ -7746,6 +7911,20 @@
         function decreaseCardTextSize() {
             if (cardTextScaleIndex > 0) cardTextScaleIndex--;
             applyCardTextScale();
+        }
+
+        function toggleTextOnFront() {
+            showTextOnFront = !showTextOnFront;
+            cachedFrontTextSize = null; // reset so it recomputes for this session
+            const btn = document.getElementById('showTextBtn');
+            if (btn) {
+                btn.style.background = showTextOnFront ? '#f0f9f4' : 'white';
+                btn.style.color = showTextOnFront ? '#35654D' : '#333';
+                btn.querySelector('svg').setAttribute('stroke', showTextOnFront ? '#1a4a32' : '#35654D');
+            }
+            const menu = document.getElementById('settingsMenu');
+            if (menu) menu.style.display = 'none';
+            renderDisplay();
         }
 
         function toggleHideUI() {
@@ -8259,15 +8438,15 @@
         // Re-render on orientation change so cards don't disappear
         window.addEventListener('orientationchange', () => {
             setTimeout(() => {
-                if (cards.length > 0) renderDisplay();
+                if (cards.length > 0) { renderDisplay(); cachedFrontTextSize = null; }
             }, 300);
         });
-        // Also handle resize (covers desktop window resizing and some Android devices)
         let resizeTimer;
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(() => {
-                if (cards.length > 0) renderDisplay();
+                positionNavOverlay();
+                if (cards.length > 0) { cachedFrontTextSize = null; scaleFrontText(); }
             }, 250);
         });
 
