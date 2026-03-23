@@ -614,14 +614,14 @@
             overflow: hidden;
         }
 
-        /* Ensure hint row is completely hidden when card face is not visible */
-        .card:not(.flipped) .card-back .hint-row {
+        /* Ensure hints are completely hidden when card face is not visible - critical for mobile */
+        .card:not(.flipped) .card-back .hint {
             visibility: hidden !important;
             opacity: 0 !important;
             display: none !important;
         }
 
-        .card.flipped .card-front .hint-row {
+        .card.flipped .card-front .hint {
             visibility: hidden !important;
             opacity: 0 !important;
             display: none !important;
@@ -670,35 +670,16 @@
             pointer-events: auto;
         }
 
-        .hint-row {
+        .hint {
             position: absolute;
-            top: 14px;
-            left: 20px;
-            right: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            pointer-events: none;
-            z-index: 5;
-        }
-
-        .hint, .hint-index {
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             font-size: 0.7rem;
-            opacity: 0.55;
+            opacity: 0.7;
+            z-index: 5;
             pointer-events: auto;
             cursor: pointer;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-
-        /* Tablet: nav buttons are 65px, push text further in */
-        @media (min-width: 769px) and (max-width: 1024px) {
-            #navRowText { left: 110px !important; right: 110px !important; }
-        }
-
-        /* Desktop */
-        @media (min-width: 1025px) {
-            #navRowText { left: 110px !important; right: 110px !important; }
         }
 
         /* Hide UI mode - only settings button and card visible */
@@ -2135,19 +2116,16 @@
         </div>
         <!-- Permanent fixed nav buttons — positioned to match card container -->
         <div id="cardOverlayNav" style="display:none; position:fixed; z-index:10000; pointer-events:none;">
-            <button class="nav-btn prev" style="position:absolute; pointer-events:auto; top:20px; left:20px;" onclick="event.stopPropagation(); prevCard()" ontouchend="event.stopPropagation(); event.preventDefault(); prevCard()">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+            <button class="nav-btn prev" style="position:absolute; pointer-events:auto; top:20px; left:20px; width:45px; height:45px;" onclick="event.stopPropagation(); prevCard()" ontouchend="event.stopPropagation(); event.preventDefault(); prevCard()">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
                     <circle cx="12" cy="12" r="10.5" stroke="#f5a623" stroke-width="2" fill="none"/>
                     <path d="M14 8L10 12L14 16" stroke="#f5a623" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
             </button>
-            <!-- Index and hint sit between the nav buttons -->
-            <div id="navRowText" style="position:absolute; top:20px; left:100px; right:100px; height:50px; display:flex; align-items:center; justify-content:space-between; pointer-events:none; gap:8px;">
-                <span id="navIndexLabel" style="font-size:0.7rem; opacity:0.55; color:#333; pointer-events:none;"></span>
-                <span id="navHintLabel" style="font-size:0.7rem; opacity:0.55; color:#333; pointer-events:none;"></span>
-            </div>
-            <button class="nav-btn next" style="position:absolute; pointer-events:auto; top:20px; right:20px;" onclick="event.stopPropagation(); nextCard()" ontouchend="event.stopPropagation(); event.preventDefault(); nextCard()">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+            <span id="navIndexLabel" style="position:absolute; top:20px; left:75px; height:45px; display:flex; align-items:center; font-size:0.7rem; opacity:0.6; color:#333; pointer-events:none;"></span>
+            <span id="navHintLabel" style="position:absolute; top:20px; right:75px; height:45px; display:flex; align-items:center; font-size:0.7rem; opacity:0.6; color:#333; pointer-events:none;"></span>
+            <button class="nav-btn next" style="position:absolute; pointer-events:auto; top:20px; right:20px; width:45px; height:45px;" onclick="event.stopPropagation(); nextCard()" ontouchend="event.stopPropagation(); event.preventDefault(); nextCard()">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
                     <circle cx="12" cy="12" r="10.5" stroke="#f5a623" stroke-width="2" fill="none"/>
                     <path d="M10 8L14 12L10 16" stroke="#f5a623" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
@@ -2530,6 +2508,20 @@
         let showTextOnFront = false; // overlay back text on card front
         let cachedFrontTextSize = null; // cached font size so all cards scale consistently
 
+        function hideCardOverlays() {
+            ['cardOverlaySettings','cardOverlayNav','cardOverlayTTS','cardOverlayCounter']
+                .forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+        }
+
+        function showCardOverlays() {
+            if (cards.length === 0) return;
+            document.getElementById('cardOverlaySettings').style.display = 'block';
+            document.getElementById('cardOverlayNav').style.display = 'block';
+            const card = cards[currentIndex];
+            if (card && card.backText) document.getElementById('cardOverlayTTS').style.display = 'block';
+            requestAnimationFrame(() => positionNavOverlay());
+        }
+
         function positionNavOverlay() {
             const container = document.querySelector('.card-container');
             const nav = document.getElementById('cardOverlayNav');
@@ -2783,14 +2775,31 @@
 
         // Load cards from browser storage on startup
         window.onload = function() {
-            domCache.init(); // Initialize DOM cache for performance
+            domCache.init();
             loadCards();
-            rebuildHashCache(); // Build image hash cache after loading cards
+            rebuildHashCache();
             renderDisplay();
             setupDragAndDrop();
             setupSwipeGestures();
-            audioManager.init(); // Initialize audio system
-            setupTextareaProtection(); // Prevent accidental deletion of multiple lines
+            audioManager.init();
+            setupTextareaProtection();
+
+            // Hide all card overlays when any modal is open, restore when all closed
+            const overlayIds = ['cardOverlaySettings','cardOverlayNav','cardOverlayTTS','cardOverlayCounter'];
+            const observer = new MutationObserver(() => {
+                const anyOpen = document.querySelector('.modal.active') !== null;
+                if (anyOpen) {
+                    overlayIds.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+                } else if (cards.length > 0) {
+                    // Restore — re-run renderDisplay logic for overlays only
+                    document.getElementById('cardOverlaySettings').style.display = 'block';
+                    document.getElementById('cardOverlayNav').style.display = 'block';
+                    const card = cards[currentIndex];
+                    if (card && card.backText) document.getElementById('cardOverlayTTS').style.display = 'block';
+                    requestAnimationFrame(() => positionNavOverlay());
+                }
+            });
+            document.querySelectorAll('.modal').forEach(m => observer.observe(m, { attributes: true, attributeFilter: ['class'] }));
         };
 
         // Setup drag and drop for upload area
@@ -4847,6 +4856,7 @@
             if (cards.length === 0) return;
 
             playSound('shuffleSound');
+            hideCardOverlays();
 
             const realCard = document.querySelector('.card');
             const container = document.querySelector('.card-container');
@@ -5329,6 +5339,7 @@
         function openSessionPreview() {
             const menu = document.getElementById('settingsMenu');
             if (menu) menu.style.display = 'none';
+            hideCardOverlays();
 
             if (cards.length === 0) { showToast('⚠️ No cards to preview', 2000); return; }
 
@@ -5362,6 +5373,7 @@
 
         function closePreviewOverlay() {
             document.getElementById('previewOverlayModal').style.display = 'none';
+            showCardOverlays();
         }
 
         function closePreviewExpand() {
@@ -7608,6 +7620,7 @@
                 document.getElementById('cardOverlaySettings').style.display = 'none';
                 document.getElementById('cardOverlayCounter').style.display = 'none';
                 document.getElementById('cardOverlayNav').style.display = 'none';
+                document.getElementById('cardOverlayTTS').style.display = 'none';
 
                 return;
             }
@@ -7693,7 +7706,7 @@
             document.getElementById('cardOverlayNav').style.display = 'block';
             document.getElementById('cardOverlayCounter').style.display = 'none';
 
-            // Update index and hint text in nav row
+            // Set index and hint labels in nav row
             const navIndex = document.getElementById('navIndexLabel');
             const navHint = document.getElementById('navHintLabel');
             if (navIndex) navIndex.textContent = `${currentIndex + 1} / ${cards.length}`;
@@ -7969,14 +7982,23 @@
         }
 
         function toggleMoreDropdown() {
-            closeQuickLoadDropdown(); // Close other dropdown first
+            closeQuickLoadDropdown();
             const content = document.getElementById('moreDropdownContent');
             content.classList.toggle('show');
+            const isOpen = content.classList.contains('show');
+            ['navIndexLabel','navHintLabel'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.visibility = isOpen ? 'hidden' : 'visible';
+            });
         }
 
         function closeMoreDropdown() {
             const content = document.getElementById('moreDropdownContent');
             content.classList.remove('show');
+            ['navIndexLabel','navHintLabel'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.visibility = 'visible';
+            });
         }
 
         // Touch event handlers for mobile
@@ -8155,6 +8177,7 @@
         function openCropTool() {
             const menu = document.getElementById('settingsMenu');
             if (menu) menu.style.display = 'none';
+            hideCardOverlays();
 
             cropState.cardIndex = currentIndex;
             const card = cards[currentIndex];
@@ -8412,6 +8435,7 @@
             document.getElementById('cropOverlay').style.display = 'none';
             document.body.style.overflow = '';
             cropState.img = null;
+            showCardOverlays();
         }
 
         // Wire up canvas events on load
