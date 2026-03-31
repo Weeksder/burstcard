@@ -1884,7 +1884,6 @@
         @media (orientation: landscape) and (max-height: 500px) {
             .top-bar { margin-bottom: 6px; }
             .fullscreen-btn { width: 38px; height: 38px; bottom: 10px; left: 10px; }
-            #cardOverlaySettings { bottom: 10px; left: 10px; }
             #cardOverlayCounter { bottom: 10px; }
             .counter { padding: 5px 12px; font-size: 0.85rem; border-radius: 10px; }
             .audio-btn { width: 38px; height: 38px; }
@@ -2048,7 +2047,7 @@
         <div id="cardDisplay"></div>
 
         <!-- Fixed card overlays: always in DOM, unaffected by card-container size or overflow -->
-        <div id="cardOverlaySettings" style="display:none; position:fixed; bottom:20px; left:20px; z-index:10000;">
+        <div id="cardOverlaySettings" style="display:none; position:fixed; z-index:10000;">
             <button class="fullscreen-btn" style="position:relative; bottom:auto; left:auto;"
                     onclick="event.stopPropagation(); toggleSettingsMenu()"
                     ontouchend="event.stopPropagation(); event.preventDefault(); toggleSettingsMenu()"
@@ -2105,7 +2104,7 @@
             </div>
         </div>
         <!-- TTS button: bottom right, mirroring settings button -->
-        <div id="cardOverlayTTS" style="display:none; position:fixed; bottom:20px; right:20px; z-index:10000;">
+        <div id="cardOverlayTTS" style="display:none; position:fixed; z-index:10000;">
         </div>
         <!-- Card number: top center between nav buttons -->
         <div id="cardOverlayCounter" style="display:none; position:fixed; top:28px; left:50%; transform:translateX(-50%); z-index:10000;">
@@ -2600,6 +2599,19 @@
             nav.style.left = rect.left + 'px';
             nav.style.width = rect.width + 'px';
             nav.style.height = rect.height + 'px';
+
+            // Anchor settings (bottom-left) and TTS (bottom-right) to card boundary
+            const settings = document.getElementById('cardOverlaySettings');
+            const tts = document.getElementById('cardOverlayTTS');
+            const offset = 14;
+            if (settings) {
+                settings.style.bottom = (window.innerHeight - rect.bottom + offset) + 'px';
+                settings.style.left = (rect.left + offset) + 'px';
+            }
+            if (tts) {
+                tts.style.bottom = (window.innerHeight - rect.bottom + offset) + 'px';
+                tts.style.right = (window.innerWidth - rect.right + offset) + 'px';
+            }
         }
         // Remember which side each card was last on
         const cardFlipStates = {};
@@ -3055,6 +3067,46 @@
                 }
                 onEnd(e);
             }, { passive: true });
+
+            // touchcancel fires when iOS home gesture / system interrupts the touch
+            // Must reset drag state or card gets stuck frozen
+            document.addEventListener('touchcancel', function() {
+                if (!isDragging) return;
+                isDragging = false;
+                dragX = 0; dragY = 0; peakDist = 0;
+                startX = 0; startY = 0;
+                const cardEl = document.querySelector('.card');
+                const cardStack = document.querySelector('.card-stack');
+                const cardContainer = document.querySelector('.card-container');
+                if (cardEl) {
+                    cardEl.style.transition = 'transform 0.25s ease';
+                    cardEl.style.transform = '';
+                    cardEl.classList.remove('swiping');
+                    cardEl.style.zIndex = '';
+                    cardEl.style.userSelect = '';
+                    cardEl.style.webkitUserSelect = '';
+                    setTimeout(() => { if (cardEl) cardEl.style.transition = ''; }, 260);
+                }
+                if (cardStack) cardStack.classList.remove('swiping');
+                if (cardContainer) cardContainer.style.zIndex = '';
+                document.body.style.overflow = 'hidden';
+            }, { passive: true });
+
+            // Also reset when app goes to background (user swipes home on iOS)
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden && isDragging) {
+                    isDragging = false;
+                    dragX = 0; dragY = 0; peakDist = 0;
+                    startX = 0; startY = 0;
+                    const cardEl = document.querySelector('.card');
+                    const cardStack = document.querySelector('.card-stack');
+                    const cardContainer = document.querySelector('.card-container');
+                    if (cardEl) { cardEl.style.transform = ''; cardEl.style.transition = ''; cardEl.classList.remove('swiping'); cardEl.style.zIndex = ''; }
+                    if (cardStack) cardStack.classList.remove('swiping');
+                    if (cardContainer) cardContainer.style.zIndex = '';
+                    document.body.style.overflow = 'hidden';
+                }
+            });
 
             // Mouse events for PC
             document.addEventListener('mousedown', function(e) {
@@ -7774,8 +7826,11 @@
                     <div class="card-stack">
                         ${prevCard && cards.length > 1 ? `
                         <div class="card-prev">
-                            <div class="card-face card-front">
+                            <div class="card-face card-front${showTextOnFront && prevCard.backText ? ' show-text-active' : ''}">
                                 <img src="${prevCard.frontImage}" class="card-image">
+                                ${showTextOnFront && prevCard.backText ? `
+                                <div class="card-front-text">${highlightVowelsFront(prevCard.backText)}</div>
+                                ` : ''}
                             </div>
                         </div>
                         ` : ''}
@@ -7793,8 +7848,11 @@
                         </div>
                         ${nextCard && cards.length > 1 ? `
                         <div class="card-next">
-                            <div class="card-face card-front">
+                            <div class="card-face card-front${showTextOnFront && nextCard.backText ? ' show-text-active' : ''}">
                                 <img src="${nextCard.frontImage}" class="card-image">
+                                ${showTextOnFront && nextCard.backText ? `
+                                <div class="card-front-text">${highlightVowelsFront(nextCard.backText)}</div>
+                                ` : ''}
                             </div>
                         </div>
                         ` : ''}
@@ -8608,6 +8666,7 @@
 
 </body>
 </html>
+
 
 
 
