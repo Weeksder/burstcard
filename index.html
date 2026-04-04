@@ -124,7 +124,7 @@
 
         @media (max-width: 480px) {
             body {
-                padding: 8px;
+                padding: 6px 4px;
             }
         }
 
@@ -1087,14 +1087,14 @@
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 20px 16px;
+            padding: 12px 8px;
             min-height: calc(100vh - 120px);
         }
 
         .empty-state-card {
             background: white;
             border-radius: 24px;
-            padding: 40px 24px 44px;
+            padding: 32px 20px 36px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.3);
             width: 100%;
             max-width: 420px;
@@ -1803,7 +1803,7 @@
         /* Very small phones (iPhone SE, 320-375px) */
         @media (max-width: 375px) {
             .empty-state-card {
-                padding: 28px 14px 32px;
+                padding: 22px 12px 26px;
                 border-radius: 18px;
             }
             .empty-action-btn {
@@ -1832,7 +1832,7 @@
             .counter { font-size: 0.95rem; padding: 8px 16px; }
             /* Settings menu fits on small screen */
             #settingsMenu { min-width: 140px; }
-            #settingsMenu button, #settingsMenu > div {
+            #settingsMenu button:not(.resize-btn), #settingsMenu > div:not(.resize-row) {
                 font-size: 13px !important;
                 padding: 10px 12px !important;
             }
@@ -1871,7 +1871,7 @@
             .empty-action-btn svg { width: 48px; height: 48px; }
             .empty-action-btn span { font-size: 1.1rem; }
             #settingsMenu { min-width: 180px; }
-            #settingsMenu button, #settingsMenu > div {
+            #settingsMenu button:not(.resize-btn), #settingsMenu > div:not(.resize-row) {
                 font-size: 15px !important;
                 padding: 13px 16px !important;
             }
@@ -2065,18 +2065,18 @@
                     </svg>
                     Clip Image
                 </button>
-                <div style="width:100%; background:white; border-bottom:1px solid #f0f0f0; box-sizing:border-box; display:flex; align-items:stretch;">
-                    <div style="padding:12px 14px; display:flex; align-items:center; gap:8px; flex:1;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#35654D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <div class="resize-row" style="width:100%; background:white; border-bottom:1px solid #f0f0f0; box-sizing:border-box; display:flex; align-items:center;">
+                    <div style="padding:13px 16px; display:flex; align-items:center; gap:10px; flex:1;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#35654D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;display:block;">
                             <polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>
                         </svg>
                         <span style="font-size:15px; font-weight:600; color:#333;">Resize</span>
                     </div>
-                    <div style="display:flex; align-items:stretch; border-left:1px solid #e8e8e8;">
-                        <button onclick="event.stopPropagation(); decreaseCardTextSize()" ontouchend="event.stopPropagation(); event.preventDefault(); decreaseCardTextSize()"
-                            style="background:none; border:none; border-right:1px solid #e8e8e8; color:#888; font-weight:700; cursor:pointer; padding:0 16px; font-size:13px; display:flex; align-items:center; justify-content:center;">A</button>
-                        <button onclick="event.stopPropagation(); increaseCardTextSize()" ontouchend="event.stopPropagation(); event.preventDefault(); increaseCardTextSize()"
-                            style="background:none; border:none; color:#444; font-weight:700; cursor:pointer; padding:0 16px; font-size:19px; display:flex; align-items:center; justify-content:center;">A</button>
+                    <div style="display:flex; align-items:stretch; border-left:1px solid #e8e8e8; align-self:stretch;">
+                        <button class="resize-btn" onclick="event.stopPropagation(); decreaseCardTextSize()" ontouchend="event.stopPropagation(); event.preventDefault(); decreaseCardTextSize()"
+                            style="background:none; border:none; border-right:1px solid #e8e8e8; color:#888; font-weight:700; cursor:pointer; padding:0 10px; font-size:13px; display:flex; align-items:center; justify-content:center;">A</button>
+                        <button class="resize-btn" onclick="event.stopPropagation(); increaseCardTextSize()" ontouchend="event.stopPropagation(); event.preventDefault(); increaseCardTextSize()"
+                            style="background:none; border:none; color:#444; font-weight:700; cursor:pointer; padding:0 10px; font-size:19px; display:flex; align-items:center; justify-content:center;">A</button>
                     </div>
                 </div>
                 <button onclick="event.stopPropagation(); openSessionPreview()" ontouchend="event.stopPropagation(); event.preventDefault(); openSessionPreview()"
@@ -5201,12 +5201,15 @@
             lastFlipTime = now;
             closeQuickLoadDropdown();
             window.speechSynthesis.cancel();
-            playSound('flipSound');
+            if (document.getElementById('matchGameModal')?.style.display !== 'flex') playSound('flipSound');
             isFlipped = !isFlipped;
             const cardEl = document.querySelector('.card');
             if (cardEl) cardEl.classList.toggle('flipped');
             const navHint = document.getElementById('navHintLabel');
-            if (navHint) navHint.textContent = isFlipped ? 'Tap to flip' : 'Tap to flip';
+            const navIndex = document.getElementById('navIndexLabel');
+            const labelColor = isFlipped ? 'white' : '#333';
+            if (navHint) { navHint.textContent = 'Tap to flip'; navHint.style.color = labelColor; }
+            if (navIndex) navIndex.style.color = labelColor;
             // Re-scale text now that card-back is visible and measurable
             if (isFlipped) requestAnimationFrame(() => scaleTextToFit());
         }
@@ -8200,10 +8203,10 @@
                                     <path d="M14 8L10 12L14 16" stroke="#f5a623" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
                             </button>
-                            <span id="navIndexLabel" style="font-size:0.65rem;opacity:0.6;color:#333;white-space:nowrap;">${currentIndex + 1} / ${cards.length}</span>
+                            <span id="navIndexLabel" style="font-size:0.65rem;opacity:0.75;color:${isFlipped ? 'white' : '#333'};white-space:nowrap;">${currentIndex + 1} / ${cards.length}</span>
                         </div>
                         <div style="position:absolute;top:10px;right:8px;display:flex;align-items:center;gap:5px;z-index:20;pointer-events:none;">
-                            <span id="navHintLabel" style="font-size:0.65rem;opacity:0.6;color:#333;white-space:nowrap;">Tap to flip</span>
+                            <span id="navHintLabel" style="font-size:0.65rem;opacity:0.75;color:${isFlipped ? 'white' : '#333'};white-space:nowrap;">Tap to flip</span>
                             <button class="nav-btn next" style="pointer-events:auto;flex-shrink:0;"
                                 onclick="event.stopPropagation();nextCard()"
                                 ontouchend="event.stopPropagation();event.preventDefault();nextCard()">
@@ -8251,21 +8254,15 @@
             requestAnimationFrame(() => { scaleTextToFit(); applyCardTextScale(); scaleFrontText(); });
         }
 
+        // cachedBackTextSizes[i] = { size: finalRem, max: maxFontSize used when computed }
+        // This lets us rescale proportionally when cardTextScaleIndex changes
+
         function scaleTextToFit() {
             const textElement = document.querySelector('.card-text-auto-scale');
             if (!textElement) return;
 
             const container = textElement.closest('.card-back');
             if (!container) return;
-
-            // Apply cached size immediately if available
-            if (cachedBackTextSizes[currentIndex] !== undefined) {
-                const isSingle = (textElement.textContent || '').trim().split(/\s+/).length === 1;
-                textElement.style.fontSize = cachedBackTextSizes[currentIndex] + 'rem';
-                textElement.style.whiteSpace = isSingle ? 'nowrap' : 'normal';
-                textElement.style.wordBreak  = isSingle ? 'normal' : 'break-word';
-                return;
-            }
 
             const screenWidth = window.innerWidth;
             let containerPadding, maxFontSize, minFontSize;
@@ -8282,9 +8279,29 @@
             }
 
             const userScale = TEXT_SCALES[cardTextScaleIndex];
-            maxFontSize = maxFontSize * userScale;
-            minFontSize = minFontSize * userScale;
+            const scaledMax = maxFontSize * userScale;
+            const scaledMin = minFontSize * userScale;
 
+            const text = textElement.textContent || textElement.innerText;
+            const wordCount = text.trim().split(/\s+/).length;
+            const isSingleWord = wordCount === 1;
+            const effectiveMax = wordCount >= 4 ? scaledMax * 0.75 : scaledMax;
+
+            // Apply cached size if available — rescale proportionally if index changed
+            if (cachedBackTextSizes[currentIndex] !== undefined) {
+                const cached = cachedBackTextSizes[currentIndex];
+                // ratio = how much we shrank below the max when originally computed
+                const ratio = cached.size / cached.max;
+                const newSize = Math.min(effectiveMax, effectiveMax * ratio);
+                textElement.style.fontSize = newSize + 'rem';
+                textElement.style.whiteSpace = isSingleWord ? 'nowrap' : 'normal';
+                textElement.style.wordBreak  = isSingleWord ? 'normal' : 'break-word';
+                // Update cached max for current scale
+                cachedBackTextSizes[currentIndex] = { size: newSize, max: effectiveMax };
+                return;
+            }
+
+            // Temporarily unrotate card-back so we can measure it
             const needsFix = container.offsetWidth === 0;
             if (needsFix) {
                 container.style.transform = 'none';
@@ -8300,11 +8317,6 @@
             }
             if (maxWidth <= 0 || maxHeight <= 0) return;
 
-            const text = textElement.textContent || textElement.innerText;
-            const wordCount = text.trim().split(/\s+/).length;
-            const isSingleWord = wordCount === 1;
-            if (wordCount >= 4) maxFontSize = maxFontSize * 0.75;
-
             if (isSingleWord) {
                 textElement.style.whiteSpace = 'nowrap';
                 textElement.style.wordBreak = 'normal';
@@ -8314,17 +8326,17 @@
                 textElement.style.wordBreak = 'break-word';
             }
 
-            textElement.style.fontSize = maxFontSize + 'rem';
+            textElement.style.fontSize = effectiveMax + 'rem';
             const fitsAtMax = isSingleWord
                 ? textElement.scrollWidth <= maxWidth
                 : textElement.scrollWidth <= maxWidth && textElement.scrollHeight <= maxHeight;
             if (fitsAtMax) {
-                cachedBackTextSizes[currentIndex] = maxFontSize;
+                cachedBackTextSizes[currentIndex] = { size: effectiveMax, max: effectiveMax };
                 return;
             }
 
-            let minSize = isSingleWord ? 0.5 : minFontSize;
-            let maxSize = maxFontSize;
+            let minSize = isSingleWord ? 0.5 : scaledMin;
+            let maxSize = effectiveMax;
             let optimalSize = maxSize;
 
             while (maxSize - minSize > 0.05) {
@@ -8339,7 +8351,7 @@
 
             const finalSize = optimalSize * 0.95;
             textElement.style.fontSize = finalSize + 'rem';
-            cachedBackTextSizes[currentIndex] = finalSize;
+            cachedBackTextSizes[currentIndex] = { size: finalSize, max: effectiveMax };
         }
         // Event listeners for save modal buttons
         document.addEventListener('DOMContentLoaded', function() {
@@ -8432,7 +8444,6 @@
         function increaseCardTextSize() {
             if (cardTextScaleIndex < TEXT_SCALES.length - 1) {
                 cardTextScaleIndex++;
-                Object.keys(cachedBackTextSizes).forEach(k => delete cachedBackTextSizes[k]);
                 requestAnimationFrame(() => {
                     scaleTextToFit();
                     requestAnimationFrame(() => {
@@ -8443,7 +8454,7 @@
                             const overflowsHeight = textEl.scrollHeight > container.offsetHeight - 20;
                             if (overflowsWidth || overflowsHeight) {
                                 cardTextScaleIndex--;
-                                Object.keys(cachedBackTextSizes).forEach(k => delete cachedBackTextSizes[k]);
+                                delete cachedBackTextSizes[currentIndex]; // force recompute for this card
                                 scaleTextToFit();
                                 showToast('⚠️ Text too large to fit the card', 2500);
                             }
@@ -8454,10 +8465,7 @@
         }
 
         function decreaseCardTextSize() {
-            if (cardTextScaleIndex > 0) {
-                cardTextScaleIndex--;
-                Object.keys(cachedBackTextSizes).forEach(k => delete cachedBackTextSizes[k]);
-            }
+            if (cardTextScaleIndex > 0) cardTextScaleIndex--;
             applyCardTextScale();
         }
 
