@@ -1891,6 +1891,61 @@
             .nav-btn svg { width: 26px; height: 26px; }
         }
 
+        /* ── Bomb game grid ─────────────────────────────────────────── */
+        #bombGameModal {
+            overflow: hidden;
+        }
+        .bomb-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            width: min(95vw, 700px);
+            margin: 0 auto;
+            padding: 5px;
+        }
+        .bomb-tile-inner {
+            background: linear-gradient(135deg, #35654D 0%, #2d5542 100%);
+            border-radius: 15px;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            position: relative;
+            width: 100%;
+        }
+        .bomb-tile-emoji {
+            font-size: clamp(4rem, 15vw, 7rem);
+            color: white;
+        }
+        /* Landscape on touch-height screens: size tiles by height so all 9 fit without scrolling */
+        @media (orientation: landscape) and (max-height: 500px) {
+            #bombGameModal > div {
+                padding-top: 4px !important;
+                justify-content: flex-start;
+            }
+            #bombGameControls {
+                margin-bottom: 4px !important;
+                padding: 5px 10px !important;
+            }
+            .bomb-grid {
+                /* Tile size driven by available height: viewport minus controls bar (~52px) and gaps */
+                --tile: calc((100vh - 56px - 16px) / 3);
+                grid-template-columns: repeat(3, var(--tile));
+                width: auto;
+                gap: 6px;
+                padding: 2px;
+            }
+            .bomb-tile-inner {
+                aspect-ratio: unset;
+                width: var(--tile, 80px);
+                height: var(--tile, 80px);
+            }
+            .bomb-tile-emoji {
+                font-size: clamp(1.8rem, 9vh, 4rem) !important;
+            }
+        }
+
         /* Ensure modal content never overflows on any screen */
         .modal-content {
             max-height: 90vh;
@@ -7023,11 +7078,14 @@
                     return;
                 }
 
-                // Shuffle all current cards (no cap — always reflects the full session)
-                const selectedCards = fisherYatesShuffle(cards);
+                // Shuffle all cards and pick up to 6 as safe cards; fill remainder to 9 with bombs
+                const shuffled = fisherYatesShuffle(cards);
+                const selectedCards = shuffled.slice(0, Math.min(6, cards.length));
+                const bombCount = 9 - selectedCards.length;
+                const bombCards = Array.from({ length: bombCount }, () => ({ isBomb: true }));
 
-                // Add 3 bomb cards and shuffle them in
-                bombGameState.gameCards = fisherYatesShuffle([...selectedCards, { isBomb: true }, { isBomb: true }, { isBomb: true }]);
+                // Always exactly 9 tiles total
+                bombGameState.gameCards = fisherYatesShuffle([...selectedCards, ...bombCards]);
                 bombGameState.eliminated = false;
                 bombGameState.cardsRemaining = selectedCards.length;
                 bombGameState.bombCount = 3;
@@ -7829,18 +7887,11 @@
             `;
 
             content.innerHTML = `
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: min(95vw, 700px); margin: 0 auto; padding: 5px;">
+                <div class="bomb-grid">
                     ${gameCards.map((card, index) => `
                         <div onclick="selectBombCard(${index})" style="cursor: pointer; animation: bomb-pulse ${2 + (index * 0.2)}s ease-in-out infinite;">
-                            <div style="background: linear-gradient(135deg, #35654D 0%, #2d5542 100%);
-                                        border-radius: 15px;
-                                        aspect-ratio: 1;
-                                        display: flex;
-                                        align-items: center;
-                                        justify-content: center;
-                                        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-                                        position: relative;">
-                                <span style="font-size: clamp(4rem, 15vw, 7rem); color: white;">💣</span>
+                            <div class="bomb-tile-inner">
+                                <span class="bomb-tile-emoji">💣</span>
                             </div>
                         </div>
                     `).join('')}
@@ -7878,18 +7929,11 @@
             const col = cardIndex % 3;
             
             content.innerHTML = `
-                <div style="position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: min(95vw, 700px); margin: 0 auto; padding: 5px;">
+                <div class="bomb-grid" style="position: relative;">
                     ${bombGameState.gameCards.map((c, index) => `
                         <div style="cursor: pointer; ${index === cardIndex ? 'visibility: hidden;' : ''}">
-                            <div style="background: linear-gradient(135deg, #35654D 0%, #2d5542 100%);
-                                        border-radius: 15px;
-                                        aspect-ratio: 1;
-                                        display: flex;
-                                        align-items: center;
-                                        justify-content: center;
-                                        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-                                        position: relative;">
-                                <span style="font-size: clamp(4rem, 15vw, 7rem); color: white;">💣</span>
+                            <div class="bomb-tile-inner">
+                                <span class="bomb-tile-emoji">💣</span>
                             </div>
                         </div>
                     `).join('')}
