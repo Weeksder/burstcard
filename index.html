@@ -2679,24 +2679,23 @@
         </button>
     </div>
 
-    <!-- Audio elements for sound effects -->
-    <!-- Using preload="metadata" to minimize audio session interruption on mobile devices -->
-    <audio id="flipSound" preload="metadata" playsinline>
+    <!-- Audio elements for sound effects — preload="auto" ensures buffers are ready for instant play -->
+    <audio id="flipSound" preload="auto" playsinline>
         <source src="flip2.wav" type="audio/wav">
     </audio>
-    <audio id="correctSound" preload="metadata" playsinline>
+    <audio id="correctSound" preload="auto" playsinline>
         <source src="correct.wav" type="audio/wav">
     </audio>
-    <audio id="errorSound" preload="metadata" playsinline>
+    <audio id="errorSound" preload="auto" playsinline>
         <source src="error.wav" type="audio/wav">
     </audio>
-    <audio id="shuffleSound" preload="metadata" playsinline>
+    <audio id="shuffleSound" preload="auto" playsinline>
         <source src="Shuffle_Chips.wav" type="audio/wav">
     </audio>
-    <audio id="explosionSound" preload="metadata" playsinline>
+    <audio id="explosionSound" preload="auto" playsinline>
         <source src="explosion.wav" type="audio/wav">
     </audio>
-    <audio id="winningSound" preload="metadata" playsinline>
+    <audio id="winningSound" preload="auto" playsinline>
         <source src="Winning_Guess_the_word.wav" type="audio/wav">
     </audio>
 
@@ -3506,53 +3505,26 @@
             },
 
             // Play sound with retry logic
-            play: function(soundId, retries = 3) {
-                console.log(`🎵 Attempting to play: ${soundId} (retries left: ${retries})`);
-
-                // Unlock audio context on first play attempt (lazy unlock)
-                if (!this.audioUnlocked) {
-                    console.log('🔓 Unlocking audio context...');
-                    this.unlockAudioContext();
-                }
-
+            play: function(soundId) {
                 const audio = this.sounds[soundId];
+                if (!audio) return;
 
-                if (!audio) {
-                    console.warn(`⚠️ Sound not found: ${soundId}`);
-                    console.warn(`   Available sounds:`, Object.keys(this.sounds));
-                    return;
-                }
-
-                console.log(`   Audio element found. Volume: ${audio.volume}, Ready state: ${audio.readyState}`);
-                console.log(`   Source: ${audio.currentSrc || audio.src}`);
-
-                // Stop current playback and reset
-                audio.pause();
-                audio.currentTime = 0;
-
-                // Attempt to play
-                const playPromise = audio.play();
-
-                if (playPromise !== undefined) {
-                    playPromise
-                        .then(() => {
-                            console.log(`✅ Successfully playing: ${soundId}`);
-                        })
-                        .catch(err => {
-                            console.error(`❌ Sound play failed for ${soundId}:`, err.message);
-                            console.error(`   Error type:`, err.name);
-
-                            // Retry if we have retries left
-                            if (retries > 0) {
-                                console.log(`   Retrying in 100ms...`);
-                                setTimeout(() => {
-                                    this.play(soundId, retries - 1);
-                                }, 100);
-                            } else {
-                                console.error(`   ❌ All retry attempts exhausted for ${soundId}`);
-                            }
+                // Clone the audio element for each play so rapid/overlapping taps
+                // never conflict with a still-playing or mid-reset instance.
+                // This is the most reliable approach on iOS/Android browsers.
+                try {
+                    const clone = audio.cloneNode(true);
+                    clone.volume = audio.volume;
+                    const p = clone.play();
+                    if (p) {
+                        p.catch(() => {
+                            // Single silent retry after 50 ms (handles brief browser lock on first tap)
+                            setTimeout(() => clone.play().catch(() => {}), 50);
                         });
-                }
+                    }
+                    // Release the clone once it has finished playing
+                    clone.addEventListener('ended', () => { clone.src = ''; }, { once: true });
+                } catch (e) {}
             }
         };
 
@@ -7080,11 +7052,10 @@
                     return;
                 }
 
-                // Shuffle and take up to 7 normal cards
-                const shuffled = fisherYatesShuffle(cards);
-                const selectedCards = shuffled.slice(0, Math.min(6, cards.length));
+                // Shuffle all current cards (no cap — always reflects the full session)
+                const selectedCards = fisherYatesShuffle(cards);
 
-                // Add 3 bomb cards initially and shuffle (6 safe + 3 bombs = 9 total)
+                // Add 3 bomb cards and shuffle them in
                 bombGameState.gameCards = fisherYatesShuffle([...selectedCards, { isBomb: true }, { isBomb: true }, { isBomb: true }]);
                 bombGameState.eliminated = false;
                 bombGameState.cardsRemaining = selectedCards.length;
