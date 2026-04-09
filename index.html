@@ -32,7 +32,7 @@
     <!-- Custom Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Dancing+Script:wght@700&family=Great+Vibes&family=Nunito:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Dancing+Script:wght@700&family=Fredoka:wght@400;500;600&family=Great+Vibes&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -610,7 +610,7 @@
             align-items: center;
             justify-content: center;
             padding: 6px 10px 4px;
-            font-family: 'Nunito', Arial, sans-serif !important;
+            font-family: 'Fredoka', Arial, sans-serif !important;
             font-size: 6rem;
             font-weight: 400;
             color: #1a1a1a;
@@ -623,7 +623,7 @@
         }
 
         .card-front-text .vowel {
-            font-family: 'Nunito', Arial, sans-serif !important;
+            font-family: 'Fredoka', Arial, sans-serif !important;
             display: inline;
             white-space: pre-wrap;
         }
@@ -666,7 +666,7 @@
             text-align: center;
             margin: 0;
             font-weight: 400;
-            font-family: 'Nunito', Arial, sans-serif;
+            font-family: 'Fredoka', Arial, sans-serif;
             line-height: 1.3;
             max-width: 100%;
             width: 100%;
@@ -7294,7 +7294,7 @@
             const label = card.backText
                 ? `<div style="flex-shrink:0;text-align:center;font-size:clamp(0.5rem,2vw,0.85rem);
                        font-weight:700;color:#1a1a1a;padding:2px 3px;
-                       font-family:'Nunito',Arial,sans-serif;
+                       font-family:'Fredoka',Arial,sans-serif;
                        white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;">
                        ${card.backText}</div>` : '';
             return img + label;
@@ -7522,7 +7522,7 @@
                            padding:4px 8px;cursor:pointer;display:flex;align-items:center;
                            justify-content:center;gap:10px;transition:all 0.18s;">
                     <span id="matchIcon${idx}L" style="width:48px;flex-shrink:0;display:flex;align-items:center;justify-content:center;opacity:0;"></span>
-                    <span id="matchLabel${idx}" style="font-family:'Nunito',Arial,sans-serif;font-size:4rem;
+                    <span id="matchLabel${idx}" style="font-family:'Fredoka',Arial,sans-serif;font-size:4rem;
                           font-weight:400;color:#1a1a1a;line-height:1.15;white-space:nowrap;overflow:visible;">
                         ${highlightVowelsFront(opt)}
                     </span>
@@ -8080,7 +8080,7 @@
             }
 
             const currentCard = gameCards[currentCardIndex];
-            const word = currentCard.backText.trim().toUpperCase();
+            const word = currentCard.backText.trim();
             spellingGameState.correctWord = word;
 
             const words = word.split(' ');
@@ -8107,17 +8107,18 @@
             spellingGameState.moveHistory = [];
 
             // Answer row: underlines — multiword tries single line first (flex-wrap:wrap with gap)
-            const lineH = 'clamp(44px,6vh,60px)';
-            const lineFS = totalChars <= 8 ? 'clamp(1.8rem,4.5vw,2.6rem)' : totalChars <= 12 ? 'clamp(1.5rem,3.8vw,2.2rem)' : 'clamp(1.2rem,3vw,1.8rem)';
+            // Slots are 1.5× bigger; scale down only for very long words (wrap first)
+            const lineH = 'clamp(66px,9vh,90px)';
+            const lineFS = totalChars <= 8 ? 'clamp(2.7rem,6.75vw,3.9rem)' : totalChars <= 12 ? 'clamp(2.25rem,5.7vw,3.3rem)' : totalChars <= 16 ? 'clamp(1.8rem,4.5vw,2.7rem)' : 'clamp(1.4rem,3.5vw,2rem)';
 
             const makeSlot = (idx) => `<div onclick="selectAnswerSlot(${idx})" class="answer-slot" data-index="${idx}"
                 ondragover="event.preventDefault()" ondrop="spellingDragDrop(event,${idx})"
                 ontouchstart="spellingTouchStart(event,${idx},'slot')"
                 ontouchmove="spellingTouchMove(event)"
                 ontouchend="spellingTouchEnd(event)"
-                style="min-width:28px;height:${lineH};border-bottom:3px solid #35654D;
+                style="min-width:42px;height:${lineH};border-bottom:3px solid #35654D;
                        display:inline-flex;align-items:center;justify-content:center;
-                       font-size:${lineFS};font-weight:700;color:#1a1a1a;cursor:pointer;
+                       font-size:${lineFS};font-weight:400;color:#1a1a1a;cursor:pointer;
                        padding:0 4px;user-select:none;"></div>`;
 
             let answerRowsHTML = '';
@@ -8136,9 +8137,9 @@
             }
 
             // Letter row — plain text centered in a single boxed line, drag/click supported
-            const letterRowFS = totalChars <= 8 ? 'clamp(1.8rem,4.5vw,2.6rem)' : totalChars <= 12 ? 'clamp(1.5rem,3.8vw,2.2rem)' : 'clamp(1.2rem,3vw,1.8rem)';
+            const letterRowFS = totalChars <= 8 ? 'clamp(2.7rem,6.75vw,3.9rem)' : totalChars <= 12 ? 'clamp(2.25rem,5.7vw,3.3rem)' : totalChars <= 16 ? 'clamp(1.8rem,4.5vw,2.7rem)' : 'clamp(1.4rem,3.5vw,2rem)';
             const letterSpans = scrambledArray.map((letter, idx) => {
-                const isVowel = ['A','E','I','O','U'].includes(letter);
+                const isVowel = ['A','E','I','O','U','a','e','i','o','u'].includes(letter);
                 return `<span class="letter-tile" data-index="${idx}"
                     onclick="selectLetter(${idx})"
                     draggable="true"
@@ -8147,7 +8148,7 @@
                     ontouchmove="spellingTouchMove(event)"
                     ontouchend="spellingTouchEnd(event)"
                     style="display:inline-flex;align-items:center;justify-content:center;
-                           font-size:${letterRowFS};font-weight:700;padding:2px 8px;
+                           font-size:${letterRowFS};font-weight:400;padding:2px 8px;
                            color:${isVowel ? '#ff9500' : '#35654D'};
                            cursor:grab;user-select:none;flex-shrink:0;">
                     ${letter}
@@ -8197,7 +8198,7 @@
                              ondrop="spellingDragDropToTile(event)"
                              style="width:100%;flex-shrink:0;
                                     display:flex;justify-content:center;align-items:center;
-                                    flex-wrap:nowrap;overflow-x:auto;
+                                    flex-wrap:wrap;
                                     border:1.5px solid #ddd;border-radius:8px;
                                     padding:4px 8px;box-sizing:border-box;
                                     min-height:48px;gap:0;">
@@ -8220,6 +8221,11 @@
                                 style="width:80px;padding:10px 0;background:#eee;border:none;border-radius:10px;
                                        font-size:0.9rem;font-weight:700;color:#555;cursor:pointer;">
                                 ➡ Skip
+                            </button>
+                            <button onclick="event.stopPropagation();speakText('${currentCard.backText.trim().replace(/'/g, "\\'")}')"
+                                style="width:80px;padding:10px 0;background:#fff3e0;border:1.5px solid #ff9500;border-radius:10px;
+                                       font-size:0.9rem;font-weight:700;color:#ff9500;cursor:pointer;">
+                                🔊 Say It
                             </button>
                         </div>
 
