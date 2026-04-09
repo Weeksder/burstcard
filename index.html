@@ -3472,9 +3472,12 @@
             });
         }
 
-        // Audio management system — uses Web Audio API for reliable, low-latency playback.
-        // AudioContext + buffer decoding starts at page load (works while context is suspended).
-        // Only ctx.resume() requires a user gesture, so buffers are always ready by first tap.
+        // Audio management system — Web Audio API for low-latency playback,
+        // with a robust HTML Audio fallback for the gap before first user gesture.
+        //
+        // IMPORTANT: On iOS Safari, AudioContext MUST be created inside a user
+        // gesture handler. Creating it at page load puts it in a permanently
+        // broken suspended state that also blocks HTML Audio (shared audio session).
         const audioManager = {
             ctx: null,
             buffers: {},
@@ -3491,25 +3494,23 @@
 
             volume: function(soundId) {
                 if (soundId === 'winningSound') return 0.8;
-                return this.isMobile ? 0.25 : 1.0;
+                return this.isMobile ? 0.3 : 1.0;
             },
 
             init: function() {
-                // Create AudioContext immediately — it starts suspended but can decode buffers
-                // straight away. This means all audio data is ready before the first tap.
-                try {
-                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-                    this._decodeAll();
-                } catch (e) {}
-
-                // resume() must be called inside a user gesture handler (browser policy).
-                // We do it synchronously on first touch/click so ctx is running by the time
-                // play() is called from the same gesture.
-                const resume = () => {
-                    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+                // Create AudioContext only on the first user gesture (iOS requirement).
+                // Decode all buffers immediately after — small WAV files finish in ~100ms,
+                // so from the second tap onwards everything plays via BufferSource.
+                const setup = () => {
+                    if (this.ctx) return;
+                    try {
+                        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                        if (this.ctx.state === 'suspended') this.ctx.resume(); // synchronous, inside gesture
+                        this._decodeAll();
+                    } catch (e) { this.ctx = null; }
                 };
-                document.addEventListener('touchstart', resume, { once: true, passive: true });
-                document.addEventListener('mousedown',  resume, { once: true });
+                document.addEventListener('touchstart', setup, { once: true, passive: true });
+                document.addEventListener('mousedown',  setup, { once: true });
             },
 
             _decodeAll: async function() {
@@ -3524,26 +3525,28 @@
             },
 
             play: function(soundId) {
-                if (this.ctx && this.buffers[soundId]) {
-                    // If still suspended (edge case: play called before first gesture),
-                    // resume then schedule the sound to fire as soon as context is running.
-                    if (this.ctx.state === 'suspended') {
-                        this.ctx.resume().then(() => this._fireBuffer(soundId)).catch(() => {});
-                        return;
-                    }
+                // Primary: AudioContext BufferSource (ready after first gesture + decode)
+                if (this.ctx && this.ctx.state === 'running' && this.buffers[soundId]) {
                     this._fireBuffer(soundId);
                     return;
                 }
 
-                // Fallback: HTML Audio (buffers not ready yet — should only hit on very first tap)
+                // Fallback: HTML Audio element.
+                // On iOS this works fine when called inside/after a user gesture.
+                // Try play() first; only seek to 0 on failure to avoid the iOS
+                // "operation aborted" error that occurs when seeking a loading element.
                 const audio = document.getElementById(soundId);
                 if (!audio) return;
                 audio.volume = this.volume(soundId);
-                audio.currentTime = 0;
-                audio.play().catch(() => {});
+                const p = audio.play();
+                if (p) p.catch(() => {
+                    audio.currentTime = 0;
+                    audio.play().catch(() => {});
+                });
             },
 
             _fireBuffer: function(soundId) {
+                if (this.ctx.state === 'suspended') this.ctx.resume();
                 const source = this.ctx.createBufferSource();
                 source.buffer = this.buffers[soundId];
                 const gain = this.ctx.createGain();
