@@ -3417,114 +3417,71 @@
             });
         }
 
-        // Audio management system for reliable sound playback
+        // Audio management system — uses Web Audio API for reliable, low-latency playback.
+        // Buffers are decoded once on first user interaction and replayed instantly thereafter.
         const audioManager = {
-            sounds: {},
-            audioUnlocked: false,
+            ctx: null,
+            buffers: {},
             isMobile: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent),
 
-            // Initialize and preload all sounds
-            init: function() {
-                const soundIds = ['flipSound', 'correctSound', 'errorSound', 'shuffleSound', 'explosionSound', 'winningSound'];
-
-                soundIds.forEach(id => {
-                    const audio = document.getElementById(id);
-                    if (audio) {
-                        // Store reference
-                        this.sounds[id] = audio;
-
-                        // Add error event listener for debugging
-                        audio.addEventListener('error', (e) => {
-                            console.error(`❌ Audio load error for ${id}:`, e);
-                            console.error(`   Source: ${audio.src}`);
-                            console.error(`   Error code: ${audio.error ? audio.error.code : 'unknown'}`);
-                        });
-
-                        // Add canplay event for debugging
-                        audio.addEventListener('canplay', () => {
-                            console.log(`✅ Audio ready: ${id}`);
-                        });
-
-                        // Preload
-                        audio.load();
-
-                        // Set volume much lower on mobile to avoid interrupting background media
-                        // Exception: winningSound should be louder since it's a celebration
-                        // On mobile devices, lower volume means less aggressive audio session takeover
-                        if (id === 'winningSound') {
-                            audio.volume = 0.8; // Louder for celebration
-                            console.log(`🔊 Winning sound volume set to: ${audio.volume}`);
-                        } else {
-                            audio.volume = this.isMobile ? 0.25 : 1.0;
-                        }
-
-                        // Try to prevent interrupting other audio on mobile
-                        // Note: This is limited by browser capabilities, but helps minimize disruption
-                        if (this.isMobile) {
-                            audio.preservesPitch = false;
-                        }
-
-                        console.log(`🎵 Initialized ${id} (volume: ${audio.volume})`);
-                    } else {
-                        console.warn(`⚠️ Audio element not found: ${id}`);
-                    }
-                });
-
-                // Note: Audio unlock now happens lazily on first playSound() call
-                // This prevents sounds from playing on initial page load
-                console.log('🎼 AudioManager initialized with sounds:', Object.keys(this.sounds));
+            soundFiles: {
+                flipSound:      'flip2.wav',
+                correctSound:   'correct.wav',
+                errorSound:     'error.wav',
+                shuffleSound:   'Shuffle_Chips.wav',
+                explosionSound: 'explosion.wav',
+                winningSound:   'Winning_Guess_the_word.wav'
             },
 
-            // Unlock audio context silently (called only when needed)
-            unlockAudioContext: function() {
-                if (this.audioUnlocked) return;
+            // Volume per sound (mobile uses lower values to avoid interrupting system audio)
+            volume: function(soundId) {
+                if (soundId === 'winningSound') return 0.8;
+                return this.isMobile ? 0.25 : 1.0;
+            },
 
-                // Pick just one sound to unlock the audio context
-                const firstSound = Object.values(this.sounds)[0];
-                if (firstSound) {
-                    // Temporarily mute it
-                    const originalVolume = firstSound.volume;
-                    firstSound.volume = 0;
+            init: function() {
+                // Decode all buffers on the very first user gesture so the AudioContext
+                // is created inside a user-interaction handler (required by iOS/Android).
+                const setup = async () => {
+                    if (this.ctx) return;
+                    try {
+                        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                        if (this.ctx.state === 'suspended') await this.ctx.resume();
 
-                    // Play and immediately pause to unlock
-                    const playPromise = firstSound.play();
-                    if (playPromise !== undefined) {
-                        playPromise.then(() => {
-                            firstSound.pause();
-                            firstSound.currentTime = 0;
-                            // Restore to appropriate volume (lower on mobile)
-                            firstSound.volume = originalVolume;
-                        }).catch(() => {
-                            // Restore volume even on error
-                            firstSound.volume = originalVolume;
-                        });
-                    }
+                        await Promise.all(Object.entries(this.soundFiles).map(async ([id, file]) => {
+                            try {
+                                const res = await fetch(file);
+                                const raw = await res.arrayBuffer();
+                                this.buffers[id] = await this.ctx.decodeAudioData(raw);
+                            } catch (e) {}
+                        }));
+                    } catch (e) { this.ctx = null; }
+                };
+
+                document.addEventListener('touchstart', setup, { once: true, passive: true });
+                document.addEventListener('mousedown',  setup, { once: true });
+            },
+
+            play: function(soundId) {
+                // Primary path: AudioContext BufferSource — instantaneous, no re-fetch needed
+                if (this.ctx && this.buffers[soundId]) {
+                    if (this.ctx.state === 'suspended') this.ctx.resume();
+                    const source = this.ctx.createBufferSource();
+                    source.buffer = this.buffers[soundId];
+                    const gain = this.ctx.createGain();
+                    gain.gain.value = this.volume(soundId);
+                    source.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    source.start(0);
+                    return;
                 }
 
-                this.audioUnlocked = true;
-            },
-
-            // Play sound with retry logic
-            play: function(soundId) {
-                const audio = this.sounds[soundId];
+                // Fallback: HTML Audio element (used before first user interaction)
+                const audio = document.getElementById(soundId);
                 if (!audio) return;
-
-                // Clone the audio element for each play so rapid/overlapping taps
-                // never conflict with a still-playing or mid-reset instance.
-                // This is the most reliable approach on iOS/Android browsers.
-                try {
-                    const clone = audio.cloneNode(true);
-                    clone.volume = audio.volume;
-                    const p = clone.play();
-                    if (p) {
-                        p.catch(() => {
-                            // Single silent retry after 50 ms (handles brief browser lock on first tap)
-                            setTimeout(() => clone.play().catch(() => {}), 50);
-                        });
-                    }
-                    // Release the clone once it has finished playing
-                    clone.addEventListener('ended', () => { clone.src = ''; }, { once: true });
-                } catch (e) {}
+                audio.volume = this.volume(soundId);
+                audio.currentTime = 0;
+                audio.play().catch(() => {});
             }
         };
 
