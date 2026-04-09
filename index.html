@@ -8106,10 +8106,10 @@
             spellingGameState.selectedLetter = null;
             spellingGameState.moveHistory = [];
 
-            // Answer row: underlines — multiword tries single line first (flex-wrap:wrap with gap)
-            // Slots are 1.5× bigger; scale down only for very long words (wrap first)
-            const lineH = 'clamp(66px,9vh,90px)';
-            const lineFS = totalChars <= 8 ? 'clamp(2.7rem,6.75vw,3.9rem)' : totalChars <= 12 ? 'clamp(2.25rem,5.7vw,3.3rem)' : totalChars <= 16 ? 'clamp(1.8rem,4.5vw,2.7rem)' : 'clamp(1.4rem,3.5vw,2rem)';
+            // Answer row: underlines — slots sized for easy touch tapping
+            // Use px sizes directly — clamp with vw can render small on mobile
+            const lineH = totalChars <= 12 ? '72px' : '60px';
+            const lineFS = totalChars <= 8 ? '2.8rem' : totalChars <= 12 ? '2.2rem' : totalChars <= 16 ? '1.8rem' : '1.4rem';
 
             const makeSlot = (idx) => `<div onclick="selectAnswerSlot(${idx})" class="answer-slot" data-index="${idx}"
                 ondragover="event.preventDefault()" ondrop="spellingDragDrop(event,${idx})"
@@ -8118,7 +8118,8 @@
                 ontouchend="spellingTouchEnd(event)"
                 style="min-width:42px;height:${lineH};border-bottom:3px solid #35654D;
                        display:inline-flex;align-items:center;justify-content:center;
-                       font-size:${lineFS};font-weight:400;color:#1a1a1a;cursor:pointer;
+                       font-size:${lineFS};font-weight:400;font-family:'Fredoka',Arial,sans-serif;
+                       color:#1a1a1a;cursor:pointer;
                        padding:0 4px;user-select:none;"></div>`;
 
             let answerRowsHTML = '';
@@ -8136,8 +8137,8 @@
                 answerRowsHTML = `<div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;">${slots}</div>`;
             }
 
-            // Letter row — plain text centered in a single boxed line, drag/click supported
-            const letterRowFS = totalChars <= 8 ? 'clamp(2.7rem,6.75vw,3.9rem)' : totalChars <= 12 ? 'clamp(2.25rem,5.7vw,3.3rem)' : totalChars <= 16 ? 'clamp(1.8rem,4.5vw,2.7rem)' : 'clamp(1.4rem,3.5vw,2rem)';
+            // Letter row — explicit px sizes, consistent across all devices
+            const letterRowFS = totalChars <= 8 ? '2.8rem' : totalChars <= 12 ? '2.2rem' : totalChars <= 16 ? '1.8rem' : '1.4rem';
             const letterSpans = scrambledArray.map((letter, idx) => {
                 const isVowel = ['A','E','I','O','U','a','e','i','o','u'].includes(letter);
                 return `<span class="letter-tile" data-index="${idx}"
@@ -8149,6 +8150,7 @@
                     ontouchend="spellingTouchEnd(event)"
                     style="display:inline-flex;align-items:center;justify-content:center;
                            font-size:${letterRowFS};font-weight:400;padding:2px 8px;
+                           font-family:'Fredoka',Arial,sans-serif;
                            color:${isVowel ? '#ff9500' : '#35654D'};
                            cursor:grab;user-select:none;flex-shrink:0;">
                     ${letter}
