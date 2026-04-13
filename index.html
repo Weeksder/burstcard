@@ -9886,23 +9886,32 @@
         function scaleTextToFit() {
             const textElement = document.querySelector('.card-text-auto-scale');
             if (!textElement) return;
-
             const container = textElement.closest('.card-back');
             if (!container) return;
 
-            const screenWidth = window.innerWidth;
-            let containerPadding, maxFontSize, minFontSize;
-            if (screenWidth <= 390) {
-                containerPadding = 52; maxFontSize = 2.8; minFontSize = 1.5;
-            } else if (screenWidth <= 480) {
-                containerPadding = 52; maxFontSize = 3.5; minFontSize = 1.8;
-            } else if (screenWidth <= 768) {
-                containerPadding = 50; maxFontSize = 4.5; minFontSize = 2.2;
-            } else if (screenWidth <= 1024) {
-                containerPadding = 50; maxFontSize = 6;   minFontSize = 2.5;
-            } else {
-                containerPadding = 60; maxFontSize = 7.5; minFontSize = 3;
+            // Measure actual card dimensions (unrotate if needed)
+            const needsFix = container.offsetWidth === 0;
+            if (needsFix) {
+                container.style.transform = 'none';
+                container.style.backfaceVisibility = 'visible';
+                container.style.webkitBackfaceVisibility = 'visible';
             }
+            const cardW = container.offsetWidth;
+            const cardH = container.offsetHeight;
+            if (needsFix) {
+                container.style.transform = '';
+                container.style.backfaceVisibility = '';
+                container.style.webkitBackfaceVisibility = '';
+            }
+            if (cardW <= 0 || cardH <= 0) return;
+
+            // Max font size = ratio of card's shorter dimension — consistent on all devices/orientations
+            const cardMin = Math.min(cardW, cardH);
+            const basePx = cardMin * 0.22;
+            const baseRem = basePx / 16;
+            const maxFontSize = Math.min(Math.max(baseRem, 1.5), 9);
+            const minFontSize = maxFontSize * 0.2;
+            const containerPadding = cardMin * 0.08;
 
             const userScale = TEXT_SCALES[cardTextScaleIndex];
             const scaledMax = maxFontSize * userScale;
@@ -9910,38 +9919,21 @@
 
             const text = textElement.textContent || textElement.innerText;
             const wordCount = text.trim().split(/\s+/).length;
-            const isSingleWord = wordCount === 1;
+            // Hyphenated words (e.g. "self-control") should wrap at the hyphen, not be treated as single nowrap words
+            const hasHyphen = text.includes('-');
+            const isSingleWord = wordCount === 1 && !hasHyphen;
             const effectiveMax = wordCount >= 4 ? scaledMax * 0.75 : scaledMax;
 
-            // Apply cached size if available — rescale proportionally if index changed
+            // If cached, use the stored ratio to derive a starting max — but still validate fit below
+            let startMax = effectiveMax;
             if (cachedBackTextSizes[currentIndex] !== undefined) {
                 const cached = cachedBackTextSizes[currentIndex];
-                // ratio = how much we shrank below the max when originally computed
                 const ratio = cached.size / cached.max;
-                const newSize = Math.min(effectiveMax, effectiveMax * ratio);
-                textElement.style.fontSize = newSize + 'rem';
-                textElement.style.whiteSpace = isSingleWord ? 'nowrap' : 'normal';
-                textElement.style.wordBreak  = isSingleWord ? 'normal' : 'break-word';
-                // Update cached max for current scale
-                cachedBackTextSizes[currentIndex] = { size: newSize, max: effectiveMax };
-                return;
+                startMax = Math.min(effectiveMax, effectiveMax * ratio);
             }
 
-            // Temporarily unrotate card-back so we can measure it
-            const needsFix = container.offsetWidth === 0;
-            if (needsFix) {
-                container.style.transform = 'none';
-                container.style.backfaceVisibility = 'visible';
-                container.style.webkitBackfaceVisibility = 'visible';
-            }
-            const maxWidth  = container.offsetWidth  - containerPadding;
-            const maxHeight = container.offsetHeight - containerPadding;
-            if (needsFix) {
-                container.style.transform = '';
-                container.style.backfaceVisibility = '';
-                container.style.webkitBackfaceVisibility = '';
-            }
-            if (maxWidth <= 0 || maxHeight <= 0) return;
+            const maxWidth  = cardW - containerPadding;
+            const maxHeight = cardH - containerPadding;
 
             if (isSingleWord) {
                 textElement.style.whiteSpace = 'nowrap';
@@ -9950,27 +9942,27 @@
             } else {
                 textElement.style.whiteSpace = 'normal';
                 textElement.style.wordBreak = 'break-word';
+                textElement.style.overflowWrap = 'break-word';
             }
 
-            textElement.style.fontSize = effectiveMax + 'rem';
+            textElement.style.fontSize = startMax + 'rem';
             const fitsAtMax = isSingleWord
                 ? textElement.scrollWidth <= maxWidth
                 : textElement.scrollWidth <= maxWidth && textElement.scrollHeight <= maxHeight;
             if (fitsAtMax) {
-                cachedBackTextSizes[currentIndex] = { size: effectiveMax, max: effectiveMax };
+                cachedBackTextSizes[currentIndex] = { size: startMax, max: effectiveMax };
                 return;
             }
 
             let minSize = isSingleWord ? 0.5 : scaledMin;
-            let maxSize = effectiveMax;
+            let maxSize = startMax;
             let optimalSize = maxSize;
-
             while (maxSize - minSize > 0.05) {
                 const testSize = (minSize + maxSize) / 2;
                 textElement.style.fontSize = testSize + 'rem';
                 const fits = isSingleWord
-                    ? textElement.scrollWidth  <= maxWidth  * 0.9
-                    : textElement.scrollWidth  <= maxWidth  * 0.9 && textElement.scrollHeight <= maxHeight * 0.9;
+                    ? textElement.scrollWidth <= maxWidth * 0.9
+                    : textElement.scrollWidth <= maxWidth * 0.9 && textElement.scrollHeight <= maxHeight * 0.9;
                 if (fits) { optimalSize = testSize; minSize = testSize; }
                 else       { maxSize = testSize; }
             }
@@ -10077,17 +10069,19 @@
         function increaseCardTextSize() {
             if (cardTextScaleIndex < TEXT_SCALES.length - 1) {
                 cardTextScaleIndex++;
+                delete cachedBackTextSizes[currentIndex];
                 requestAnimationFrame(() => {
                     scaleTextToFit();
                     requestAnimationFrame(() => {
                         const textEl = document.querySelector('.card-text-auto-scale');
                         const container = textEl?.closest('.card-back');
                         if (textEl && container) {
-                            const overflowsWidth = textEl.scrollWidth > container.offsetWidth - 20;
-                            const overflowsHeight = textEl.scrollHeight > container.offsetHeight - 20;
+                            const overflowsWidth  = textEl.scrollWidth  > container.offsetWidth  - 10;
+                            const overflowsHeight = textEl.scrollHeight > container.offsetHeight - 10;
                             if (overflowsWidth || overflowsHeight) {
+                                // Revert — text cannot fit even after scaling attempt
                                 cardTextScaleIndex--;
-                                delete cachedBackTextSizes[currentIndex]; // force recompute for this card
+                                delete cachedBackTextSizes[currentIndex];
                                 scaleTextToFit();
                                 showToast('⚠️ Text too large to fit the card', 2500);
                             }
@@ -10098,8 +10092,11 @@
         }
 
         function decreaseCardTextSize() {
-            if (cardTextScaleIndex > 0) cardTextScaleIndex--;
-            applyCardTextScale();
+            if (cardTextScaleIndex > 0) {
+                cardTextScaleIndex--;
+                delete cachedBackTextSizes[currentIndex];
+                applyCardTextScale();
+            }
         }
 
         function toggleTextOnFront() {
